@@ -2,15 +2,18 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { AGENTS } from "@/lib/agents";
-import { DEMO_AGENT_STATS } from "@/lib/demo-data";
+import { getAgentStats } from "@/lib/data";
 import { num, pct, dollars } from "@/lib/format";
+
+export const revalidate = 120;
 
 export const metadata = {
   title: "Agents — Crucible",
 };
 
-export default function AgentsPage() {
-  const byId = Object.fromEntries(DEMO_AGENT_STATS.map((s) => [s.agent_id, s]));
+export default async function AgentsPage() {
+  const statsRes = await getAgentStats();
+  const byId = Object.fromEntries(statsRes.rows.map((s) => [s.agent_id, s]));
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
