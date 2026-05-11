@@ -5,3 +5,8 @@
 [build.environment]
   NODE_VERSION = "22"
   NPM_FLAGS = "--no-audit --no-fund"
+
+# Force Next.js plugin (sometimes Netlify's auto-detection drops it on cache
+# hits and produces 0-function deploys — every page 404s on dynamic routes).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
