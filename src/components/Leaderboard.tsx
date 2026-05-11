@@ -46,36 +46,36 @@ export function Leaderboard({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto" role="region" aria-label="Agent leaderboard table">
+        <table className="w-full" aria-label="Agent leaderboard">
           <thead>
             <tr className="border-b border-border-subtle text-text-muted">
-              <th className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
                 Rank
               </th>
-              <th className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
                 Agent
               </th>
-              <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Crucible
               </th>
-              <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Brier ↓
               </th>
-              <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Log-loss ↓
               </th>
-              <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Win %
               </th>
-              <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Paper P&amp;L
               </th>
-              <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Picks
               </th>
-              <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                24h
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                24h rank
               </th>
             </tr>
           </thead>
@@ -150,17 +150,17 @@ export function Leaderboard({
                   </td>
                   <td className="px-4 py-3 mono text-right text-xs">
                     {delta > 0 ? (
-                      <span className="text-accent flex items-center justify-end gap-1">
-                        <ArrowUp size={12} />
+                      <span className="text-accent flex items-center justify-end gap-1" aria-label={`Rose ${delta} place${delta === 1 ? "" : "s"}`}>
+                        <ArrowUp size={12} aria-hidden="true" />
                         {delta}
                       </span>
                     ) : delta < 0 ? (
-                      <span className="text-text-muted flex items-center justify-end gap-1">
-                        <ArrowDown size={12} />
+                      <span className="text-text-muted flex items-center justify-end gap-1" aria-label={`Fell ${Math.abs(delta)} place${Math.abs(delta) === 1 ? "" : "s"}`}>
+                        <ArrowDown size={12} aria-hidden="true" />
                         {Math.abs(delta)}
                       </span>
                     ) : (
-                      <span className="text-text-muted">—</span>
+                      <span className="text-text-muted" aria-label="No change">—</span>
                     )}
                   </td>
                 </tr>
