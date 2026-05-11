@@ -2,11 +2,8 @@
   command = "npm run build"
   publish = ".next"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-# Functions live in src/app/api — Next runtime handles them.
-# Cron schedule for crucible jobs runs in Supabase pg_cron, not Netlify.
+# Next.js runtime is auto-detected by Netlify; no need to declare the plugin
+# explicitly here (and declaring it conflicts with auto-install in some flows).
 
 [build.environment]
   NODE_VERSION = "20"
