@@ -17,6 +17,12 @@ export function Header() {
         </Link>
         <nav className="flex items-center gap-6 text-sm text-text-secondary">
           <Link
+            href="/benchmark"
+            className="hover:text-text-primary transition-colors"
+          >
+            Benchmark
+          </Link>
+          <Link
             href="/leaderboard"
             className="hover:text-text-primary transition-colors"
           >
