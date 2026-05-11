@@ -1,0 +1,56 @@
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+/**
+ * Server-side Supabase client. Reads/writes cookies for auth session.
+ * Uses publishable anon key — never the service-role key here.
+ */
+export async function getServerClient() {
+  const cookieStore = await cookies();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set"
+    );
+  }
+  return createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(toSet) {
+        try {
+          for (const { name, value, options } of toSet) {
+            cookieStore.set(name, value, options);
+          }
+        } catch {
+          // setAll called from a server component — ignored.
+        }
+      },
+    },
+  });
+}
+
+/**
+ * Service-role client. SERVER ONLY. Used by API routes that need to bypass RLS
+ * (e.g. cron-triggered agent runs writing to predictions table).
+ *
+ * Never import this from a client component.
+ */
+export function getServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "Service-role client requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+    );
+  }
+  // Use the standard JS client for service-role calls (no cookies needed).
+  // We import lazily to avoid pulling it into client bundles.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createClient } = require("@supabase/supabase-js");
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
