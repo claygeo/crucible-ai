@@ -1,0 +1,378 @@
+/**
+ * Data adapter: prefer live Supabase, fall back to demo data.
+ *
+ * Server-only. Use from server components or API routes. Each function:
+ *   1. Tries Supabase via service-role client (or anon for read-only)
+ *   2. If query fails OR returns no rows, falls back to deterministic demo
+ *   3. Always returns the same shape regardless of source
+ *
+ * The site stays alive even if Supabase goes down or returns empty.
+ */
+
+import { createClient } from "@supabase/supabase-js";
+import { AGENTS } from "@/lib/agents";
+import {
+  DEMO_AGENT_STATS,
+  DEMO_EUREKA_CARDS,
+  DEMO_MARKETS,
+  DEMO_PREDICTIONS,
+  DEMO_SCORES,
+  type DemoAgentStats,
+  type DemoEurekaCard,
+  type DemoMarket,
+  type DemoPrediction,
+  type DemoScore,
+} from "@/lib/demo-data";
+
+// ────────────────────────────────────────────────────────────────────────────
+// Supabase client — server-only, anon key (public-read RLS is enabled)
+// ────────────────────────────────────────────────────────────────────────────
+
+let _client: ReturnType<typeof createClient> | null = null;
+function sb() {
+  if (_client) return _client;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Prefer service role on server (bypasses RLS, faster); fall back to anon.
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  try {
+    _client = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } catch {
+    _client = null;
+  }
+  return _client;
+}
+
+const FORCE_DEMO =
+  (process.env.NEXT_PUBLIC_USE_DEMO_DATA ?? "false").toLowerCase() === "true";
+
+// ────────────────────────────────────────────────────────────────────────────
+// Public API
+// ────────────────────────────────────────────────────────────────────────────
+
+export type Source = "live" | "demo";
+
+export type LiveMarket = DemoMarket;
+export type LiveAgentStats = DemoAgentStats;
+export type LiveEurekaCard = DemoEurekaCard;
+export type LivePrediction = DemoPrediction & { id?: string };
+export type LiveScore = DemoScore;
+
+export async function getAgentStats(): Promise<{
+  source: Source;
+  rows: LiveAgentStats[];
+}> {
+  if (FORCE_DEMO) return { source: "demo", rows: DEMO_AGENT_STATS };
+  const client = sb();
+  if (!client) return { source: "demo", rows: DEMO_AGENT_STATS };
+  try {
+    const { data, error } = await client
+      .from("agent_stats")
+      .select("*")
+      .order("rank", { ascending: true });
+    if (error || !data) throw error;
+    if (data.length === 0)
+      return { source: "demo", rows: DEMO_AGENT_STATS };
+    // Some scored agents (>0 predictions) means we have real data
+    const realData = (data as Array<Record<string, unknown>>).filter(
+      (s) => Number(s.total_scored) > 0
+    );
+    if (realData.length === 0)
+      return { source: "demo", rows: DEMO_AGENT_STATS };
+    const rows: LiveAgentStats[] = realData.map((s) => ({
+      agent_id: s.agent_id as string,
+      brier_30d: Number(s.brier_30d ?? 0),
+      log_loss_30d: Number(s.log_loss_30d ?? 0),
+      total_predictions: Number(s.total_predictions ?? 0),
+      total_scored: Number(s.total_scored ?? 0),
+      win_rate_30d: Number(s.win_rate_30d ?? 0),
+      paper_pnl_30d: Number(s.paper_pnl_30d ?? 0),
+      crucible_score: Number(s.crucible_score ?? 0),
+      rank: Number(s.rank ?? 99),
+      rank_delta_24h: Number(s.rank_delta_24h ?? 0),
+      calibration: (s.calibration as LiveAgentStats["calibration"]) ?? [],
+    }));
+    return { source: "live", rows };
+  } catch {
+    return { source: "demo", rows: DEMO_AGENT_STATS };
+  }
+}
+
+export async function getMarkets(opts: {
+  status?: "open" | "resolved";
+  limit?: number;
+} = {}): Promise<{ source: Source; rows: LiveMarket[] }> {
+  if (FORCE_DEMO) return { source: "demo", rows: filterDemo(DEMO_MARKETS, opts) };
+  const client = sb();
+  if (!client) return { source: "demo", rows: filterDemo(DEMO_MARKETS, opts) };
+  try {
+    let q = client.from("markets").select("*");
+    if (opts.status) q = q.eq("status", opts.status);
+    q = q
+      .order("resolved_at", { ascending: false, nullsFirst: false })
+      .limit(opts.limit ?? 200);
+    const { data, error } = await q;
+    if (error || !data) throw error;
+    if (data.length === 0)
+      return { source: "demo", rows: filterDemo(DEMO_MARKETS, opts) };
+    return { source: "live", rows: rowsToMarkets(data as Array<Record<string, unknown>>) };
+  } catch {
+    return { source: "demo", rows: filterDemo(DEMO_MARKETS, opts) };
+  }
+}
+
+export async function getMarketById(
+  id: string
+): Promise<{ source: Source; market: LiveMarket | null }> {
+  // Demo markets use ids like "m-001"; live use uuids.
+  if (id.startsWith("m-")) {
+    const market = DEMO_MARKETS.find((m) => m.id === id) ?? null;
+    return { source: "demo", market };
+  }
+  const client = sb();
+  if (!client) return { source: "live", market: null };
+  try {
+    const { data } = await client.from("markets").select("*").eq("id", id).maybeSingle();
+    if (!data) return { source: "live", market: null };
+    return {
+      source: "live",
+      market: rowsToMarkets([data as Record<string, unknown>])[0] ?? null,
+    };
+  } catch {
+    return { source: "live", market: null };
+  }
+}
+
+export async function getPredictionsForMarket(
+  marketDbId: string
+): Promise<{ source: Source; rows: LivePrediction[] }> {
+  if (marketDbId.startsWith("m-")) {
+    return {
+      source: "demo",
+      rows: DEMO_PREDICTIONS.filter((p) => p.market_id === marketDbId),
+    };
+  }
+  const client = sb();
+  if (!client) return { source: "live", rows: [] };
+  try {
+    const { data } = await client
+      .from("predictions")
+      .select("*")
+      .eq("market_id", marketDbId)
+      .order("created_at", { ascending: true });
+    if (!data) return { source: "live", rows: [] };
+    return {
+      source: "live",
+      rows: (data as Array<Record<string, unknown>>).map((p) => ({
+        id: p.id as string,
+        agent_id: p.agent_id as string,
+        market_id: p.market_id as string,
+        probability: Number(p.probability),
+        confidence: (p.confidence as LivePrediction["confidence"]) ?? "medium",
+        reasoning: (p.reasoning as string) ?? "",
+        market_price_at_forecast: Number(p.market_price_at_forecast ?? 0.5),
+        created_at: p.created_at as string,
+        abstained: Boolean(p.abstained),
+      })),
+    };
+  } catch {
+    return { source: "live", rows: [] };
+  }
+}
+
+export async function getRecentPredictions(
+  limit = 30
+): Promise<{ source: Source; rows: LivePrediction[] }> {
+  if (FORCE_DEMO) {
+    return {
+      source: "demo",
+      rows: DEMO_PREDICTIONS.slice(-limit).reverse(),
+    };
+  }
+  const client = sb();
+  if (!client)
+    return { source: "demo", rows: DEMO_PREDICTIONS.slice(-limit).reverse() };
+  try {
+    const { data } = await client
+      .from("predictions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (!data || data.length === 0)
+      return { source: "demo", rows: DEMO_PREDICTIONS.slice(-limit).reverse() };
+    return {
+      source: "live",
+      rows: (data as Array<Record<string, unknown>>).map((p) => ({
+        id: p.id as string,
+        agent_id: p.agent_id as string,
+        market_id: p.market_id as string,
+        probability: Number(p.probability),
+        confidence: (p.confidence as LivePrediction["confidence"]) ?? "medium",
+        reasoning: (p.reasoning as string) ?? "",
+        market_price_at_forecast: Number(p.market_price_at_forecast ?? 0.5),
+        created_at: p.created_at as string,
+        abstained: Boolean(p.abstained),
+      })),
+    };
+  } catch {
+    return { source: "demo", rows: DEMO_PREDICTIONS.slice(-limit).reverse() };
+  }
+}
+
+export async function getScoresForAgent(
+  agentId: string,
+  limit = 50
+): Promise<{ source: Source; rows: LiveScore[] }> {
+  if (FORCE_DEMO) {
+    return {
+      source: "demo",
+      rows: DEMO_SCORES.filter((s) => s.agent_id === agentId).slice(-limit),
+    };
+  }
+  const client = sb();
+  if (!client)
+    return {
+      source: "demo",
+      rows: DEMO_SCORES.filter((s) => s.agent_id === agentId).slice(-limit),
+    };
+  try {
+    const { data } = await client
+      .from("scores")
+      .select("*")
+      .eq("agent_id", agentId)
+      .order("scored_at", { ascending: false })
+      .limit(limit);
+    if (!data || data.length === 0)
+      return {
+        source: "demo",
+        rows: DEMO_SCORES.filter((s) => s.agent_id === agentId).slice(-limit),
+      };
+    return {
+      source: "live",
+      rows: (data as Array<Record<string, unknown>>).map((s) => ({
+        prediction_id: s.prediction_id as string,
+        agent_id: s.agent_id as string,
+        market_id: s.market_id as string,
+        brier: Number(s.brier),
+        log_loss: Number(s.log_loss),
+        paper_pnl: Number(s.paper_pnl ?? 0),
+        was_correct: Boolean(s.was_correct),
+      })),
+    };
+  } catch {
+    return {
+      source: "demo",
+      rows: DEMO_SCORES.filter((s) => s.agent_id === agentId).slice(-limit),
+    };
+  }
+}
+
+export async function getEurekaCards(
+  limit = 3
+): Promise<{ source: Source; rows: LiveEurekaCard[] }> {
+  if (FORCE_DEMO) return { source: "demo", rows: DEMO_EUREKA_CARDS.slice(0, limit) };
+  const client = sb();
+  if (!client)
+    return { source: "demo", rows: DEMO_EUREKA_CARDS.slice(0, limit) };
+  try {
+    const { data } = await client
+      .from("eureka_cards")
+      .select("*")
+      .eq("active", true)
+      .order("sort_order", { ascending: true })
+      .limit(limit);
+    if (!data || data.length === 0)
+      return { source: "demo", rows: DEMO_EUREKA_CARDS.slice(0, limit) };
+    return {
+      source: "live",
+      rows: (data as Array<Record<string, unknown>>).map((e) => ({
+        id: e.id as string,
+        headline: e.headline as string,
+        body: e.body as string,
+        generated_at: e.generated_at as string,
+      })),
+    };
+  } catch {
+    return { source: "demo", rows: DEMO_EUREKA_CARDS.slice(0, limit) };
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────────────────
+
+function filterDemo(
+  arr: DemoMarket[],
+  opts: { status?: "open" | "resolved"; limit?: number }
+): DemoMarket[] {
+  let out = arr;
+  if (opts.status) out = out.filter((m) => m.status === opts.status);
+  if (opts.limit) out = out.slice(0, opts.limit);
+  return out;
+}
+
+function rowsToMarkets(rows: Array<Record<string, unknown>>): LiveMarket[] {
+  return rows.map((m) => ({
+    id: m.id as string,
+    source: m.source as LiveMarket["source"],
+    source_id: m.source_id as string,
+    question: m.question as string,
+    category: (m.category as LiveMarket["category"]) ?? "other",
+    closes_at: (m.closes_at as string) ?? new Date().toISOString(),
+    resolved_at: (m.resolved_at as string) ?? undefined,
+    resolved_outcome:
+      m.resolved_outcome === null || m.resolved_outcome === undefined
+        ? undefined
+        : Boolean(m.resolved_outcome),
+    outcome_yes_price: Number(m.outcome_yes_price ?? 0.5),
+    status: (m.status as LiveMarket["status"]) ?? "open",
+    url: (m.url as string) ?? "#",
+  }));
+}
+
+/** Aggregate stats for the homepage hero counter. */
+export async function getCounters(): Promise<{
+  source: Source;
+  watching: number;
+  totalPredictions: number;
+  resolved: number;
+}> {
+  const client = sb();
+  if (!client || FORCE_DEMO) {
+    return {
+      source: "demo",
+      watching: DEMO_MARKETS.filter((m) => m.status === "open").length,
+      totalPredictions: DEMO_PREDICTIONS.length,
+      resolved: DEMO_MARKETS.filter((m) => m.status === "resolved").length,
+    };
+  }
+  try {
+    const [openRes, resRes, predRes] = await Promise.all([
+      client.from("markets").select("id", { count: "exact", head: true }).eq("status", "open"),
+      client.from("markets").select("id", { count: "exact", head: true }).eq("status", "resolved"),
+      client.from("predictions").select("id", { count: "exact", head: true }),
+    ]);
+    const watching = openRes.count ?? 0;
+    const resolved = resRes.count ?? 0;
+    const totalPredictions = predRes.count ?? 0;
+    if (totalPredictions === 0) {
+      return {
+        source: "demo",
+        watching: DEMO_MARKETS.filter((m) => m.status === "open").length,
+        totalPredictions: DEMO_PREDICTIONS.length,
+        resolved: DEMO_MARKETS.filter((m) => m.status === "resolved").length,
+      };
+    }
+    return { source: "live", watching, totalPredictions, resolved };
+  } catch {
+    return {
+      source: "demo",
+      watching: DEMO_MARKETS.filter((m) => m.status === "open").length,
+      totalPredictions: DEMO_PREDICTIONS.length,
+      resolved: DEMO_MARKETS.filter((m) => m.status === "resolved").length,
+    };
+  }
+}

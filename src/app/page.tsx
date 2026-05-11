@@ -4,22 +4,25 @@ import { LiveTicker } from "@/components/LiveTicker";
 import { Leaderboard } from "@/components/Leaderboard";
 import { EurekaCard } from "@/components/EurekaCard";
 import { HeroMetric } from "@/components/HeroMetric";
-import { DEMO_EUREKA_CARDS, DEMO_MARKETS } from "@/lib/demo-data";
+import { getAgentStats, getCounters, getEurekaCards } from "@/lib/data";
 import { int } from "@/lib/format";
 
-const DEMO_MODE =
-  (process.env.NEXT_PUBLIC_USE_DEMO_DATA ?? "true").toLowerCase() === "true";
+export const revalidate = 300; // ISR every 5 min
 
-export default function HomePage() {
-  const watching = DEMO_MARKETS.filter((m) => m.status === "open").length;
-  const resolved = DEMO_MARKETS.filter((m) => m.status === "resolved").length;
-  const totalPredictions = 25 * 6; // 6 agents × 25 markets
+export default async function HomePage() {
+  // Fetch all data in parallel — live if Supabase has data, demo otherwise
+  const [statsRes, eurekaRes, counters] = await Promise.all([
+    getAgentStats(),
+    getEurekaCards(3),
+    getCounters(),
+  ]);
+  const isDemo = statsRes.source === "demo" || counters.source === "demo";
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      {DEMO_MODE && (
+      {isDemo && (
         <div
           className="bg-warn/10 border-b border-warn/30 text-warn text-xs"
           role="status"
@@ -27,7 +30,8 @@ export default function HomePage() {
           <div className="max-w-[1280px] mx-auto px-6 py-2 flex items-center gap-3">
             <span className="mono uppercase tracking-wider">[Demo mode]</span>
             <span className="text-text-secondary">
-              Showing seed data. Live forecasting comes online when ANTHROPIC_API_KEY is wired in Netlify.
+              Showing seed data while we backfill real predictions on resolved
+              prediction-market events. Live data appears as soon as agents finish scoring.
             </span>
           </div>
         </div>
@@ -51,17 +55,19 @@ export default function HomePage() {
           </p>
           <div className="flex flex-wrap items-center gap-6 mono text-xs text-text-muted">
             <span>
-              <span className="text-text-primary">{int(watching)}</span> markets
-              watched
+              <span className="text-text-primary">{int(counters.watching)}</span>{" "}
+              markets watched
             </span>
             <span aria-hidden="true">·</span>
             <span>
-              <span className="text-text-primary">{int(totalPredictions)}</span>{" "}
+              <span className="text-text-primary">
+                {int(counters.totalPredictions)}
+              </span>{" "}
               predictions logged
             </span>
             <span aria-hidden="true">·</span>
             <span>
-              <span className="text-text-primary">{int(resolved)}</span>{" "}
+              <span className="text-text-primary">{int(counters.resolved)}</span>{" "}
               resolved + scored
             </span>
             <span aria-hidden="true">·</span>
@@ -70,7 +76,7 @@ export default function HomePage() {
         </section>
 
         {/* Hero metric */}
-        <HeroMetric />
+        <HeroMetric stats={statsRes.rows} />
 
         {/* Eureka cards */}
         <section className="flex flex-col gap-4">
@@ -83,14 +89,14 @@ export default function HomePage() {
             </span>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
-            {DEMO_EUREKA_CARDS.map((card) => (
+            {eurekaRes.rows.map((card) => (
               <EurekaCard key={card.id} card={card} />
             ))}
           </div>
         </section>
 
         {/* Leaderboard */}
-        <Leaderboard />
+        <Leaderboard stats={statsRes.rows} source={statsRes.source} />
 
         {/* Methodology blurb */}
         <section className="grid md:grid-cols-3 gap-4">
