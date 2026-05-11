@@ -3,7 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getAgentStats } from "@/lib/data";
 
-export const revalidate = 300;
+export const revalidate = 120; // 2-min ISR so backfill updates show fast
 
 export const metadata = {
   title: "Leaderboard — Crucible",

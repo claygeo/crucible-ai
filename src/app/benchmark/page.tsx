@@ -14,7 +14,7 @@ import { AGENTS } from "@/lib/agents";
 import { num, pct, dollars, signed, prob, int, trunc } from "@/lib/format";
 import { createClient } from "@supabase/supabase-js";
 
-export const revalidate = 600;
+export const revalidate = 120; // 2-min ISR so backfill updates show fast
 
 export const metadata = {
   title: "Benchmark — Crucible",
