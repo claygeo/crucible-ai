@@ -15,7 +15,7 @@ export function Header() {
             _
           </span>
         </Link>
-        <nav className="flex items-center gap-6 text-sm text-text-secondary">
+        <nav aria-label="Main navigation" className="flex items-center gap-6 text-sm text-text-secondary">
           <Link
             href="/benchmark"
             className="hover:text-text-primary transition-colors"
