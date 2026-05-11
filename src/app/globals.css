@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Color tokens — locked in DESIGN.md */
+    --bg-canvas: #0a0b0d;
+    --bg-panel: #111317;
+    --bg-panel-hi: #161a20;
+    --border-subtle: #1f242c;
+    --border-strong: #2a313b;
+    --text-primary: #e6e9ee;
+    --text-secondary: #9aa4b2;
+    --text-muted: #7b8595; /* WCAG AA on bg-canvas */
+    --accent: #00c2a8;
+    --accent-soft: rgba(0, 194, 168, 0.2);
+    --positive: #4ade80;
+    --negative: #f87171;
+    --warn: #fbbf24;
+  }
+
+  html,
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+    color: var(--text-primary);
+  }
+}
+
+@layer components {
+  .panel {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+  }
+
+  .panel-hover {
+    transition:
+      background-color 160ms ease-out,
+      border-color 160ms ease-out;
+  }
+
+  .panel-hover:hover {
+    background-color: var(--bg-panel-hi);
+    border-color: var(--border-strong);
+  }
+
+  .panel-live {
+    border-top: 1px solid var(--accent);
+  }
+
+  .mono {
+    font-family: var(--font-jetbrains-mono), JetBrains Mono, ui-monospace,
+      "SF Mono", Menlo, Consolas, monospace;
+    letter-spacing: -0.01em;
+  }
+
+  .heading {
+    font-family: var(--font-plex-sans), "IBM Plex Sans", Inter, ui-sans-serif,
+      system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+
+  /* Hairline divider, used between table rows etc. */
+  .hairline {
+    border-color: var(--border-subtle);
+  }
+
+  /* Number flash animation when stats change */
+  .num-flash {
+    animation: num-flash 200ms ease-out;
+  }
+
+  @keyframes num-flash {
+    0% {
+      background-color: var(--accent-soft);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  /* Live dot pulse */
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: var(--accent);
+    box-shadow: 0 0 0 0 rgba(0, 194, 168, 0.7);
+    animation: live-dot-pulse 2.4s ease-out infinite;
+  }
+
+  @keyframes live-dot-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0, 194, 168, 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(0, 194, 168, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 194, 168, 0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-pulse-soft,
+  .live-dot,
+  .num-flash {
+    animation: none !important;
+  }
+}
