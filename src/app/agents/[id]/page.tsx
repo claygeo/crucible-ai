@@ -4,13 +4,15 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CalibrationPlot } from "@/components/CalibrationPlot";
 import { AGENTS } from "@/lib/agents";
+import { getAgentStats, getScoresForAgent } from "@/lib/data";
 import {
-  DEMO_AGENT_STATS,
   DEMO_PREDICTIONS,
   DEMO_MARKETS,
-  DEMO_SCORES,
 } from "@/lib/demo-data";
-import { num, pct, dollars, signed, prob, relativeTime, trunc } from "@/lib/format";
+import { num, pct, dollars, signed, relativeTime, trunc } from "@/lib/format";
+import { createClient } from "@supabase/supabase-js";
+
+export const revalidate = 120;
 
 export function generateStaticParams() {
   return AGENTS.map((a) => ({ id: a.id }));
@@ -30,6 +32,38 @@ export async function generateMetadata({
   };
 }
 
+/** Pull recent predictions w/ market metadata for one agent. */
+async function getAgentRecentPredictions(agentId: string, limit = 12) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  try {
+    const sb = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: preds } = await sb
+      .from("predictions")
+      .select("id, market_id, probability, confidence, reasoning, abstained, market_price_at_forecast, created_at")
+      .eq("agent_id", agentId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (!preds || preds.length === 0) return null;
+    const marketIds = (preds as Array<{ market_id: string }>).map((p) => p.market_id);
+    const { data: markets } = await sb
+      .from("markets")
+      .select("id, question, status, resolved_outcome")
+      .in("id", marketIds);
+    const marketsById = new Map<string, { question: string; status: string; resolved_outcome: boolean | null }>();
+    for (const m of (markets ?? []) as Array<{ id: string; question: string; status: string; resolved_outcome: boolean | null }>) {
+      marketsById.set(m.id, m);
+    }
+    return { preds: preds as Array<Record<string, unknown>>, marketsById };
+  } catch {
+    return null;
+  }
+}
+
 export default async function AgentDetailPage({
   params,
 }: {
@@ -38,22 +72,66 @@ export default async function AgentDetailPage({
   const { id } = await params;
   const agent = AGENTS.find((a) => a.id === id);
   if (!agent) notFound();
-  const stats = DEMO_AGENT_STATS.find((s) => s.agent_id === id);
+
+  const [statsRes, scoresRes, liveRecent] = await Promise.all([
+    getAgentStats(),
+    getScoresForAgent(id, 50),
+    getAgentRecentPredictions(id, 12),
+  ]);
+  const stats = statsRes.rows.find((s) => s.agent_id === id);
   if (!stats) notFound();
 
-  const myPredictions = DEMO_PREDICTIONS.filter((p) => p.agent_id === id);
-  const myScores = DEMO_SCORES.filter((s) => s.agent_id === id);
-  // Latest predictions (resolved + open) sorted by created_at desc
-  const recent = [...myPredictions]
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
-    .slice(0, 12);
+  // Live recent if available, else fall back to demo predictions
+  const recent: Array<{
+    market_id: string;
+    question: string;
+    probability: number;
+    market_price_at_forecast: number;
+    status: string;
+    resolved_outcome: boolean | null;
+    brier: number | null;
+    created_at: string;
+  }> = (() => {
+    if (liveRecent) {
+      return liveRecent.preds.map((p) => {
+        const market = liveRecent.marketsById.get(p.market_id as string);
+        const score = scoresRes.rows.find((s) => s.market_id === p.market_id);
+        return {
+          market_id: p.market_id as string,
+          question: market?.question ?? "(market metadata not yet loaded)",
+          probability: Number(p.probability),
+          market_price_at_forecast: Number(p.market_price_at_forecast ?? 0.5),
+          status: market?.status ?? "open",
+          resolved_outcome: market?.resolved_outcome ?? null,
+          brier: score?.brier ?? null,
+          created_at: p.created_at as string,
+        };
+      });
+    }
+    // Demo fallback
+    return DEMO_PREDICTIONS.filter((p) => p.agent_id === id)
+      .sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+      .slice(0, 12)
+      .map((p) => {
+        const m = DEMO_MARKETS.find((x) => x.id === p.market_id);
+        return {
+          market_id: p.market_id,
+          question: m?.question ?? "",
+          probability: p.probability,
+          market_price_at_forecast: p.market_price_at_forecast,
+          status: m?.status ?? "open",
+          resolved_outcome: m?.resolved_outcome ?? null,
+          brier: null,
+          created_at: p.created_at,
+        };
+      });
+  })();
 
   // Hero metric: this agent's brier vs market-anchor (Echo) brier
-  const echoStats = DEMO_AGENT_STATS.find((s) => s.agent_id === "echo")!;
-  const brierDelta = stats.brier_30d - echoStats.brier_30d;
+  const echoStats = statsRes.rows.find((s) => s.agent_id === "echo");
+  const brierDelta = echoStats ? stats.brier_30d - echoStats.brier_30d : 0;
   const beatsMarket = brierDelta < 0;
 
   return (
@@ -178,56 +256,44 @@ export default async function AgentDetailPage({
                 </tr>
               </thead>
               <tbody>
-                {recent.map((p) => {
-                  const market = DEMO_MARKETS.find(
-                    (m) => m.id === p.market_id
-                  )!;
-                  const score = myScores.find((s) => s.market_id === p.market_id);
-                  return (
-                    <tr
-                      key={`${p.market_id}-${p.created_at}`}
-                      className="border-b border-border-subtle/60 panel-hover"
-                    >
-                      <td className="px-4 py-3 text-text-primary text-sm">
-                        <Link
-                          href={`/markets/${market.id}`}
-                          className="hover:text-accent transition-colors"
-                        >
-                          {trunc(market.question, 64)}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 mono text-right text-text-primary">
-                        {prob(p.probability)}
-                      </td>
-                      <td className="px-4 py-3 mono text-right text-text-secondary">
-                        {prob(p.market_price_at_forecast)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {market.status === "resolved" ? (
-                          market.resolved_outcome ? (
-                            <span className="mono text-xs text-positive">
-                              YES
-                            </span>
-                          ) : (
-                            <span className="mono text-xs text-rose-400">
-                              NO
-                            </span>
-                          )
+                {recent.map((p) => (
+                  <tr
+                    key={`${p.market_id}-${p.created_at}`}
+                    className="border-b border-border-subtle/60 panel-hover"
+                  >
+                    <td className="px-4 py-3 text-text-primary text-sm">
+                      <Link
+                        href={`/markets/${p.market_id}`}
+                        className="hover:text-accent transition-colors"
+                      >
+                        {trunc(p.question, 64)}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 mono text-right text-text-primary">
+                      {num(p.probability, 2)}
+                    </td>
+                    <td className="px-4 py-3 mono text-right text-text-secondary">
+                      {num(p.market_price_at_forecast, 2)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {p.status === "resolved" ? (
+                        p.resolved_outcome ? (
+                          <span className="mono text-xs text-positive">YES</span>
                         ) : (
-                          <span className="mono text-xs text-text-muted">
-                            open
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 mono text-right text-text-secondary">
-                        {score ? num(score.brier, 3) : "—"}
-                      </td>
-                      <td className="px-4 py-3 mono text-right text-text-muted text-xs">
-                        {relativeTime(p.created_at)}
-                      </td>
-                    </tr>
-                  );
-                })}
+                          <span className="mono text-xs text-rose-400">NO</span>
+                        )
+                      ) : (
+                        <span className="mono text-xs text-text-muted">open</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 mono text-right text-text-secondary">
+                      {p.brier !== null ? num(p.brier, 3) : "—"}
+                    </td>
+                    <td className="px-4 py-3 mono text-right text-text-muted text-xs">
+                      {relativeTime(p.created_at)}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
