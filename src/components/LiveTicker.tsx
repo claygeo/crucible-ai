@@ -5,7 +5,7 @@ import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
 import { DEMO_PREDICTIONS, DEMO_MARKETS } from "@/lib/demo-data";
 import { trunc, prob, relativeTime } from "@/lib/format";
 
-type TickerItem = {
+export type TickerItem = {
   id: string;
   agentId: string;
   agentName: string;
@@ -17,9 +17,17 @@ type TickerItem = {
   ts: string;
 };
 
-function buildItems(): TickerItem[] {
-  // Stitch the most recent N demo predictions into ticker items
-  const recent = DEMO_PREDICTIONS.slice(-30).reverse();
+/**
+ * Build demo ticker items as fallback when no live items are passed in.
+ * Filters out demo predictions whose synthetic created_at is in the future
+ * (would render as "in 3 days" — confusing for a "live" ticker).
+ */
+function buildDemoItems(): TickerItem[] {
+  const now = Date.now();
+  const recent = DEMO_PREDICTIONS
+    .filter((p) => new Date(p.created_at).getTime() <= now)
+    .slice(-30)
+    .reverse();
   return recent.map((p, i) => {
     const agent = AGENTS.find((a) => a.id === p.agent_id)!;
     const market = DEMO_MARKETS.find((m) => m.id === p.market_id)!;
@@ -40,13 +48,16 @@ function buildItems(): TickerItem[] {
 /**
  * LiveTicker — bottom strip showing newest forecasts.
  *
+ * Pass `items` from a server component for live data. Falls back to demo
+ * predictions if no items provided (e.g., layout without data fetch).
+ *
  * Per /autoplan review:
  *   - When prefers-reduced-motion: discrete cycling, 4s dwell, cross-fade.
  *   - Mobile (<480px): same discrete cycling unconditionally; marquee not rendered.
  *   - aria-live="polite", each item announced as it appears.
  */
-export function LiveTicker() {
-  const items = buildItems();
+export function LiveTicker({ items: itemsProp }: { items?: TickerItem[] } = {}) {
+  const items = itemsProp && itemsProp.length > 0 ? itemsProp : buildDemoItems();
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 

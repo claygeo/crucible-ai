@@ -1,15 +1,23 @@
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { DEMO_MARKETS } from "@/lib/demo-data";
+import { getMarkets } from "@/lib/data";
 import { relativeTime, pct } from "@/lib/format";
+
+export const revalidate = 120;
 
 export const metadata = {
   title: "Markets — Crucible",
 };
 
-export default function MarketsPage() {
-  const open = DEMO_MARKETS.filter((m) => m.status === "open");
-  const resolved = DEMO_MARKETS.filter((m) => m.status === "resolved");
+export default async function MarketsPage() {
+  const [openRes, resolvedRes] = await Promise.all([
+    getMarkets({ status: "open", limit: 200 }),
+    getMarkets({ status: "resolved", limit: 200 }),
+  ]);
+  const open = openRes.rows;
+  const resolved = resolvedRes.rows;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -29,27 +37,39 @@ export default function MarketsPage() {
             Open ({open.length})
           </h2>
           <div className="panel divide-y divide-border-subtle">
-            {open.map((m) => (
-              <div
-                key={m.id}
-                className="px-5 py-4 panel-hover flex items-center gap-4"
-              >
-                <span
-                  className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
-                >
-                  {m.category}
-                </span>
-                <span className="flex-1 text-text-primary text-sm">
-                  {m.question}
-                </span>
-                <span className="mono text-xs text-text-muted">
-                  closes {relativeTime(m.closes_at)}
-                </span>
-                <span className="mono text-xs text-text-primary">
-                  P={pct(m.outcome_yes_price)}
-                </span>
+            {open.length === 0 ? (
+              <div className="px-5 py-8 mono text-xs text-text-muted">
+                [ ] No open markets pulled yet. The /15-min cron should populate
+                this within minutes.
               </div>
-            ))}
+            ) : (
+              open.map((m) => (
+                <div
+                  key={m.id}
+                  className="px-5 py-4 panel-hover flex items-center gap-4"
+                >
+                  <span
+                    className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
+                  >
+                    {m.category}
+                  </span>
+                  <Link
+                    href={m.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 text-text-primary text-sm hover:text-accent transition-colors"
+                  >
+                    {m.question}
+                  </Link>
+                  <span className="mono text-xs text-text-muted">
+                    closes {relativeTime(m.closes_at)}
+                  </span>
+                  <span className="mono text-xs text-text-primary">
+                    P={pct(m.outcome_yes_price)}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </section>
 
@@ -58,33 +78,42 @@ export default function MarketsPage() {
             Resolved ({resolved.length})
           </h2>
           <div className="panel divide-y divide-border-subtle">
-            {resolved.map((m) => (
-              <div
-                key={m.id}
-                className="px-5 py-4 panel-hover flex items-center gap-4"
-              >
-                <span
-                  className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
-                >
-                  {m.category}
-                </span>
-                <span className="flex-1 text-text-primary text-sm">
-                  {m.question}
-                </span>
-                <span className="mono text-xs text-text-muted">
-                  resolved {relativeTime(m.resolved_at!)}
-                </span>
-                <span
-                  className={`mono text-xs px-2 py-0.5 rounded ${
-                    m.resolved_outcome
-                      ? "bg-positive/10 text-positive"
-                      : "bg-rose-400/10 text-rose-400"
-                  }`}
-                >
-                  {m.resolved_outcome ? "YES" : "NO"}
-                </span>
+            {resolved.length === 0 ? (
+              <div className="px-5 py-8 mono text-xs text-text-muted">
+                [ ] No resolved markets scored yet. First scores in ~6h.
               </div>
-            ))}
+            ) : (
+              resolved.map((m) => (
+                <div
+                  key={m.id}
+                  className="px-5 py-4 panel-hover flex items-center gap-4"
+                >
+                  <span
+                    className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
+                  >
+                    {m.category}
+                  </span>
+                  <Link
+                    href={`/markets/${m.id}`}
+                    className="flex-1 text-text-primary text-sm hover:text-accent transition-colors"
+                  >
+                    {m.question}
+                  </Link>
+                  <span className="mono text-xs text-text-muted">
+                    resolved {relativeTime(m.resolved_at ?? m.closes_at)}
+                  </span>
+                  <span
+                    className={`mono text-xs px-2 py-0.5 rounded ${
+                      m.resolved_outcome
+                        ? "bg-positive/10 text-positive"
+                        : "bg-rose-400/10 text-rose-400"
+                    }`}
+                  >
+                    {m.resolved_outcome ? "YES" : "NO"}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </main>

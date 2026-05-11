@@ -1,20 +1,72 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { LiveTicker } from "@/components/LiveTicker";
+import { LiveTicker, type TickerItem } from "@/components/LiveTicker";
 import { Leaderboard } from "@/components/Leaderboard";
 import { EurekaCard } from "@/components/EurekaCard";
 import { HeroMetric } from "@/components/HeroMetric";
-import { getAgentStats, getCounters, getEurekaCards } from "@/lib/data";
+import {
+  getAgentStats,
+  getCounters,
+  getEurekaCards,
+  getRecentPredictions,
+} from "@/lib/data";
 import { int } from "@/lib/format";
+import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
+import { createClient } from "@supabase/supabase-js";
 
 export const revalidate = 120; // 2-min ISR so backfill updates show fast
 
+async function getTickerItems(): Promise<TickerItem[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return [];
+  try {
+    const sb = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: preds } = await sb
+      .from("predictions")
+      .select("id, agent_id, market_id, probability, reasoning, market_price_at_forecast, created_at")
+      .eq("abstained", false)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (!preds || preds.length === 0) return [];
+    const marketIds = Array.from(new Set((preds as Array<{ market_id: string }>).map((p) => p.market_id)));
+    const { data: markets } = await sb
+      .from("markets")
+      .select("id, question")
+      .in("id", marketIds);
+    const qById = new Map<string, string>();
+    for (const m of (markets ?? []) as Array<{ id: string; question: string }>) {
+      qById.set(m.id, m.question);
+    }
+    return (preds as Array<Record<string, unknown>>).map((p, i) => {
+      const agent = AGENTS.find((a) => a.id === p.agent_id) ?? AGENTS[0]!;
+      return {
+        id: `${p.agent_id}-${p.market_id}-${i}`,
+        agentId: agent.id,
+        agentName: agent.name,
+        hueClass: HUE_TO_TEXT[agent.hue],
+        marketTitle: qById.get(p.market_id as string) ?? "(market)",
+        probability: Number(p.probability),
+        marketPrice: Number(p.market_price_at_forecast ?? 0.5),
+        reasoning: ((p.reasoning as string) ?? "").slice(0, 240),
+        ts: p.created_at as string,
+      } satisfies TickerItem;
+    });
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
   // Fetch all data in parallel — live if Supabase has data, demo otherwise
-  const [statsRes, eurekaRes, counters] = await Promise.all([
+  const [statsRes, eurekaRes, counters, tickerItems] = await Promise.all([
     getAgentStats(),
     getEurekaCards(3),
     getCounters(),
+    getTickerItems(),
   ]);
   const isDemo = statsRes.source === "demo" || counters.source === "demo";
 
@@ -131,7 +183,7 @@ export default async function HomePage() {
       </main>
 
       <Footer />
-      <LiveTicker />
+      <LiveTicker items={tickerItems} />
       <div className="h-16" aria-hidden="true" />
     </div>
   );
