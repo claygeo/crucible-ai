@@ -34,14 +34,23 @@ export function dollars(n: number, digits = 2): string {
 
 export function relativeTime(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return "—";
   const diffMs = Date.now() - d.getTime();
-  const sec = Math.floor(diffMs / 1000);
-  if (sec < 60) return `${sec}s ago`;
+  const future = diffMs < 0;
+  const sec = Math.floor(Math.abs(diffMs) / 1000);
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
   const day = Math.floor(hr / 24);
+  if (future) {
+    if (sec < 60) return `in ${sec}s`;
+    if (min < 60) return `in ${min}m`;
+    if (hr < 24) return `in ${hr}h`;
+    if (day < 30) return `in ${day}d`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+  if (sec < 60) return `${sec}s ago`;
+  if (min < 60) return `${min}m ago`;
+  if (hr < 24) return `${hr}h ago`;
   if (day < 30) return `${day}d ago`;
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
