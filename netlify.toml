@@ -1,7 +1,6 @@
 [build]
   command = "npm run build"
-  # Let Netlify auto-detect the publish dir for Next.js.
-  # The OpenNext adapter handles .next, server runtime, edge funcs.
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
