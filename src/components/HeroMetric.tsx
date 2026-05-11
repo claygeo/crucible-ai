@@ -1,6 +1,6 @@
 import { signed, num } from "@/lib/format";
-import { DEMO_AGENT_STATS } from "@/lib/demo-data";
 import { AGENTS } from "@/lib/agents";
+import type { LiveAgentStats } from "@/lib/data";
 
 /**
  * Hero metric on the homepage.
@@ -12,9 +12,9 @@ import { AGENTS } from "@/lib/agents";
  * If best agent has Brier 0.18 and Echo has Brier 0.22 → delta = -0.04 (Lower
  * Brier is better, so the best agent is "more calibrated" by 0.04).
  */
-export function HeroMetric() {
-  const echo = DEMO_AGENT_STATS.find((s) => s.agent_id === "echo");
-  const best = [...DEMO_AGENT_STATS].sort((a, b) => a.brier_30d - b.brier_30d)[0];
+export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
+  const echo = stats.find((s) => s.agent_id === "echo");
+  const best = [...stats].sort((a, b) => a.brier_30d - b.brier_30d)[0];
   if (!best || !echo) return null;
   const delta = best.brier_30d - echo.brier_30d;
   const bestAgent = AGENTS.find((a) => a.id === best.agent_id);

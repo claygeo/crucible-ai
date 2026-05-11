@@ -1,10 +1,8 @@
 [build]
   command = "npm run build"
-  publish = ".next"
-
-# Next.js runtime is auto-detected by Netlify; no need to declare the plugin
-# explicitly here (and declaring it conflicts with auto-install in some flows).
+  # Let Netlify auto-detect the publish dir for Next.js.
+  # The OpenNext adapter handles .next, server runtime, edge funcs.
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
   NPM_FLAGS = "--no-audit --no-fund"

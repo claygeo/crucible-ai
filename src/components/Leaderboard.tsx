@@ -1,28 +1,46 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
-import { num, signed, dollars, pct, int } from "@/lib/format";
-import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
-import { DEMO_AGENT_STATS, type DemoAgentStats } from "@/lib/demo-data";
-
-type Stat = DemoAgentStats;
-
-function getStats(): Stat[] {
-  // For now: always use demo stats. Live agent_stats table fills in later.
-  // The data shape matches public.agent_stats so swapping is one line.
-  return DEMO_AGENT_STATS;
-}
+import { num, dollars, pct, int } from "@/lib/format";
+import { AGENTS } from "@/lib/agents";
+import type { LiveAgentStats } from "@/lib/data";
 
 export function Leaderboard({
-  rankingBasis = "Last 30 days · Resolved markets only · Sorted by Crucible Score ↓",
+  stats,
+  source = "demo",
+  rankingBasis = "All-time · Resolved markets only · Sorted by Crucible Score ↓",
 }: {
+  stats: LiveAgentStats[];
+  source?: "live" | "demo";
   rankingBasis?: string;
 }) {
-  const stats = getStats();
+  if (stats.length === 0) {
+    return (
+      <section className="panel panel-live">
+        <div className="px-5 py-4 border-b border-border-subtle">
+          <h2 className="heading text-base text-text-primary">Leaderboard</h2>
+        </div>
+        <div className="px-5 py-8 text-text-muted text-sm mono">
+          [WARMING UP] No scored predictions yet. First scores in ~6h.
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="panel panel-live">
       <div className="px-5 py-4 flex items-center justify-between border-b border-border-subtle">
-        <h2 className="heading text-base text-text-primary">Leaderboard</h2>
+        <h2 className="heading text-base text-text-primary flex items-center gap-3">
+          Leaderboard
+          <span
+            className={`mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${
+              source === "live"
+                ? "bg-positive/10 text-positive"
+                : "bg-warn/10 text-warn"
+            }`}
+          >
+            {source}
+          </span>
+        </h2>
         <div className="mono text-xs text-text-muted uppercase tracking-wider">
           {rankingBasis}
         </div>

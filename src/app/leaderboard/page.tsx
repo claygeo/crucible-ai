@@ -1,12 +1,16 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Leaderboard } from "@/components/Leaderboard";
+import { getAgentStats } from "@/lib/data";
+
+export const revalidate = 300;
 
 export const metadata = {
   title: "Leaderboard — Crucible",
 };
 
-export default function LeaderboardPage() {
+export default async function LeaderboardPage() {
+  const stats = await getAgentStats();
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -21,7 +25,7 @@ export default function LeaderboardPage() {
             markets.
           </p>
         </div>
-        <Leaderboard />
+        <Leaderboard stats={stats.rows} source={stats.source} />
       </main>
       <Footer />
     </div>

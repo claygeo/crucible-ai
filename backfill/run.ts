@@ -409,14 +409,16 @@ function runClaude(
       .filter(Boolean)
       .join("\n");
 
+    // Use --system-prompt to REPLACE the default system prompt (no project
+    // context loading). Pipe the user message via stdin to avoid Windows
+    // argument-escaping issues with JSON braces / quotes.
     const args: string[] = [
       "-p",
-      "--bare", // skip hooks, plugins, auto-memory; faster + deterministic
       "--model",
       agent.model,
       "--effort",
       agent.effort,
-      "--append-system-prompt",
+      "--system-prompt",
       agent.systemPrompt,
       "--json-schema",
       JSON.stringify(FORECAST_SCHEMA),
@@ -424,14 +426,25 @@ function runClaude(
       "0.40",
       "--output-format",
       "json",
-      userMessage,
+      "--input-format",
+      "text",
     ];
 
-    const child = spawn("claude", args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env, CI: "1" },
-      shell: process.platform === "win32",
-    });
+    // Windows npm shim is claude.cmd. shell:true mangles args with JSON braces.
+    // Direct invocation via cmd.exe /c works AND lets us stream stdin cleanly.
+    const isWin = process.platform === "win32";
+    const child = isWin
+      ? spawn("cmd.exe", ["/c", "claude.cmd", ...args], {
+          stdio: ["pipe", "pipe", "pipe"],
+          env: { ...process.env, CI: "1" },
+          windowsHide: true,
+        })
+      : spawn("claude", args, {
+          stdio: ["pipe", "pipe", "pipe"],
+          env: { ...process.env, CI: "1" },
+        });
+    child.stdin.write(userMessage);
+    child.stdin.end();
 
     let stdout = "";
     let stderr = "";
