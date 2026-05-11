@@ -61,7 +61,7 @@ export default async function AgentDetailPage({
       <Header />
       <main className="flex-1 max-w-[1280px] w-full mx-auto px-6 py-12 flex flex-col gap-10">
         {/* Breadcrumb */}
-        <nav className="mono text-xs text-text-muted">
+        <nav aria-label="Breadcrumb" className="mono text-xs text-text-muted">
           <Link href="/agents" className="hover:text-text-primary">
             agents
           </Link>
@@ -154,25 +154,25 @@ export default async function AgentDetailPage({
                 Latest 12 · scored where resolved
               </span>
             </div>
-            <table className="w-full">
+            <table className="w-full" aria-label={`Recent forecasts for ${agent.name}`}>
               <thead>
                 <tr className="border-b border-border-subtle text-text-muted">
-                  <th className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
                     Market
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Forecast
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Market
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Outcome
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Brier
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     When
                   </th>
                 </tr>

@@ -245,32 +245,32 @@ export default async function BenchmarkPage() {
         {/* Full leaderboard */}
         <section className="flex flex-col gap-3">
           <h2 className="heading text-xl text-text-primary">Full leaderboard</h2>
-          <div className="panel">
-            <table className="w-full">
+          <div className="panel overflow-x-auto" role="region" aria-label="Full benchmark leaderboard">
+            <table className="w-full" aria-label="Full agent benchmark leaderboard">
               <thead>
                 <tr className="border-b border-border-subtle text-text-muted">
-                  <th className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
                     Rank
                   </th>
-                  <th className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
                     Agent
                   </th>
-                  <th className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
                     Model
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Brier ↓
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Log-loss ↓
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Win %
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Paper P&amp;L
                   </th>
-                  <th className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     N
                   </th>
                 </tr>
