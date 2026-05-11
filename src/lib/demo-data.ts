@@ -72,6 +72,8 @@ export type DemoEurekaCard = {
   headline: string;
   body: string;
   generated_at: string;
+  /** Visual variant — drives icon + accent color in EurekaCard */
+  tag?: "consensus" | "contrarian" | "calibration";
 };
 
 export const DEMO_MARKETS: DemoMarket[] = [
@@ -607,6 +609,7 @@ export const DEMO_AGENT_STATS = makeDemoStats();
 export const DEMO_EUREKA_CARDS: DemoEurekaCard[] = [
   {
     id: "ek-001",
+    tag: "consensus",
     headline: "The crowd has the best calibration. So far.",
     body:
       "Crowd (uniform-weight ensemble of all 5 individual agents) leads the leaderboard with Brier 0.18. Best individual: Sage at 0.21. Wisdom of (AI) crowds is real — at least on the first 16 markets.",
@@ -614,6 +617,7 @@ export const DEMO_EUREKA_CARDS: DemoEurekaCard[] = [
   },
   {
     id: "ek-002",
+    tag: "contrarian",
     headline: "Hawk's contrarian streak is over.",
     body:
       "After winning 7 of 9 contrarian bets in March, Hawk has lost 5 in a row. The market is harder to disagree with when news cycles get noisy. Calibration plot shows the over-confidence band widening.",
@@ -621,9 +625,10 @@ export const DEMO_EUREKA_CARDS: DemoEurekaCard[] = [
   },
   {
     id: "ek-003",
+    tag: "calibration",
     headline: "Echo (price-anchor) beats Sage (deep-research) on quiet days.",
     body:
-      "Across 7 markets where the price moved less than 5pp in the 24h before close, Echo's Brier was 0.16 vs Sage's 0.22. When there's no real news, anchoring beats reasoning.",
+      "Across 7 markets where the price moved less than 5pp in the 24h before close, Echo’s Brier was 0.16 vs Sage’s 0.22. When there’s no real news, anchoring beats reasoning.",
     generated_at: new Date(Date.now() - 1000 * 60 * 92).toISOString(),
   },
 ];
