@@ -47,6 +47,10 @@ const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 const RESOLVED_AFTER = new Date("2026-02-01T00:00:00Z");
 const RESOLVED_BEFORE = new Date("2026-05-08T00:00:00Z");
 
+// Strip per-market detail of resolution date so the model is in a "what was
+// the probability at market open" mindset instead of "I know how this resolved".
+// We don't pass the resolution outcome to the model. We only score after.
+
 // Agents (mirror of src/lib/agents.ts — duplicated here so backfill is standalone)
 type AgentDef = {
   id: string;
@@ -410,8 +414,11 @@ function runClaude(
       .join("\n");
 
     // Use --system-prompt to REPLACE the default system prompt (no project
-    // context loading). Pipe the user message via stdin to avoid Windows
-    // argument-escaping issues with JSON braces / quotes.
+    // context loading). Disallow tools so claude doesn't try web search and
+    // burn budget on permission denials. Run from /tmp (no CLAUDE.md to load).
+    // Don't use --json-schema (forces a tool call which complicates output
+    // parsing). Instead, ask for JSON in the system prompt + extract from
+    // result text directly.
     const args: string[] = [
       "-p",
       "--model",
@@ -419,29 +426,31 @@ function runClaude(
       "--effort",
       agent.effort,
       "--system-prompt",
-      agent.systemPrompt,
-      "--json-schema",
-      JSON.stringify(FORECAST_SCHEMA),
+      agent.systemPrompt +
+        '\n\nOUTPUT FORMAT — strict requirement:\nReply with EXACTLY ONE JSON object on a single line. No markdown. No code fences. No prose before or after.\nUse THIS schema and EXACTLY these field names:\n{"probability": <number between 0.01 and 0.99>, "confidence": "low"|"medium"|"high", "reasoning": "<one paragraph>", "abstain": false}\n\nDo NOT rename "probability" to "forecast" or "p_yes" or "probability_yes". Use the literal key "probability". The value must be a number, not a string.',
+      "--disallowedTools",
+      "WebSearch,WebFetch,Bash,Read,Write,Edit,Glob,Grep,Task",
       "--max-budget-usd",
-      "0.40",
-      "--output-format",
-      "json",
-      "--input-format",
-      "text",
+      "0.30",
+      "--max-turns",
+      "5",
     ];
 
     // Windows npm shim is claude.cmd. shell:true mangles args with JSON braces.
     // Direct invocation via cmd.exe /c works AND lets us stream stdin cleanly.
+    // CWD = /tmp so claude.cmd doesn't auto-load the crucible CLAUDE.md (~33k tokens).
     const isWin = process.platform === "win32";
     const child = isWin
       ? spawn("cmd.exe", ["/c", "claude.cmd", ...args], {
           stdio: ["pipe", "pipe", "pipe"],
           env: { ...process.env, CI: "1" },
+          cwd: process.env.TEMP ?? "C:\\Windows\\Temp",
           windowsHide: true,
         })
       : spawn("claude", args, {
           stdio: ["pipe", "pipe", "pipe"],
           env: { ...process.env, CI: "1" },
+          cwd: "/tmp",
         });
     child.stdin.write(userMessage);
     child.stdin.end();
@@ -457,30 +466,66 @@ function runClaude(
     child.stderr.on("data", (chunk) => (stderr += chunk.toString()));
     child.on("close", (code) => {
       clearTimeout(timer);
-      if (code !== 0) {
-        return reject(
-          new Error(`claude exit ${code}: ${stderr.slice(0, 500)}`)
-        );
-      }
       try {
-        // Output format JSON: top-level has 'result' field with our content
-        const parsed = JSON.parse(stdout);
-        const text =
-          typeof parsed.result === "string"
-            ? parsed.result
-            : typeof parsed.text === "string"
-              ? parsed.text
-              : JSON.stringify(parsed);
-        // The result itself should be a JSON string matching our schema
-        let inner: Record<string, unknown> = {};
-        try {
-          inner = JSON.parse(text);
-        } catch {
-          // Sometimes claude returns the JSON inside a code fence
-          const m = text.match(/\{[\s\S]*"probability"[\s\S]*\}/);
-          if (m) inner = JSON.parse(m[0]);
+        // No --output-format json: stdout is the raw text response from claude.
+        // (Claude's JSON output mode wraps tool calls inconveniently when using
+        // --max-turns; raw text is simpler.)
+        const text = stdout.trim();
+
+        // Detect explicit error markers
+        if (
+          text.includes("Reached maximum budget") ||
+          text.includes("Reached maximum number of turns")
+        ) {
+          return reject(new Error(`claude error: ${text.slice(0, 200)}`));
         }
-        const probability = clamp(Number(inner.probability));
+        if (text.length === 0) {
+          return reject(
+            new Error(`claude returned empty stderr=${stderr.slice(0, 200)}`)
+          );
+        }
+
+        // Find the JSON body by locating the FIRST { and LAST } in the text.
+        // This handles ```json...``` fences, leading prose, trailing prose.
+        let inner: Record<string, unknown> = {};
+        const firstBrace = text.indexOf("{");
+        const lastBrace = text.lastIndexOf("}");
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+          const candidate = text.slice(firstBrace, lastBrace + 1);
+          try {
+            inner = JSON.parse(candidate);
+          } catch {
+            // Try with smart-quote replacement
+            try {
+              inner = JSON.parse(
+                candidate.replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+              );
+            } catch {}
+          }
+        }
+        // Accept multiple aliases for `probability` field — agents use varied names
+        const probField =
+          typeof inner.probability === "number"
+            ? inner.probability
+            : typeof inner.probability_yes === "number"
+              ? inner.probability_yes
+              : typeof inner.p_yes === "number"
+                ? inner.p_yes
+                : typeof inner.forecast === "number"
+                  ? inner.forecast
+                  : typeof inner.p === "number"
+                    ? inner.p
+                    : typeof inner.prob === "number"
+                      ? inner.prob
+                      : typeof inner.yes === "number"
+                        ? inner.yes
+                        : NaN;
+        if (!Number.isFinite(probField)) {
+          return reject(
+            new Error(`no probability in response. text=${text.slice(0, 300)}`)
+          );
+        }
+        const probability = clamp(Number(probField));
         const confidence =
           inner.confidence === "low" || inner.confidence === "high"
             ? inner.confidence
@@ -850,8 +895,35 @@ async function main() {
   const polyMarkets = SOURCE === "manifold" ? [] : await pullPolymarketResolved();
   const manifoldMarkets =
     SOURCE === "polymarket" ? [] : await pullManifoldResolved();
-  const all = [...polyMarkets, ...manifoldMarkets].slice(0, LIMIT);
-  console.log(`[backfill] using ${all.length} markets total`);
+  const combined = [...polyMarkets, ...manifoldMarkets];
+
+  // Diversify: round-robin across categories so we don't overfit to crypto FDV.
+  // Group by category, then interleave.
+  const byCategory = new Map<string, CommonMarket[]>();
+  for (const m of combined) {
+    const arr = byCategory.get(m.category) ?? [];
+    arr.push(m);
+    byCategory.set(m.category, arr);
+  }
+  // Cap each category's contribution to LIMIT/categories so no one category dominates.
+  const categories = Array.from(byCategory.keys());
+  const all: CommonMarket[] = [];
+  let idx = 0;
+  while (all.length < LIMIT) {
+    const cat = categories[idx % categories.length];
+    const list = byCategory.get(cat)!;
+    const taken = all.filter((m) => m.category === cat).length;
+    if (taken < list.length) {
+      all.push(list[taken]!);
+    }
+    idx += 1;
+    // Bail if all categories exhausted
+    if (idx > 1000) break;
+    if (all.length === combined.length) break;
+  }
+  console.log(
+    `[backfill] using ${all.length} markets total across categories: ${[...byCategory.entries()].map(([c, m]) => `${c}=${m.length}`).join(", ")}`
+  );
 
   if (DRY) {
     console.log("DRY RUN — would forecast on:");
