@@ -17,7 +17,7 @@ export async function GET() {
     status: "ok",
     deployed_at: process.env.BUILD_TIME ?? new Date().toISOString(),
     demo_mode:
-      (process.env.NEXT_PUBLIC_USE_DEMO_DATA ?? "true").toLowerCase() ===
+      (process.env.NEXT_PUBLIC_USE_DEMO_DATA ?? "false").toLowerCase() ===
       "true",
     has_anthropic_key: Boolean(process.env.ANTHROPIC_API_KEY),
     has_openai_key: Boolean(process.env.OPENAI_API_KEY),
