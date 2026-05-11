@@ -7,7 +7,7 @@ import { HeroMetric } from "@/components/HeroMetric";
 import { getAgentStats, getCounters, getEurekaCards } from "@/lib/data";
 import { int } from "@/lib/format";
 
-export const revalidate = 300; // ISR every 5 min
+export const revalidate = 120; // 2-min ISR so backfill updates show fast
 
 export default async function HomePage() {
   // Fetch all data in parallel — live if Supabase has data, demo otherwise
