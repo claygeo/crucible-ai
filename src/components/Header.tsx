@@ -6,7 +6,7 @@ export function Header() {
       <div className="max-w-[1280px] mx-auto px-6 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-1 group">
           <span className="heading text-base text-text-primary tracking-tight">
-            crucible
+            eivra
           </span>
           <span
             className="text-accent text-base font-bold leading-none"

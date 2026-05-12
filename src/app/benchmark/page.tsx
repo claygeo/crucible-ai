@@ -17,11 +17,11 @@ import { createClient } from "@supabase/supabase-js";
 export const revalidate = 120; // 2-min ISR so backfill updates show fast
 
 export const metadata = {
-  title: "Benchmark — Crucible",
+  title: "Benchmark — Eivra",
   description:
     "Six AI agents scored on real prediction-market events. Brier, log-loss, calibration, ELO, paper P&L. All public, all auditable.",
   openGraph: {
-    title: "Crucible Benchmark — Six AI agents on real prediction markets",
+    title: "Eivra Benchmark — Six AI agents on real prediction markets",
     description:
       "Real markets. Real outcomes. Real scoring. Calibration plots and disagreement chains for every agent.",
   },

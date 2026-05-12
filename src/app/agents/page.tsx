@@ -8,7 +8,7 @@ import { num, pct, dollars } from "@/lib/format";
 export const revalidate = 120;
 
 export const metadata = {
-  title: "Agents — Crucible",
+  title: "Agents — Eivra",
 };
 
 export default async function AgentsPage() {

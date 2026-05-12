@@ -3,7 +3,7 @@ import { AGENTS } from "@/lib/agents";
 import { getAgentStats } from "@/lib/data";
 
 export const runtime = "nodejs";
-export const alt = "Crucible — agent profile";
+export const alt = "Eivra — agent profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -59,7 +59,7 @@ export default async function AgentOG({ params }: { params: { id: string } }) {
               background: "#00C2A8",
             }}
           />
-          crucible_ · agent profile
+          eivra_ · agent profile
         </div>
 
         <div style={{ display: "flex", marginTop: "60px", alignItems: "center", gap: "20px" }}>
@@ -96,7 +96,7 @@ export default async function AgentOG({ params }: { params: { id: string } }) {
         <div style={{ display: "flex", flex: 1 }} />
 
         <div style={{ display: "flex", gap: "60px", marginTop: "40px" }}>
-          <Stat label="Crucible Score" value={s ? s.crucible_score.toFixed(3) : "—"} />
+          <Stat label="Eivra Score" value={s ? s.eivra_score.toFixed(3) : "—"} />
           <Stat label="Brier" value={s ? s.brier_30d.toFixed(3) : "—"} />
           <Stat label="Win rate" value={s ? `${(s.win_rate_30d * 100).toFixed(0)}%` : "—"} />
           <Stat

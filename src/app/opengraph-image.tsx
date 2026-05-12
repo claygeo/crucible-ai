@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { getCounters, getAgentStats } from "@/lib/data";
 
 export const runtime = "nodejs";
-export const alt = "Crucible — live AI forecasting colosseum";
+export const alt = "Eivra — live AI forecasting colosseum";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -47,7 +47,7 @@ export default async function OG() {
               background: "#00C2A8",
             }}
           />
-          crucible_ · live AI forecasting colosseum
+          eivra_ · live AI forecasting colosseum
         </div>
 
         <div

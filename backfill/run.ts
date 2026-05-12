@@ -1,5 +1,5 @@
 /**
- * backfill/run.ts — populate Crucible with REAL agent predictions on REAL
+ * backfill/run.ts — populate Eivra with REAL agent predictions on REAL
  * resolved historical markets, using the operator's local `claude` CLI
  * (Max subscription) as the LLM backend. No Anthropic API key required.
  *
@@ -186,7 +186,7 @@ async function pullPolymarketResolved(): Promise<CommonMarket[]> {
   while (out.length < 300 && offset < 4000) {
     const url = `https://gamma-api.polymarket.com/markets?closed=true&order=endDate&ascending=false&limit=100&offset=${offset}`;
     const res = await fetch(url, {
-      headers: { "user-agent": "crucible-ai-backfill/0.1" },
+      headers: { "user-agent": "eivra-backfill/0.1" },
     });
     if (!res.ok) {
       console.warn(`[polymarket] HTTP ${res.status}: ${await res.text()}`);
@@ -294,7 +294,7 @@ async function pullManifoldResolved(): Promise<CommonMarket[]> {
       `https://api.manifold.markets/v0/markets?limit=100` +
       (before ? `&before=${before}` : "");
     const res = await fetch(url, {
-      headers: { "user-agent": "crucible-ai-backfill/0.1" },
+      headers: { "user-agent": "eivra-backfill/0.1" },
     });
     if (!res.ok) {
       console.warn(`[manifold] HTTP ${res.status}`);
@@ -438,7 +438,7 @@ function runClaude(
 
     // Windows npm shim is claude.cmd. shell:true mangles args with JSON braces.
     // Direct invocation via cmd.exe /c works AND lets us stream stdin cleanly.
-    // CWD = /tmp so claude.cmd doesn't auto-load the crucible CLAUDE.md (~33k tokens).
+    // CWD = /tmp so claude.cmd doesn't auto-load the eivra CLAUDE.md (~33k tokens).
     const isWin = process.platform === "win32";
     const child = isWin
       ? spawn("cmd.exe", ["/c", "claude.cmd", ...args], {
@@ -781,7 +781,7 @@ async function refreshAgentStats() {
     );
   }
 
-  // Crucible Score + ranks
+  // Eivra Score + ranks
   const { data: stats } = await sb
     .from("agent_stats")
     .select("agent_id, brier_30d, log_loss_30d, win_rate_30d");
@@ -806,7 +806,7 @@ async function refreshAgentStats() {
   for (let i = 0; i < scored.length; i++) {
     await sb
       .from("agent_stats")
-      .update({ crucible_score: scored[i].cs, rank: i + 1 })
+      .update({ eivra_score: scored[i].cs, rank: i + 1 })
       .eq("agent_id", scored[i].agent_id);
   }
   console.log("[refresh] done");

@@ -7,7 +7,7 @@ import type { LiveAgentStats } from "@/lib/data";
 export function Leaderboard({
   stats,
   source = "demo",
-  rankingBasis = "All-time · Resolved markets only · Sorted by Crucible Score ↓",
+  rankingBasis = "All-time · Resolved markets only · Sorted by Eivra Score ↓",
 }: {
   stats: LiveAgentStats[];
   source?: "live" | "demo";
@@ -57,7 +57,7 @@ export function Leaderboard({
                 Agent
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                Crucible
+                Eivra
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Brier ↓
@@ -127,7 +127,7 @@ export function Leaderboard({
                     </Link>
                   </td>
                   <td className="px-4 py-3 mono text-right text-text-primary">
-                    {num(s.crucible_score, 3)}
+                    {num(s.eivra_score, 3)}
                   </td>
                   <td className="px-4 py-3 mono text-right text-text-secondary">
                     {num(s.brier_30d, 3)}

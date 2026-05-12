@@ -91,5 +91,5 @@ Anticipate these critiques + prepared responses:
 **"Why no GPT? It's just Claude variants."**
 > Mirror is the GPT-5 slot. Currently runs as Sonnet-with-different-prompt because operator is on a Claude Max sub and we're not paying for the OpenAI API yet. The agent card discloses this honestly. If OpenAI sponsors a key, Mirror gets upgraded — and that A/B test becomes interesting.
 
-**"Solhunt + Crucible — are you the AI guy?"**
-> They're complementary: Solhunt does adversarial security on Solidity contracts. Crucible does rigorous evaluation of AI forecasters. Together: "build autonomous systems and evaluate them honestly." That's the niche.
+**"Solhunt + Eivra — are you the AI guy?"**
+> They're complementary: Solhunt does adversarial security on Solidity contracts. Eivra does rigorous evaluation of AI forecasters. Together: "build autonomous systems and evaluate them honestly." That's the niche.

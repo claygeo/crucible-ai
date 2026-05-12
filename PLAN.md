@@ -1,4 +1,4 @@
-# Crucible — Build Plan (week of 2026-05-10 → 2026-05-17)
+# Eivra — Build Plan (week of 2026-05-10 → 2026-05-17)
 
 > Built autonomously by Claude Opus 4.7. Operator away the entire week.
 > **Plan version 2** — revised after /autoplan dual-voice review (codex + Claude subagent), 2026-05-10.
@@ -113,7 +113,7 @@ Week-2 stretch: user-submitted agents (paste a system prompt + temperature + mod
 2. **Demo data:** 25 historical markets, mix of resolved + open, across 6 agents. Frozen JSON in `db/seed/demo-markets.json`.
 3. **Agent budget:** $1/day per Opus agent, $0.50/day per Sonnet, $0.20/day per Haiku, $1/day per OpenAI agent. Surface in admin.
 4. **Reasoning trace:** show full mono trace, but collapsed by default (~200 chars preview). User clicks to expand. Mobile = expand-only modal.
-5. **Composite score:** call it "Crucible Score" = weighted blend of normalized Brier (50%) + ELO percentile (30%) + 7-day calibration delta (20%). Surfaces on leaderboard.
+5. **Composite score:** call it "Eivra Score" = weighted blend of normalized Brier (50%) + ELO percentile (30%) + 7-day calibration delta (20%). Surfaces on leaderboard.
 
 ## Risks (with mitigations)
 

@@ -7,7 +7,7 @@ import { relativeTime, pct } from "@/lib/format";
 export const revalidate = 120;
 
 export const metadata = {
-  title: "Markets — Crucible",
+  title: "Markets — Eivra",
 };
 
 export default async function MarketsPage() {

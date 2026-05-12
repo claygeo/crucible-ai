@@ -47,7 +47,7 @@ async function pullPolymarket(): Promise<CommonMarket[]> {
   const url =
     "https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=80";
   const res = await fetch(url, {
-    headers: { "user-agent": "crucible.ai-bot/0.1" },
+    headers: { "user-agent": "eivra-bot/0.1" },
   });
   if (!res.ok) {
     throw new Error(`polymarket gamma ${res.status}: ${await res.text()}`);
@@ -100,7 +100,7 @@ async function pullManifold(): Promise<CommonMarket[]> {
   // Docs: https://docs.manifold.markets/api
   const url = "https://api.manifold.markets/v0/markets?limit=80";
   const res = await fetch(url, {
-    headers: { "user-agent": "crucible.ai-bot/0.1" },
+    headers: { "user-agent": "eivra-bot/0.1" },
   });
   if (!res.ok) {
     throw new Error(`manifold ${res.status}: ${await res.text()}`);
