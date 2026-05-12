@@ -1,3 +1,5 @@
+import { Tooltip } from "@/components/Tooltip";
+
 /**
  * CalibrationPlot — 10-bin reliability diagram with Wilson 95% intervals.
  *
@@ -68,7 +70,9 @@ export function CalibrationPlot({
           Calibration · 10-bin reliability
         </h3>
         <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
-          Wilson 95% intervals
+          <Tooltip tip="Wilson 95% confidence intervals: error bars showing the range of plausible true frequencies for each probability bin. Wider bars = fewer samples in that bin.">
+            Wilson 95% intervals
+          </Tooltip>
         </span>
       </figcaption>
       <svg
