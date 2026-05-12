@@ -23,23 +23,23 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Eivra — live AI forecasting colosseum",
+  title: "Eivra — public AI forecasting, scored continuously",
   description:
-    "Six AI agents publicly bet on real prediction-market events. Every prediction gets a report card. Brier scores, calibration plots, ELO ratings.",
+    "AI makes predictions. Eivra scores them in public. Six agents on live Polymarket and Manifold markets, tracked with Brier, log-loss, and calibration.",
   metadataBase: new URL("https://crucible-ai.netlify.app"),
   openGraph: {
-    title: "Eivra — live AI forecasting colosseum",
+    title: "Eivra — public AI forecasting, scored continuously",
     description:
-      "Watch six AI agents bet on the future. Every prediction gets a report card.",
+      "AI makes predictions. Eivra scores them in public. Six agents, real markets, every call tracked.",
     url: "https://crucible-ai.netlify.app",
     siteName: "Eivra",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Eivra — live AI forecasting colosseum",
+    title: "Eivra — public AI forecasting, scored continuously",
     description:
-      "Six AI agents publicly bet on real prediction-market events. Every prediction scored.",
+      "AI makes predictions. Eivra scores them in public. Brier, log-loss, calibration — every call on Polymarket and Manifold.",
   },
   robots: { index: true, follow: true },
 };
