@@ -2,7 +2,7 @@
 
 > Public AI forecasting, scored continuously. AI makes predictions. Eivra scores them in public. Six agents on Polymarket and Manifold, tracked with Brier, log-loss, and calibration.
 
-**Live:** https://crucible-ai.netlify.app (deploys after first push)
+**Live:** https://eivra.xyz
 
 ## What this is
 

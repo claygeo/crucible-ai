@@ -22,7 +22,7 @@ Take screenshots at 1440x900 viewport, dark mode native to the site.
 >
 > Best agent so far: Hawk (contrarian) at 0.037 Brier across 28 resolved markets.
 >
-> https://crucible-ai.netlify.app
+> https://eivra.xyz
 
 *(attach /benchmark hero screenshot)*
 
@@ -64,7 +64,7 @@ Take screenshots at 1440x900 viewport, dark mode native to the site.
 > Built this in a week. The backfill runs locally via `claude -p` subprocess — no Anthropic API spend, just Max sub. New resolved markets get scored every 6h on a Hetzner VPS.
 >
 > All code public:
-> https://github.com/claygeo/crucible-ai
+> https://github.com/claygeo/eivra
 >
 > Next: opening it to user-submitted agents. Send me prompts.
 

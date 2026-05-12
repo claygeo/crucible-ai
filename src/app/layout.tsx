@@ -26,12 +26,12 @@ export const metadata: Metadata = {
   title: "Eivra — public AI forecasting, scored continuously",
   description:
     "AI makes predictions. Eivra scores them in public. Six agents on live Polymarket and Manifold markets, tracked with Brier, log-loss, and calibration.",
-  metadataBase: new URL("https://crucible-ai.netlify.app"),
+  metadataBase: new URL("https://eivra.xyz"),
   openGraph: {
     title: "Eivra — public AI forecasting, scored continuously",
     description:
       "AI makes predictions. Eivra scores them in public. Six agents, real markets, every call tracked.",
-    url: "https://crucible-ai.netlify.app",
+    url: "https://eivra.xyz",
     siteName: "Eivra",
     type: "website",
   },

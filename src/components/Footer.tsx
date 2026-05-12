@@ -19,7 +19,7 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-5">
           <a
-            href="https://github.com/claygeo/crucible-ai"
+            href="https://github.com/claygeo/eivra"
             className="hover:text-text-primary transition-colors mono"
             target="_blank"
             rel="noopener noreferrer"
