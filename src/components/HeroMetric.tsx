@@ -1,6 +1,7 @@
 import { signed, num } from "@/lib/format";
 import { AGENTS } from "@/lib/agents";
 import type { LiveAgentStats } from "@/lib/data";
+import { Tooltip } from "@/components/Tooltip";
 
 /**
  * Hero metric on the homepage.
@@ -40,7 +41,9 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
       </div>
       <div className="flex flex-col items-start sm:items-end gap-1">
         <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-          Brier delta
+          <Tooltip tip="Brier delta: best agent's Brier score minus Echo's (market-anchor) Brier. Negative = beats the market. Lower Brier is better.">
+            Brier delta
+          </Tooltip>
         </div>
         <div
           className={`heading text-3xl ${

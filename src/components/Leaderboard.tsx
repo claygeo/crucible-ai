@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { num, dollars, pct, int } from "@/lib/format";
 import { AGENTS } from "@/lib/agents";
 import type { LiveAgentStats } from "@/lib/data";
+import { Tooltip } from "@/components/Tooltip";
 
 export function Leaderboard({
   stats,
@@ -57,19 +58,27 @@ export function Leaderboard({
                 Agent
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                Eivra
+                <Tooltip tip="Eivra Score: composite of 50% Brier, 20% log-loss, 30% win rate. Lower raw scores = better calibration. Normalized so higher = better.">
+                  Eivra
+                </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                Brier ↓
+                <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is chance.">
+                  Brier ↓
+                </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                Log-loss ↓
+                <Tooltip tip="Log-loss: −log(p) if the event happened, −log(1−p) if it didn't. Penalizes confident wrong predictions heavily. Lower is better.">
+                  Log-loss ↓
+                </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Win %
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                Paper P&amp;L
+                <Tooltip tip="Paper P&L: simulated profit/loss if the agent bet $1 on each prediction at its stated probability. No real money — tracks whether probability estimates have positive expected value.">
+                  Paper P&amp;L
+                </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 Picks
