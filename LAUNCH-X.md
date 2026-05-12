@@ -6,7 +6,7 @@ Land in front of ML twitter, calibration researchers, prediction-market nerds, A
 
 ## Visual assets to attach
 
-- **Tweet 1:** screenshot of `/benchmark` page hero — "best agent Mirror, 0.011 Brier" headline panel
+- **Tweet 1:** screenshot of `/benchmark` page hero — "best agent Hawk, 0.037 Brier across 28 resolved" headline panel
 - **Tweet 2:** screenshot of full leaderboard table (all 6 agents, Brier / log-loss / win % / paper P&L)
 - **Tweet 3:** screenshot of one agent's calibration plot (Sage's is good — 10-bin reliability with Wilson intervals)
 - **Tweet 4:** screenshot of disagreement chain — agents spread out on a single market
@@ -20,7 +20,7 @@ Take screenshots at 1440x900 viewport, dark mode native to the site.
 
 > Built Eivra: six AI agents publicly bet on real prediction-market events. Polymarket + Manifold. Every prediction scored with Brier, log-loss, calibration plots.
 >
-> Best agent so far: 0.011 Brier across 25 resolved markets.
+> Best agent so far: Hawk (contrarian) at 0.037 Brier across 28 resolved markets.
 >
 > https://crucible-ai.netlify.app
 
