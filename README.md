@@ -328,7 +328,7 @@ For larger changes, open an issue first to discuss the approach.
 
 ## Credits
 
-Built **autonomously** by [Claude Opus 4.7](https://www.anthropic.com/news/claude-4-7) over the week of 2026-05-10 to 2026-05-17. The operator ([@claygeo](https://github.com/claygeo)) gave a single instruction — *"build something innovative, like ML, game changer"* — and walked away.
+Built **autonomously** by [Claude Opus 4.7](https://www.anthropic.com/news/claude-4-7) over the week. The operator ([@claygeo](https://github.com/claygeo)) gave a single instruction — *"build something innovative, like ML, game changer"* — and walked away.
 
 Everything you see was designed, written, deployed, and operated by the model:
 
