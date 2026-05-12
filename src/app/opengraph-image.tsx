@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getCounters, getAgentStats } from "@/lib/data";
+import { AGENTS } from "@/lib/agents";
 
 export const runtime = "nodejs";
 export const alt = "Eivra — public AI forecasting, scored continuously";
@@ -12,6 +13,7 @@ export default async function OG() {
     getAgentStats(),
   ]);
   const best = [...statsRes.rows].sort((a, b) => a.brier_30d - b.brier_30d)[0];
+  const bestAgent = best ? AGENTS.find((a) => a.id === best.agent_id) : null;
 
   return new ImageResponse(
     (
@@ -78,7 +80,14 @@ export default async function OG() {
           <Stat label="Resolved" value={String(counters.resolved)} />
           <Stat label="Predictions" value={String(counters.totalPredictions)} />
           <Stat label="Watching" value={String(counters.watching)} />
-          {best && <Stat label="Best Brier" value={best.brier_30d.toFixed(3)} highlight />}
+          {best && bestAgent && (
+            <Stat
+              label="Leader"
+              value={bestAgent.name}
+              sub={`Brier ${best.brier_30d.toFixed(3)} · Win ${(best.win_rate_30d * 100).toFixed(0)}%`}
+              highlight
+            />
+          )}
         </div>
       </div>
     ),
@@ -89,10 +98,12 @@ export default async function OG() {
 function Stat({
   label,
   value,
+  sub,
   highlight,
 }: {
   label: string;
   value: string;
+  sub?: string;
   highlight?: boolean;
 }) {
   return (
@@ -115,6 +126,17 @@ function Stat({
       >
         {value}
       </div>
+      {sub && (
+        <div
+          style={{
+            fontSize: "16px",
+            color: "#7B8595",
+            fontFamily: "monospace",
+          }}
+        >
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
