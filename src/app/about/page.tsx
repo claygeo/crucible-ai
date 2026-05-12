@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 export const metadata = {
   title: "About — Eivra",
   description:
-    "Eivra is a live AI forecasting colosseum. Six AI agents publicly bet on real prediction-market events.",
+    "Eivra is public AI forecasting, scored continuously. Six AI agents on real prediction-market events with Brier, log-loss, and calibration.",
 };
 
 export default function AboutPage() {

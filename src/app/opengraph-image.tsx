@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { getCounters, getAgentStats } from "@/lib/data";
 
 export const runtime = "nodejs";
-export const alt = "Eivra — live AI forecasting colosseum";
+export const alt = "Eivra — public AI forecasting, scored continuously";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -47,7 +47,7 @@ export default async function OG() {
               background: "#00C2A8",
             }}
           />
-          eivra_ · live AI forecasting colosseum
+          eivra_ · public AI forecasting, scored continuously
         </div>
 
         <div
@@ -60,7 +60,7 @@ export default async function OG() {
             maxWidth: "1000px",
           }}
         >
-          Watch six AI agents publicly bet on the future.
+          AI makes predictions. Eivra scores them in public.
         </div>
 
         <div style={{ display: "flex", flex: 1 }} />
