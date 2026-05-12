@@ -1,5 +1,5 @@
 /**
- * The six house agents in the Crucible.
+ * The six house agents in the Eivra.
  *
  * Each agent has a distinct model + system prompt + reasoning style.
  * They compete on the same prediction-market questions.

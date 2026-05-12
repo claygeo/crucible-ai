@@ -90,7 +90,7 @@ export async function getAgentStats(): Promise<{
       total_scored: Number(s.total_scored ?? 0),
       win_rate_30d: Number(s.win_rate_30d ?? 0),
       paper_pnl_30d: Number(s.paper_pnl_30d ?? 0),
-      crucible_score: Number(s.crucible_score ?? 0),
+      eivra_score: Number(s.eivra_score ?? 0),
       rank: Number(s.rank ?? 99),
       rank_delta_24h: Number(s.rank_delta_24h ?? 0),
       calibration: (s.calibration as LiveAgentStats["calibration"]) ?? [],

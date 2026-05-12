@@ -29,7 +29,7 @@ export async function generateMetadata({
   const { market } = await getMarketById(id);
   if (!market) return {};
   return {
-    title: `${market.question.slice(0, 60)} — Crucible`,
+    title: `${market.question.slice(0, 60)} — Eivra`,
     description: `Live agent forecasts on: ${market.question}`,
   };
 }

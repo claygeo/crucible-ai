@@ -1,6 +1,6 @@
 # VPS backfill cron — one-time setup
 
-**Goal:** keep Crucible's leaderboard fresh by re-running the backfill every 6h on your Hetzner VPS (77.42.83.22), so new resolved Polymarket/Manifold markets keep flowing in.
+**Goal:** keep Eivra's leaderboard fresh by re-running the backfill every 6h on your Hetzner VPS (77.42.83.22), so new resolved Polymarket/Manifold markets keep flowing in.
 
 **Why VPS not laptop:** laptop sleeps on lid-close (per memory), 75-min jobs would miss runs, leaderboard would look "updated when operator was awake" which kills the live-benchmark vibe. Codex verdict: VPS @ 6h cron.
 

@@ -1,4 +1,4 @@
-# Crucible — Design System
+# Eivra — Design System
 
 > Aesthetic direction: **Bloomberg terminal meets Linear app meets a forensic case file.** Confident, dense, technical. No fluff, no playful illustrations, no rounded-corner consumer vibes.
 
@@ -82,7 +82,7 @@ Horizontal stacked bars, one row per agent, sorted by absolute distance from the
 
 ## Logo / wordmark
 
-Lowercase `crucible` in IBM Plex Sans 600, slightly extended tracking. Accent used as a single underscore mark after the wordmark: `crucible_`. No icon required week-1.
+Lowercase `eivra` in IBM Plex Sans 600, slightly extended tracking. Accent used as a single underscore mark after the wordmark: `eivra_`. No icon required week-1.
 
 ## Motion
 

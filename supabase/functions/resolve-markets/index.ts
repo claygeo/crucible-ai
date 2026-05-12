@@ -44,7 +44,7 @@ async function fetchPolymarketResolution(sourceId: string): Promise<{
   try {
     const res = await fetch(
       `https://gamma-api.polymarket.com/markets/${sourceId}`,
-      { headers: { "user-agent": "crucible.ai-bot/0.1" } }
+      { headers: { "user-agent": "eivra-bot/0.1" } }
     );
     if (!res.ok) return null;
     const m = (await res.json()) as Record<string, unknown>;
@@ -79,7 +79,7 @@ async function fetchManifoldResolution(sourceId: string): Promise<{
   try {
     const res = await fetch(
       `https://api.manifold.markets/v0/market/${sourceId}`,
-      { headers: { "user-agent": "crucible.ai-bot/0.1" } }
+      { headers: { "user-agent": "eivra-bot/0.1" } }
     );
     if (!res.ok) return null;
     const m = (await res.json()) as Record<string, unknown>;
@@ -309,7 +309,7 @@ async function refreshAgentStats() {
     );
   }
 
-  // Compute Crucible Score + ranks
+  // Compute Eivra Score + ranks
   const { data: stats } = await sb
     .from("agent_stats")
     .select("agent_id, brier_30d, log_loss_30d, win_rate_30d");
@@ -332,14 +332,14 @@ async function refreshAgentStats() {
     const ln = maxL > minL ? (Number(s.log_loss_30d) - minL) / (maxL - minL) : 0;
     const cs =
       0.5 * (1 - bn) + 0.3 * Number(s.win_rate_30d) + 0.2 * (1 - ln);
-    return { agent_id: s.agent_id, crucible_score: cs };
+    return { agent_id: s.agent_id, eivra_score: cs };
   });
-  scored.sort((a, b) => b.crucible_score - a.crucible_score);
+  scored.sort((a, b) => b.eivra_score - a.eivra_score);
   for (let i = 0; i < scored.length; i++) {
     await sb
       .from("agent_stats")
       .update({
-        crucible_score: scored[i].crucible_score,
+        eivra_score: scored[i].eivra_score,
         rank: i + 1,
       })
       .eq("agent_id", scored[i].agent_id);

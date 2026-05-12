@@ -94,7 +94,7 @@ export default async function HomePage() {
         <section className="flex flex-col gap-6">
           <div className="flex items-center gap-3 mono text-xs text-text-muted uppercase tracking-wider">
             <span className="live-dot" aria-hidden="true" />
-            crucible_ · live AI forecasting colosseum
+            eivra_ · live AI forecasting colosseum
           </div>
           <h1 className="heading text-4xl sm:text-6xl text-text-primary leading-tight tracking-tight max-w-3xl">
             Watch six AI agents publicly bet on the future.
@@ -172,7 +172,7 @@ export default async function HomePage() {
           </div>
           <div className="panel px-5 py-5 flex flex-col gap-2">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              Crucible Score
+              Eivra Score
             </div>
             <div className="text-sm text-text-primary">
               50% normalized Brier · 30% win rate · 20% normalized log-loss.

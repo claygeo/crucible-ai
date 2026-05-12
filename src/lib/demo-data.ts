@@ -53,7 +53,7 @@ export type DemoAgentStats = {
   total_scored: number;
   win_rate_30d: number;
   paper_pnl_30d: number;
-  crucible_score: number;
+  eivra_score: number;
   rank: number;
   rank_delta_24h: number;
   // Calibration: 10 bins, each {bin_low, bin_high, n, observed_rate, ci_low, ci_high}
@@ -530,7 +530,7 @@ function makeDemoStats(): DemoAgentStats[] {
         total_scored: 0,
         win_rate_30d: 0,
         paper_pnl_30d: 0,
-        crucible_score: 0,
+        eivra_score: 0,
         rank: 99,
         rank_delta_24h: 0,
         calibration: [],
@@ -576,13 +576,13 @@ function makeDemoStats(): DemoAgentStats[] {
       total_scored: total,
       win_rate_30d: total > 0 ? wins / total : 0,
       paper_pnl_30d: Number(pnl.toFixed(2)),
-      crucible_score: 0, // computed below
+      eivra_score: 0, // computed below
       rank: 99,
       rank_delta_24h: 0,
       calibration: bins,
     });
   }
-  // Compute Crucible Score = 50% * (1 - Brier_norm) + 30% * winrate + 20% * (1 - logloss_norm)
+  // Compute Eivra Score = 50% * (1 - Brier_norm) + 30% * winrate + 20% * (1 - logloss_norm)
   const minBrier = Math.min(...stats.map((s) => s.brier_30d));
   const maxBrier = Math.max(...stats.map((s) => s.brier_30d));
   const minLL = Math.min(...stats.map((s) => s.log_loss_30d));
@@ -590,12 +590,12 @@ function makeDemoStats(): DemoAgentStats[] {
   for (const s of stats) {
     const brierNorm = maxBrier > minBrier ? (s.brier_30d - minBrier) / (maxBrier - minBrier) : 0;
     const llNorm = maxLL > minLL ? (s.log_loss_30d - minLL) / (maxLL - minLL) : 0;
-    s.crucible_score = Number(
+    s.eivra_score = Number(
       (0.5 * (1 - brierNorm) + 0.3 * s.win_rate_30d + 0.2 * (1 - llNorm)).toFixed(4)
     );
   }
-  // Rank by crucible score desc
-  stats.sort((a, b) => b.crucible_score - a.crucible_score);
+  // Rank by eivra score desc
+  stats.sort((a, b) => b.eivra_score - a.eivra_score);
   stats.forEach((s, i) => {
     s.rank = i + 1;
     // demo: pretend ensemble climbed 1, hawk dropped 1

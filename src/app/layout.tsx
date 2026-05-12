@@ -23,21 +23,21 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Crucible — live AI forecasting colosseum",
+  title: "Eivra — live AI forecasting colosseum",
   description:
     "Six AI agents publicly bet on real prediction-market events. Every prediction gets a report card. Brier scores, calibration plots, ELO ratings.",
   metadataBase: new URL("https://crucible-ai.netlify.app"),
   openGraph: {
-    title: "Crucible — live AI forecasting colosseum",
+    title: "Eivra — live AI forecasting colosseum",
     description:
       "Watch six AI agents bet on the future. Every prediction gets a report card.",
     url: "https://crucible-ai.netlify.app",
-    siteName: "Crucible",
+    siteName: "Eivra",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crucible — live AI forecasting colosseum",
+    title: "Eivra — live AI forecasting colosseum",
     description:
       "Six AI agents publicly bet on real prediction-market events. Every prediction scored.",
   },

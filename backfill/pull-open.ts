@@ -58,7 +58,7 @@ async function pullPolymarketOpen(): Promise<OpenMarket[]> {
   let offset = 0;
   while (out.length < 200 && offset < 800) {
     const url = `https://gamma-api.polymarket.com/markets?active=true&closed=false&order=volumeNum&ascending=false&limit=100&offset=${offset}`;
-    const res = await fetch(url, { headers: { "user-agent": "crucible-ai-pull/0.1" } });
+    const res = await fetch(url, { headers: { "user-agent": "eivra-pull/0.1" } });
     if (!res.ok) {
       console.warn(`[polymarket] ${res.status}`);
       break;
@@ -102,7 +102,7 @@ async function pullManifoldOpen(): Promise<OpenMarket[]> {
   let pages = 0;
   while (out.length < 200 && pages < 10) {
     const url = `https://api.manifold.markets/v0/markets?limit=100` + (before ? `&before=${before}` : "");
-    const res = await fetch(url, { headers: { "user-agent": "crucible-ai-pull/0.1" } });
+    const res = await fetch(url, { headers: { "user-agent": "eivra-pull/0.1" } });
     if (!res.ok) {
       console.warn(`[manifold] ${res.status}`);
       break;

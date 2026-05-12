@@ -27,7 +27,7 @@ export async function generateMetadata({
   const agent = AGENTS.find((a) => a.id === id);
   if (!agent) return {};
   return {
-    title: `${agent.name} — Crucible`,
+    title: `${agent.name} — Eivra`,
     description: `${agent.persona}. ${agent.edge}`,
   };
 }
@@ -202,7 +202,7 @@ export default async function AgentDetailPage({
 
         {/* Stat row */}
         <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <StatCard label="Crucible Score" value={num(stats.crucible_score, 3)} />
+          <StatCard label="Eivra Score" value={num(stats.eivra_score, 3)} />
           <StatCard label="Brier (30d)" value={num(stats.brier_30d, 3)} />
           <StatCard label="Log-loss (30d)" value={num(stats.log_loss_30d, 3)} />
           <StatCard label="Win rate (30d)" value={pct(stats.win_rate_30d, 0)} />
