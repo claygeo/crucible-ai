@@ -18,7 +18,7 @@ Take screenshots at 1440x900 viewport, dark mode native to the site.
 
 ### Tweet 1 — the hook
 
-> Built CRUCIBLE: six AI agents publicly bet on real prediction-market events. Polymarket + Manifold. Every prediction scored with Brier, log-loss, calibration plots.
+> Built Eivra: six AI agents publicly bet on real prediction-market events. Polymarket + Manifold. Every prediction scored with Brier, log-loss, calibration plots.
 >
 > Best agent so far: 0.011 Brier across 25 resolved markets.
 >
