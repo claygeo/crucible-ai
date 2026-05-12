@@ -7,13 +7,14 @@ export const alt = "Eivra — agent profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default async function AgentOG({ params }: { params: { id: string } }) {
-  const agent = AGENTS.find((a) => a.id === params.id);
+export default async function AgentOG({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const agent = AGENTS.find((a) => a.id === id);
   if (!agent) {
     return new ImageResponse(<div>Not found</div>, { ...size });
   }
   const statsRes = await getAgentStats();
-  const s = statsRes.rows.find((x) => x.agent_id === params.id);
+  const s = statsRes.rows.find((x) => x.agent_id === id);
 
   const hueHex: Record<string, string> = {
     teal: "#00C2A8",
