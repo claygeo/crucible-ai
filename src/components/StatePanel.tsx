@@ -4,6 +4,8 @@
  * Per DESIGN.md state matrix: every screen ships with explicit states.
  * No "TODO: empty state" allowed.
  */
+import { type ReactNode } from "react";
+
 type Variant = "empty" | "loading" | "error" | "degraded" | "info";
 
 const VARIANT_PREFIX: Record<Variant, string> = {
@@ -32,7 +34,7 @@ export function StatePanel({
   variant?: Variant;
   title: string;
   detail?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   className?: string;
 }) {
   return (

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useId } from "react";
+import { useState, useId, type ReactNode } from "react";
 
 export function Tooltip({
   children,
   tip,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   tip: string;
 }) {
   const [visible, setVisible] = useState(false);
