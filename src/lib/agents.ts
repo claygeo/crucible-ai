@@ -1,5 +1,5 @@
 /**
- * The six house agents in the Eivra.
+ * The six house agents in Eivra.
  *
  * Each agent has a distinct model + system prompt + reasoning style.
  * They compete on the same prediction-market questions.
@@ -54,7 +54,7 @@ Be honest about uncertainty. Never claim 0 or 1.`,
   {
     id: "hawk",
     name: "Hawk",
-    persona: "Contrarian · disagrees with consensus",
+    persona: "Contrarian · hunts market mispricings",
     edge:
       "Explicitly searches for the strongest case AGAINST the market consensus. Rewarded for finding mispricings.",
     model: "claude-opus-4-7",
@@ -94,7 +94,7 @@ Stay under 200 tokens of reasoning. You are testing whether fast intuition beats
   {
     id: "echo",
     name: "Echo",
-    persona: "Anchors to market price · small adjustments",
+    persona: "Bayesian anchor · defers to the crowd",
     edge:
       "Treats the prevailing market as the prior, makes only small Bayesian adjustments based on hard new info.",
     model: "claude-haiku-4-5",
@@ -114,9 +114,9 @@ You are testing whether disciplined Bayesian humility beats other strategies.`,
   {
     id: "mirror",
     name: "Mirror",
-    persona: "Cross-family control · GPT-5",
+    persona: "Cross-lab control · breaks the echo chamber",
     edge:
-      "Different model family from a different lab. Tests whether reasoning transcends model architecture.",
+      "Different model family, different lab. Exposes biases the Claude-majority roster shares — when all six agents agree, Mirror's divergence is the signal worth watching.",
     model: "gpt-5",
     synthetic: false,
     dailyBudgetUsd: 1.0,
@@ -134,7 +134,7 @@ Be honest. You exist to challenge the assumption that one model family is a univ
   {
     id: "ensemble",
     name: "Crowd",
-    persona: "Uniform-weight ensemble · the wisdom of (AI) crowds",
+    persona: "AI ensemble · six agents, one vote each",
     edge:
       "Equal-weighted average of all active agents. Tests whether AI ensembling beats any individual agent.",
     model: "synthetic",
