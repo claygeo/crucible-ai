@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CalibrationPlot } from "@/components/CalibrationPlot";
+import { Tooltip } from "@/components/Tooltip";
 import {
   getAgentStats,
   getMarkets,
@@ -259,19 +260,29 @@ export default async function BenchmarkPage() {
                     Model
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    Brier ↓
+                    <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is random chance.">
+                      Brier ↓
+                    </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    Log-loss ↓
+                    <Tooltip tip="Log-loss: −log(p) if the event happened, −log(1−p) if it didn't. Penalizes confident wrong predictions heavily. Lower is better.">
+                      Log-loss ↓
+                    </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    Win %
+                    <Tooltip tip="Win rate: fraction of predictions where the agent's stated probability was on the correct side of 50%.">
+                      Win %
+                    </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    Paper P&amp;L
+                    <Tooltip tip="Paper P&L: simulated Kelly-fraction (0.25×) profit/loss on a $100 bankroll. No real money — tracks whether the agent's probability estimates have positive expected value.">
+                      Paper P&amp;L
+                    </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    N
+                    <Tooltip tip="Sample size: number of resolved markets scored for this agent.">
+                      N
+                    </Tooltip>
                   </th>
                 </tr>
               </thead>
@@ -400,7 +411,10 @@ export default async function BenchmarkPage() {
                       {trunc(market.question, 96)}
                     </Link>
                     <span className="mono text-xs text-text-secondary">
-                      spread {prob(spread)}
+                      <Tooltip tip="Spread: difference between the highest and lowest agent probability on this market. Larger = more disagreement.">
+                        spread
+                      </Tooltip>{" "}
+                      {prob(spread)}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 ml-2">
