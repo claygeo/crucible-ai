@@ -46,10 +46,10 @@ export default async function MarketsPage() {
               open.map((m) => (
                 <div
                   key={m.id}
-                  className="px-5 py-4 panel-hover flex items-center gap-4"
+                  className="px-5 py-4 panel-hover flex items-start gap-4"
                 >
                   <span
-                    className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
+                    className={`shrink-0 mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
                   >
                     {m.category}
                   </span>
@@ -57,16 +57,18 @@ export default async function MarketsPage() {
                     href={m.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 text-text-primary text-sm hover:text-accent transition-colors"
+                    className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
                   >
                     {m.question}
                   </Link>
-                  <span className="mono text-xs text-text-muted">
-                    closes {relativeTime(m.closes_at)}
-                  </span>
-                  <span className="mono text-xs text-text-primary">
-                    P={pct(m.outcome_yes_price)}
-                  </span>
+                  <div className="shrink-0 flex flex-col items-end gap-0.5">
+                    <span className="mono text-xs text-text-muted whitespace-nowrap">
+                      closes {relativeTime(m.closes_at)}
+                    </span>
+                    <span className="mono text-xs text-text-primary">
+                      P={pct(m.outcome_yes_price)}
+                    </span>
+                  </div>
                 </div>
               ))
             )}
@@ -86,31 +88,33 @@ export default async function MarketsPage() {
               resolved.map((m) => (
                 <div
                   key={m.id}
-                  className="px-5 py-4 panel-hover flex items-center gap-4"
+                  className="px-5 py-4 panel-hover flex items-start gap-4"
                 >
                   <span
-                    className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
+                    className={`shrink-0 mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
                   >
                     {m.category}
                   </span>
                   <Link
                     href={`/markets/${m.id}`}
-                    className="flex-1 text-text-primary text-sm hover:text-accent transition-colors"
+                    className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
                   >
                     {m.question}
                   </Link>
-                  <span className="mono text-xs text-text-muted">
-                    resolved {relativeTime(m.resolved_at ?? m.closes_at)}
-                  </span>
-                  <span
-                    className={`mono text-xs px-2 py-0.5 rounded ${
-                      m.resolved_outcome
-                        ? "bg-positive/10 text-positive"
-                        : "bg-rose-400/10 text-rose-400"
-                    }`}
-                  >
-                    {m.resolved_outcome ? "YES" : "NO"}
-                  </span>
+                  <div className="shrink-0 flex flex-col items-end gap-0.5">
+                    <span className="mono text-xs text-text-muted whitespace-nowrap">
+                      resolved {relativeTime(m.resolved_at ?? m.closes_at)}
+                    </span>
+                    <span
+                      className={`mono text-xs px-2 py-0.5 rounded ${
+                        m.resolved_outcome
+                          ? "bg-positive/10 text-positive"
+                          : "bg-rose-400/10 text-rose-400"
+                      }`}
+                    >
+                      {m.resolved_outcome ? "YES" : "NO"}
+                    </span>
+                  </div>
                 </div>
               ))
             )}
