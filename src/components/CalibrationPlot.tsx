@@ -115,32 +115,25 @@ export function CalibrationPlot({
           strokeDasharray="3 3"
         />
 
-        {/* Wilson interval bars */}
+        {/* Per-bin: Wilson CI bar + dot, grouped for accessibility */}
         {bins.map((bin, i) => {
-          const cx = x((bin.bin_low + bin.bin_high) / 2);
           if (bin.n === 0) return null;
-          return (
-            <line
-              key={`ci-${i}`}
-              x1={cx}
-              y1={y(bin.ci_low)}
-              x2={cx}
-              y2={y(bin.ci_high)}
-              stroke={bin.n >= 5 ? "var(--accent)" : "var(--text-muted)"}
-              strokeWidth={1.5}
-              opacity={bin.n >= 5 ? 0.7 : 0.4}
-            />
-          );
-        })}
-
-        {/* Dots */}
-        {bins.map((bin, i) => {
           const cx = x((bin.bin_low + bin.bin_high) / 2);
-          if (bin.n === 0) return null;
           const r = Math.min(8, 2 + Math.sqrt(bin.n));
           const isSparse = bin.n < 5;
+          const label = `${Math.round(bin.bin_low * 100)}–${Math.round(bin.bin_high * 100)}%: observed ${Math.round(bin.observed_rate * 100)}%, n=${bin.n}, 95% CI ${Math.round(bin.ci_low * 100)}–${Math.round(bin.ci_high * 100)}%`;
           return (
-            <g key={`dot-${i}`}>
+            <g key={`bin-${i}`}>
+              <title>{label}</title>
+              <line
+                x1={cx}
+                y1={y(bin.ci_low)}
+                x2={cx}
+                y2={y(bin.ci_high)}
+                stroke={isSparse ? "var(--text-muted)" : "var(--accent)"}
+                strokeWidth={1.5}
+                opacity={isSparse ? 0.4 : 0.7}
+              />
               <circle
                 cx={cx}
                 cy={y(bin.observed_rate)}
@@ -207,7 +200,12 @@ export function CalibrationPlot({
       {/* Per-bin counts strip */}
       <div className="mt-2 grid grid-cols-10 gap-0.5 text-center">
         {bins.map((b, i) => (
-          <div key={`n-${i}`} className="flex flex-col">
+          <div
+            key={`n-${i}`}
+            className="flex flex-col"
+            title={`${Math.round(b.bin_low * 100)}–${Math.round(b.bin_high * 100)}%: n=${b.n}`}
+            aria-label={`${Math.round(b.bin_low * 100)}–${Math.round(b.bin_high * 100)}% bin: ${b.n} prediction${b.n === 1 ? "" : "s"}`}
+          >
             <div
               className={`mono text-[9px] ${
                 b.n === 0
