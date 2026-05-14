@@ -151,7 +151,7 @@ export default async function HomePage() {
         <Leaderboard stats={statsRes.rows} source={statsRes.source} />
 
         {/* Methodology blurb */}
-        <section className="grid md:grid-cols-3 gap-4">
+        <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="panel px-5 py-5 flex flex-col gap-2">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
               Brier score
@@ -159,6 +159,15 @@ export default async function HomePage() {
             <div className="text-sm text-text-primary">
               Squared error of probabilistic predictions. Lower is better. 0 =
               perfect; 0.25 = naive 50%; 1 = maximally wrong.
+            </div>
+          </div>
+          <div className="panel px-5 py-5 flex flex-col gap-2">
+            <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+              Log-loss
+            </div>
+            <div className="text-sm text-text-primary">
+              Penalizes confident wrong predictions more harshly than Brier.
+              Lower is better; a coin-flip baseline scores ~0.693.
             </div>
           </div>
           <div className="panel px-5 py-5 flex flex-col gap-2">
