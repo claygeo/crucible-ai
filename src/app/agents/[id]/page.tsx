@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CalibrationPlot } from "@/components/CalibrationPlot";
+import { Tooltip } from "@/components/Tooltip";
 import { AGENTS } from "@/lib/agents";
 import { getAgentStats, getScoresForAgent } from "@/lib/data";
 import {
@@ -185,7 +186,9 @@ export default async function AgentDetailPage({
 
           <div className="flex flex-col gap-1 panel px-5 py-4 min-w-[220px]">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              Brier delta vs market-anchor
+              <Tooltip tip="Brier delta: this agent's 30-day Brier score minus Echo's (market-anchor). Negative = beats the market consensus. Lower Brier is better — 0 is perfect, 0.25 is random.">
+                Brier delta vs market-anchor
+              </Tooltip>
             </div>
             <div
               className={`heading text-3xl ${
@@ -202,14 +205,31 @@ export default async function AgentDetailPage({
 
         {/* Stat row */}
         <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <StatCard label="Eivra Score" value={num(stats.eivra_score, 3)} />
-          <StatCard label="Brier (30d)" value={num(stats.brier_30d, 3)} />
-          <StatCard label="Log-loss (30d)" value={num(stats.log_loss_30d, 3)} />
-          <StatCard label="Win rate (30d)" value={pct(stats.win_rate_30d, 0)} />
+          <StatCard
+            label="Eivra Score"
+            value={num(stats.eivra_score, 3)}
+            tip="Eivra Score: composite of 50% Brier, 20% log-loss, 30% win rate. Normalized so higher = better overall forecasting quality."
+          />
+          <StatCard
+            label="Brier (30d)"
+            value={num(stats.brier_30d, 3)}
+            tip="Brier score: mean squared error between predicted probability and outcome. Range 0–1. Lower is better — 0 is perfect, 0.25 is random chance."
+          />
+          <StatCard
+            label="Log-loss (30d)"
+            value={num(stats.log_loss_30d, 3)}
+            tip="Log-loss: −log(p) if the event happened, −log(1−p) if it didn't. Penalizes confident wrong predictions heavily. Lower is better."
+          />
+          <StatCard
+            label="Win rate (30d)"
+            value={pct(stats.win_rate_30d, 0)}
+            tip="Win rate: fraction of resolved predictions where the agent's stated probability was on the correct side of 50%."
+          />
           <StatCard
             label="Paper P&L (30d)"
             value={dollars(stats.paper_pnl_30d, 0)}
             tone={stats.paper_pnl_30d >= 0 ? "pos" : "neg"}
+            tip="Paper P&L: simulated profit/loss if the agent bet $1 on each prediction at its stated probability. No real money — tracks whether probability estimates have positive expected value."
           />
         </section>
 
@@ -239,16 +259,22 @@ export default async function AgentDetailPage({
                     Market
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    Forecast
+                    <Tooltip tip="Agent's stated probability (0–1) at time of forecast.">
+                      Forecast
+                    </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    Market
+                    <Tooltip tip="Polymarket/Manifold market price at the moment the agent made its forecast. Echo uses this directly as its prediction.">
+                      Market
+                    </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     Outcome
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    Brier
+                    <Tooltip tip="Brier score for this prediction: (p − outcome)². Range 0–1. Lower is better — 0 is perfect.">
+                      Brier
+                    </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     When
@@ -323,15 +349,17 @@ function StatCard({
   label,
   value,
   tone,
+  tip,
 }: {
   label: string;
   value: string;
   tone?: "pos" | "neg";
+  tip?: string;
 }) {
   return (
     <div className="panel px-4 py-4 flex flex-col gap-1">
       <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-        {label}
+        {tip ? <Tooltip tip={tip}>{label}</Tooltip> : label}
       </div>
       <div
         className={`mono text-2xl ${
