@@ -8,7 +8,7 @@ import { Tooltip } from "@/components/Tooltip";
 export function Leaderboard({
   stats,
   source = "demo",
-  rankingBasis = "All-time · Resolved markets only · Sorted by Eivra Score ↓",
+  rankingBasis = "30-day window · Resolved markets · Eivra Score ↓",
 }: {
   stats: LiveAgentStats[];
   source?: "live" | "demo";
