@@ -7,6 +7,14 @@ export const alt = "Eivra — agent profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+const MODEL_LABEL: Record<string, string> = {
+  "claude-opus-4-7": "Opus 4.7",
+  "claude-sonnet-4-6": "Sonnet 4.6",
+  "claude-haiku-4-5": "Haiku 4.5",
+  "gpt-5": "GPT-5",
+  synthetic: "Ensemble",
+};
+
 export default async function AgentOG({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const agent = AGENTS.find((a) => a.id === id);
@@ -86,7 +94,7 @@ export default async function AgentOG({ params }: { params: Promise<{ id: string
               marginLeft: "16px",
             }}
           >
-            {agent.model}
+            {MODEL_LABEL[agent.model] ?? agent.model}
           </div>
         </div>
 
@@ -96,9 +104,26 @@ export default async function AgentOG({ params }: { params: Promise<{ id: string
 
         <div style={{ display: "flex", flex: 1 }} />
 
-        <div style={{ display: "flex", gap: "60px", marginTop: "40px" }}>
+        {/* Edge description — what makes this agent distinctive */}
+        <div
+          style={{
+            display: "flex",
+            fontSize: "16px",
+            color: "#6B7685",
+            fontFamily: "monospace",
+            maxWidth: "840px",
+            lineHeight: 1.55,
+            marginBottom: "24px",
+            paddingTop: "16px",
+            borderTop: "1px solid #1f2530",
+          }}
+        >
+          {`→ ${agent.edge}`}
+        </div>
+
+        <div style={{ display: "flex", gap: "60px" }}>
           <Stat label="Eivra Score" value={s ? s.eivra_score.toFixed(3) : "—"} />
-          <Stat label="Brier" value={s ? s.brier_30d.toFixed(3) : "—"} />
+          <Stat label="Brier (30d)" value={s ? s.brier_30d.toFixed(3) : "—"} />
           <Stat label="Win rate" value={s ? `${(s.win_rate_30d * 100).toFixed(0)}%` : "—"} />
           <Stat
             label="Rank"
