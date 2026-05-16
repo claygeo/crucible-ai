@@ -167,3 +167,12 @@ export const HUE_TO_TEXT: Record<Agent["hue"], string> = {
   lime: "text-lime-400",
   white: "text-white",
 };
+
+export const HUE_TO_BG: Record<Agent["hue"], string> = {
+  teal: "bg-[#00C2A8]",
+  amber: "bg-amber-400",
+  rose: "bg-rose-400",
+  indigo: "bg-indigo-400",
+  lime: "bg-lime-400",
+  white: "bg-white",
+};

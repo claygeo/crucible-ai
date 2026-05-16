@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { AGENTS } from "@/lib/agents";
+import { AGENTS, HUE_TO_BG } from "@/lib/agents";
 import { getAgentStats } from "@/lib/data";
 import { num, pct, dollars } from "@/lib/format";
 
@@ -40,19 +40,7 @@ export default async function AgentsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span
-                      className={`w-2.5 h-2.5 rounded-full ${
-                        agent.hue === "teal"
-                          ? "bg-[#00C2A8]"
-                          : agent.hue === "amber"
-                            ? "bg-amber-400"
-                            : agent.hue === "rose"
-                              ? "bg-rose-400"
-                              : agent.hue === "indigo"
-                                ? "bg-indigo-400"
-                                : agent.hue === "lime"
-                                  ? "bg-lime-400"
-                                  : "bg-white"
-                      }`}
+                      className={`w-2.5 h-2.5 rounded-full ${HUE_TO_BG[agent.hue]}`}
                       aria-hidden="true"
                     />
                     <h2 className="heading text-lg text-text-primary">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { num, dollars, pct, int } from "@/lib/format";
-import { AGENTS } from "@/lib/agents";
+import { AGENTS, HUE_TO_BG } from "@/lib/agents";
 import type { LiveAgentStats } from "@/lib/data";
 import { Tooltip } from "@/components/Tooltip";
 
@@ -110,19 +110,7 @@ export function Leaderboard({
                       className="flex items-center gap-3 group"
                     >
                       <span
-                        className={`w-2 h-2 rounded-full ring-2 ring-offset-2 ring-offset-panel ${
-                          agent.hue === "teal"
-                            ? "bg-[#00C2A8]"
-                            : agent.hue === "amber"
-                              ? "bg-amber-400"
-                              : agent.hue === "rose"
-                                ? "bg-rose-400"
-                                : agent.hue === "indigo"
-                                  ? "bg-indigo-400"
-                                  : agent.hue === "lime"
-                                    ? "bg-lime-400"
-                                    : "bg-white"
-                        }`}
+                        className={`w-2 h-2 rounded-full ring-2 ring-offset-2 ring-offset-panel ${HUE_TO_BG[agent.hue]}`}
                         aria-hidden="true"
                       />
                       <span className="flex flex-col gap-0">
