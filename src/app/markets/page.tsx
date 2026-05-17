@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { getMarkets } from "@/lib/data";
@@ -8,6 +9,13 @@ export const revalidate = 120;
 
 export const metadata = {
   title: "Markets — Eivra",
+  description:
+    "Every prediction market Eivra's AI agents are watching — open questions tracked in real-time and resolved events with outcome verdicts.",
+  openGraph: {
+    title: "Markets — Eivra",
+    description:
+      "Polymarket and Manifold events tracked by six AI forecasters. Open markets watched in real-time; resolved markets scored and archived.",
+  },
 };
 
 export default async function MarketsPage() {
@@ -48,18 +56,24 @@ export default async function MarketsPage() {
                   key={m.id}
                   className="px-5 py-4 panel-hover flex items-start gap-4"
                 >
-                  <span
-                    className={`shrink-0 mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
-                  >
-                    {m.category}
-                  </span>
+                  <div className="shrink-0 flex flex-col items-start gap-1">
+                    <span
+                      className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
+                    >
+                      {m.category}
+                    </span>
+                    <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${sourceClass(m.source)}`}>
+                      {m.source}
+                    </span>
+                  </div>
                   <Link
                     href={m.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
+                    className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors flex items-start gap-1.5"
                   >
-                    {m.question}
+                    <span className="flex-1 min-w-0">{m.question}</span>
+                    <ExternalLink size={12} className="shrink-0 mt-0.5 text-text-muted" aria-label="opens in new tab" />
                   </Link>
                   <div className="shrink-0 flex flex-col items-end gap-0.5">
                     <span className="mono text-xs text-text-muted whitespace-nowrap">
@@ -90,11 +104,16 @@ export default async function MarketsPage() {
                   key={m.id}
                   className="px-5 py-4 panel-hover flex items-start gap-4"
                 >
-                  <span
-                    className={`shrink-0 mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
-                  >
-                    {m.category}
-                  </span>
+                  <div className="shrink-0 flex flex-col items-start gap-1">
+                    <span
+                      className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
+                    >
+                      {m.category}
+                    </span>
+                    <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${sourceClass(m.source)}`}>
+                      {m.source}
+                    </span>
+                  </div>
                   <Link
                     href={`/markets/${m.id}`}
                     className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
@@ -136,6 +155,19 @@ function categoryClass(c: string) {
       return "bg-positive/10 text-positive";
     case "ai-tech":
       return "bg-accent/10 text-accent";
+    default:
+      return "bg-text-muted/10 text-text-muted";
+  }
+}
+
+function sourceClass(s: string) {
+  switch (s) {
+    case "polymarket":
+      return "bg-[#00C2A8]/10 text-[#00C2A8]";
+    case "manifold":
+      return "bg-indigo-400/10 text-indigo-400";
+    case "kalshi":
+      return "bg-amber-400/10 text-amber-400";
     default:
       return "bg-text-muted/10 text-text-muted";
   }
