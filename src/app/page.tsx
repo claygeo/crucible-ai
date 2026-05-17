@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LiveTicker, type TickerItem } from "@/components/LiveTicker";
@@ -123,7 +124,7 @@ export default async function HomePage() {
               resolved + scored
             </span>
             <span aria-hidden="true">·</span>
-            <span>updates every 30 min</span>
+            <span>markets every 15 min · forecasts every 6 h</span>
           </div>
         </section>
 
@@ -189,6 +190,14 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+        <div className="flex items-center justify-end">
+          <Link
+            href="/benchmark"
+            className="mono text-[11px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors flex items-center gap-1.5"
+          >
+            Full calibration plots &amp; scoring methodology →
+          </Link>
+        </div>
       </main>
 
       <Footer />
