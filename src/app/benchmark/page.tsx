@@ -417,7 +417,7 @@ export default async function BenchmarkPage() {
                       {prob(spread)}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 ml-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 ml-2">
                     {agentPreds
                       .sort((a, b) => b.probability - a.probability)
                       .map((p) => {
@@ -428,18 +428,25 @@ export default async function BenchmarkPage() {
                         return (
                           <div
                             key={p.agent_id}
-                            className="flex flex-col gap-0.5 panel px-2 py-1.5"
+                            className="flex flex-col gap-1 panel px-3 py-2"
                           >
-                            <span
-                              className={`mono text-[10px] uppercase tracking-wider ${
-                                correct ? "text-positive" : "text-rose-400"
-                              }`}
-                            >
-                              {agent.name}
-                            </span>
-                            <span className="mono text-sm text-text-primary">
-                              {prob(p.probability)}
-                            </span>
+                            <div className="flex items-center justify-between gap-2">
+                              <span
+                                className={`mono text-[10px] uppercase tracking-wider ${
+                                  correct ? "text-positive" : "text-rose-400"
+                                }`}
+                              >
+                                {agent.name}
+                              </span>
+                              <span className="mono text-sm text-text-primary">
+                                {prob(p.probability)}
+                              </span>
+                            </div>
+                            {p.reasoning && (
+                              <p className="text-[11px] text-text-muted leading-tight line-clamp-2">
+                                {trunc(p.reasoning, 100)}
+                              </p>
+                            )}
                           </div>
                         );
                       })}
