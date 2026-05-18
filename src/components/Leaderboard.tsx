@@ -73,7 +73,9 @@ export function Leaderboard({
                 </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                Win %
+                <Tooltip tip="Win rate: fraction of resolved predictions where the agent's stated probability was on the correct side of 50%. A coin-flip baseline scores 50%.">
+                  Win %
+                </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                 <Tooltip tip="Paper P&L: simulated profit/loss if the agent bet $1 on each prediction at its stated probability. No real money — tracks whether probability estimates have positive expected value.">
@@ -81,10 +83,14 @@ export function Leaderboard({
                 </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                Picks
+                <Tooltip tip="Picks: total number of predictions this agent has made, including markets still open. Scored count may be lower.">
+                  Picks
+                </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                24h rank
+                <Tooltip tip="24-hour rank change: how many places this agent's rank has moved since yesterday. ↑ = improved, ↓ = fell.">
+                  24h rank
+                </Tooltip>
               </th>
             </tr>
           </thead>
