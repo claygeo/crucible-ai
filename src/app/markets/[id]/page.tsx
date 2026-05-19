@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { AGENTS, HUE_TO_BG } from "@/lib/agents";
+import { Tooltip } from "@/components/Tooltip";
 import {
   getMarketById,
   getPredictionsForMarket,
@@ -197,30 +198,32 @@ export default async function MarketDetailPage({
                 const tookYes = pred.probability > pred.market_price_at_forecast;
                 return (
                   <div key={agent.id} className="px-5 py-4">
-                    <div className="flex items-center gap-4 mb-2">
+                    <div className="flex items-center gap-2 sm:gap-4 mb-2">
                       <Link
                         href={`/agents/${agent.id}`}
-                        className="flex items-center gap-2 group min-w-[140px]"
+                        className="flex items-center gap-2 group w-[110px] sm:min-w-[140px] shrink-0"
                       >
                         <span
-                          className={`w-2 h-2 rounded-full ${HUE_TO_BG[agent.hue]}`}
+                          className={`w-2 h-2 rounded-full shrink-0 ${HUE_TO_BG[agent.hue]}`}
                           aria-hidden="true"
                         />
-                        <span className="text-text-primary text-sm group-hover:text-accent transition-colors">
+                        <span className="text-text-primary text-sm group-hover:text-accent transition-colors truncate">
                           {agent.name}
                         </span>
                       </Link>
 
-                      <ProbabilityBar
-                        probability={pred.probability}
-                        marketPrice={pred.market_price_at_forecast}
-                      />
+                      <div className="hidden sm:flex flex-1">
+                        <ProbabilityBar
+                          probability={pred.probability}
+                          marketPrice={pred.market_price_at_forecast}
+                        />
+                      </div>
 
-                      <span className="mono text-sm text-text-primary min-w-[48px] text-right">
+                      <span className="mono text-sm text-text-primary w-[44px] sm:min-w-[48px] text-right tabular-nums">
                         {prob(pred.probability)}
                       </span>
                       <span
-                        className={`mono text-xs min-w-[60px] text-right ${
+                        className={`mono text-xs w-[44px] sm:min-w-[60px] text-right tabular-nums ${
                           delta >= 0 ? "text-accent" : "text-text-muted"
                         }`}
                       >
@@ -229,15 +232,18 @@ export default async function MarketDetailPage({
 
                       {score && (
                         <span
-                          className={`mono text-xs min-w-[70px] text-right ${
+                          className={`mono text-xs w-[56px] sm:min-w-[70px] text-right tabular-nums ${
                             score.was_correct ? "text-positive" : "text-rose-400"
                           }`}
                         >
-                          Brier {num(score.brier, 3)}
+                          <Tooltip tip="Brier score: mean squared error between predicted probability and outcome. Lower is better — 0 is perfect, 0.25 is random chance.">
+                            Brier
+                          </Tooltip>
+                          {" "}{num(score.brier, 3)}
                         </span>
                       )}
                     </div>
-                    <details className="ml-[156px]">
+                    <details className="sm:ml-[156px]">
                       <summary className="mono text-[10px] uppercase tracking-wider text-text-muted cursor-pointer hover:text-text-secondary transition-colors">
                         reasoning · {tookYes ? "long YES" : "long NO"}
                       </summary>
