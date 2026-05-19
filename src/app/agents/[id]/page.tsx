@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CalibrationPlot } from "@/components/CalibrationPlot";
 import { Tooltip } from "@/components/Tooltip";
-import { AGENTS } from "@/lib/agents";
+import { AGENTS, HUE_TO_BG } from "@/lib/agents";
 import { getAgentStats, getScoresForAgent } from "@/lib/data";
 import {
   DEMO_PREDICTIONS,
@@ -153,19 +153,7 @@ export default async function AgentDetailPage({
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <span
-                className={`w-3 h-3 rounded-full ${
-                  agent.hue === "teal"
-                    ? "bg-[#00C2A8]"
-                    : agent.hue === "amber"
-                      ? "bg-amber-400"
-                      : agent.hue === "rose"
-                        ? "bg-rose-400"
-                        : agent.hue === "indigo"
-                          ? "bg-indigo-400"
-                          : agent.hue === "lime"
-                            ? "bg-lime-400"
-                            : "bg-white"
-                }`}
+                className={`w-3 h-3 rounded-full ${HUE_TO_BG[agent.hue]}`}
                 aria-hidden="true"
               />
               <h1 className="heading text-4xl text-text-primary tracking-tight">
