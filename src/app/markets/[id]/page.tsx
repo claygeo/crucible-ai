@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { AGENTS } from "@/lib/agents";
+import { AGENTS, HUE_TO_BG } from "@/lib/agents";
 import {
   getMarketById,
   getPredictionsForMarket,
@@ -203,19 +203,8 @@ export default async function MarketDetailPage({
                         className="flex items-center gap-2 group min-w-[140px]"
                       >
                         <span
-                          className={`w-2 h-2 rounded-full ${
-                            agent.hue === "teal"
-                              ? "bg-[#00C2A8]"
-                              : agent.hue === "amber"
-                                ? "bg-amber-400"
-                                : agent.hue === "rose"
-                                  ? "bg-rose-400"
-                                  : agent.hue === "indigo"
-                                    ? "bg-indigo-400"
-                                    : agent.hue === "lime"
-                                      ? "bg-lime-400"
-                                      : "bg-white"
-                          }`}
+                          className={`w-2 h-2 rounded-full ${HUE_TO_BG[agent.hue]}`}
+                          aria-hidden="true"
                         />
                         <span className="text-text-primary text-sm group-hover:text-accent transition-colors">
                           {agent.name}
