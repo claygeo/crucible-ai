@@ -288,12 +288,21 @@ export async function getEurekaCards(
       return { source: "demo", rows: DEMO_EUREKA_CARDS.slice(0, limit) };
     return {
       source: "live",
-      rows: (data as Array<Record<string, unknown>>).map((e) => ({
-        id: e.id as string,
-        headline: e.headline as string,
-        body: e.body as string,
-        generated_at: e.generated_at as string,
-      })),
+      rows: (data as Array<Record<string, unknown>>).map((e) => {
+        const arch = (e.evidence as Record<string, unknown> | null)?.archetype as string | undefined;
+        const tag: DemoEurekaCard["tag"] =
+          arch === "calibration_surprise" ? "calibration"
+          : arch === "conviction_gap" ? "contrarian"
+          : arch === "mispricing_hunter" ? "consensus"
+          : undefined;
+        return {
+          id: e.id as string,
+          headline: e.headline as string,
+          body: e.body as string,
+          generated_at: e.generated_at as string,
+          tag,
+        };
+      }),
     };
   } catch {
     return { source: "demo", rows: DEMO_EUREKA_CARDS.slice(0, limit) };
