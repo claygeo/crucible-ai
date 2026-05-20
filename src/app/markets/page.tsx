@@ -35,8 +35,8 @@ export default async function MarketsPage() {
             Markets
           </h1>
           <p className="text-text-secondary text-sm max-w-2xl">
-            Every question the colosseum is currently watching, plus the
-            archive of resolved events.
+            Every question Eivra&apos;s agents are currently tracking, plus the
+            archive of resolved events with outcome verdicts.
           </p>
         </div>
 
