@@ -34,9 +34,9 @@ export const AGENTS: Agent[] = [
   {
     id: "sage",
     name: "Sage",
-    persona: "Deliberative · base-rate-anchored",
+    persona: "Base-rate first · slow to update",
     edge:
-      "Reads the market, reasons from first principles, anchors to historical base rates before adjusting.",
+      "Finds the closest historical reference class and anchors to its base rate before adjusting for specifics. Wins on slow-moving questions where history is a reliable guide; loses when a market is genuinely unprecedented and base rates don't apply.",
     model: "claude-opus-4-7",
     synthetic: false,
     dailyBudgetUsd: 1.0,
@@ -54,9 +54,9 @@ Be honest about uncertainty. Never claim 0 or 1.`,
   {
     id: "hawk",
     name: "Hawk",
-    persona: "Contrarian · disagrees with consensus",
+    persona: "Contrarian · hunts mispricings",
     edge:
-      "Explicitly searches for the strongest case AGAINST the market consensus. Rewarded for finding mispricings.",
+      "Steelmans the crowd, then steelmans the opposite. Abstains rather than rubber-stamping consensus — only forecasts when it spots a genuine mispricing driven by recency bias, narrative dominance, or availability bias. High variance; high alpha when right.",
     model: "claude-opus-4-7",
     synthetic: false,
     dailyBudgetUsd: 1.0,
@@ -75,9 +75,9 @@ Hawks earn their edge by being right when the crowd is wrong. They lose if they 
   {
     id: "magpie",
     name: "Magpie",
-    persona: "Snap forecasts · speed over depth",
+    persona: "Snap forecaster · first instinct only",
     edge:
-      "Cheap, fast, short-context. Tests whether speed beats deliberation when news is scarce.",
+      "One relevant fact. One sentence of reasoning. One number. Tests whether snap probabilistic intuition beats careful deliberation — especially on fast-moving questions where deep analysis can't keep pace with the news.",
     model: "claude-sonnet-4-6",
     synthetic: false,
     dailyBudgetUsd: 0.5,
@@ -94,9 +94,9 @@ Stay under 200 tokens of reasoning. You are testing whether fast intuition beats
   {
     id: "echo",
     name: "Echo",
-    persona: "Anchors to market price · small adjustments",
+    persona: "Market-prior · small Bayesian steps",
     edge:
-      "Treats the prevailing market as the prior, makes only small Bayesian adjustments based on hard new info.",
+      "The market price is already a crowd-sourced posterior. Echo only deviates when it spots hard new information the crowd hasn't priced in yet — typically by no more than five percentage points. Tests whether disciplined Bayesian humility beats independent reasoning.",
     model: "claude-haiku-4-5",
     synthetic: false,
     dailyBudgetUsd: 0.2,
@@ -114,9 +114,9 @@ You are testing whether disciplined Bayesian humility beats other strategies.`,
   {
     id: "mirror",
     name: "Mirror",
-    persona: "Cross-family control · GPT-5",
+    persona: "Cross-lab control · GPT-5 backbone",
     edge:
-      "Different model family from a different lab. Tests whether reasoning transcends model architecture.",
+      "Anthropic's other four agents may share training-family biases invisible to themselves. Mirror's GPT-5 backbone is the cross-lab control: systematic divergence on a class of questions is evidence of model-family blind spots, not market signal.",
     model: "gpt-5",
     synthetic: false,
     dailyBudgetUsd: 1.0,
@@ -134,9 +134,9 @@ Be honest. You exist to challenge the assumption that one model family is a univ
   {
     id: "ensemble",
     name: "Crowd",
-    persona: "Uniform-weight ensemble · the wisdom of (AI) crowds",
+    persona: "Ensemble · uniform avg of all agents",
     edge:
-      "Equal-weighted average of all active agents. Tests whether AI ensembling beats any individual agent.",
+      "Uniform-weight mean of all non-abstaining agents each period. The wisdom-of-AI-crowds baseline — if no individual agent consistently outperforms Crowd, diversification is the rational strategy over specialization.",
     model: "synthetic",
     synthetic: true,
     dailyBudgetUsd: 0,
