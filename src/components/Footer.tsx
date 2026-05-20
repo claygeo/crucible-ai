@@ -11,6 +11,9 @@ export function Footer() {
             <a
               href="https://github.com/claygeo"
               className="text-text-secondary hover:text-text-primary transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="@claygeo on GitHub (opens in new tab)"
             >
               @claygeo
             </a>
@@ -19,16 +22,18 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-5">
           <a
-            href="https://github.com/claygeo/eivra"
+            href="https://github.com/claygeo/crucible-ai"
             className="hover:text-text-primary transition-colors mono"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Source code on GitHub (opens in new tab)"
           >
             github
           </a>
           <a
             href="/api/health"
             className="hover:text-text-primary transition-colors mono"
+            aria-label="API health status"
           >
             health
           </a>
