@@ -15,7 +15,14 @@ export function Header() {
             _
           </span>
         </Link>
-        <nav aria-label="Main navigation" className="flex items-center gap-6 text-sm text-text-secondary">
+        <nav aria-label="Main navigation" className="flex items-center gap-5 text-sm text-text-secondary">
+          <Link
+            href="/live"
+            className="flex items-center gap-1.5 hover:text-text-primary transition-colors"
+          >
+            <span className="live-dot" aria-hidden="true" />
+            <span className="text-accent group-hover:text-accent">Live</span>
+          </Link>
           <Link
             href="/benchmark"
             className="hover:text-text-primary transition-colors"
