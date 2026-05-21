@@ -244,8 +244,18 @@ export default async function MarketDetailPage({
                       )}
                     </div>
                     <details className="sm:ml-[156px]">
-                      <summary className="mono text-[10px] uppercase tracking-wider text-text-muted cursor-pointer hover:text-text-secondary transition-colors">
-                        reasoning · {tookYes ? "long YES" : "long NO"}
+                      <summary className="mono text-[10px] uppercase tracking-wider text-text-muted cursor-pointer hover:text-text-secondary transition-colors flex items-center gap-2 flex-wrap">
+                        <span>reasoning · {tookYes ? "long YES" : "long NO"}</span>
+                        {pred.is_backfill === false ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/30">
+                            <span className="live-dot" aria-hidden="true" />
+                            <span>LIVE · locked {relativeTime(pred.created_at)}</span>
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded bg-text-muted/10 text-text-muted border border-text-muted/20">
+                            BACKFILL
+                          </span>
+                        )}
                       </summary>
                       <div className="mono text-xs text-text-secondary mt-2 leading-relaxed pl-4 border-l border-border-subtle">
                         {pred.reasoning}

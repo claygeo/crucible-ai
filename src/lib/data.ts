@@ -176,6 +176,7 @@ export async function getPredictionsForMarket(
         market_price_at_forecast: Number(p.market_price_at_forecast ?? 0.5),
         created_at: p.created_at as string,
         abstained: Boolean(p.abstained),
+        is_backfill: p.is_backfill === false ? false : true,
       })),
     };
   } catch {
@@ -348,6 +349,7 @@ export async function getCounters(): Promise<{
   watching: number;
   totalPredictions: number;
   resolved: number;
+  liveInFlight: number; // live predictions on markets still open
 }> {
   const client = sb();
   if (!client || FORCE_DEMO) {
@@ -356,32 +358,42 @@ export async function getCounters(): Promise<{
       watching: DEMO_MARKETS.filter((m) => m.status === "open").length,
       totalPredictions: DEMO_PREDICTIONS.length,
       resolved: DEMO_MARKETS.filter((m) => m.status === "resolved").length,
+      liveInFlight: 0,
     };
   }
   try {
-    const [openRes, resRes, predRes] = await Promise.all([
+    const [openRes, resRes, predRes, liveRes] = await Promise.all([
       client.from("markets").select("id", { count: "exact", head: true }).eq("status", "open"),
       client.from("markets").select("id", { count: "exact", head: true }).eq("status", "resolved"),
       client.from("predictions").select("id", { count: "exact", head: true }),
+      // is_backfill=false = locked forecasts on markets that hadn't resolved
+      // when the agent made the call. The headline "live in flight" stat.
+      client
+        .from("predictions")
+        .select("id", { count: "exact", head: true })
+        .eq("is_backfill", false),
     ]);
     const watching = openRes.count ?? 0;
     const resolved = resRes.count ?? 0;
     const totalPredictions = predRes.count ?? 0;
+    const liveInFlight = liveRes.count ?? 0;
     if (totalPredictions === 0) {
       return {
         source: "demo",
         watching: DEMO_MARKETS.filter((m) => m.status === "open").length,
         totalPredictions: DEMO_PREDICTIONS.length,
         resolved: DEMO_MARKETS.filter((m) => m.status === "resolved").length,
+        liveInFlight: 0,
       };
     }
-    return { source: "live", watching, totalPredictions, resolved };
+    return { source: "live", watching, totalPredictions, resolved, liveInFlight };
   } catch {
     return {
       source: "demo",
       watching: DEMO_MARKETS.filter((m) => m.status === "open").length,
       totalPredictions: DEMO_PREDICTIONS.length,
       resolved: DEMO_MARKETS.filter((m) => m.status === "resolved").length,
+      liveInFlight: 0,
     };
   }
 }
