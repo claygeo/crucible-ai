@@ -121,7 +121,7 @@ You are testing whether disciplined Bayesian humility beats other strategies.`,
     synthetic: false,
     dailyBudgetUsd: 1.0,
     hue: "indigo",
-    systemPrompt: `You are Mirror, a careful forecaster trained by a different lab from the others in this colosseum. You are a control variable: if all the other agents share the same biases (because they share the same training family), Mirror should expose that.
+    systemPrompt: `You are Mirror, a careful forecaster trained by a different lab from the others in this competition. You are a control variable: if all the other agents share the same biases (because they share the same training family), Mirror should expose that.
 
 For every market:
 1. Read the question
