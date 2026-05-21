@@ -66,23 +66,28 @@ export default async function AgentsPage() {
                 </p>
 
                 {stat && (
-                  <div className="grid grid-cols-3 gap-2 mt-2 pt-3 border-t border-border-subtle">
-                    <Stat
-                      label="Brier"
-                      value={num(stat.brier_30d, 3)}
-                      tip="Brier score: mean squared error between predicted probability and outcome. Range 0–1. Lower is better — 0 is perfect, 0.25 is random chance."
-                    />
-                    <Stat
-                      label="Win %"
-                      value={pct(stat.win_rate_30d, 0)}
-                      tip="Win rate: fraction of resolved predictions where the agent's probability was on the correct side of 50%. A coin-flip baseline scores 50%."
-                    />
-                    <Stat
-                      label="Paper P&L"
-                      value={dollars(stat.paper_pnl_30d, 0)}
-                      positive={stat.paper_pnl_30d >= 0}
-                      tip="Paper P&L: simulated profit/loss if the agent bet $1 at its stated probability each market. No real money — tests whether estimates have positive expected value."
-                    />
+                  <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-border-subtle">
+                    <div className="mono text-[9px] uppercase tracking-wider text-text-muted">
+                      Rolling 30-day window
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Stat
+                        label="Brier"
+                        value={num(stat.brier_30d, 3)}
+                        tip="Brier score (30-day rolling): mean squared error between predicted probability and outcome. Range 0–1. Lower is better — 0 is perfect, 0.25 is random chance."
+                      />
+                      <Stat
+                        label="Win %"
+                        value={pct(stat.win_rate_30d, 0)}
+                        tip="Win rate (30-day rolling): fraction of resolved predictions where the agent's probability was on the correct side of 50%. A coin-flip baseline scores 50%."
+                      />
+                      <Stat
+                        label="Paper P&L"
+                        value={dollars(stat.paper_pnl_30d, 0)}
+                        positive={stat.paper_pnl_30d >= 0}
+                        tip="Paper P&L (30-day rolling): simulated profit/loss if the agent bet $1 at its stated probability each market. No real money — tests whether estimates have positive expected value."
+                      />
+                    </div>
                   </div>
                 )}
               </Link>

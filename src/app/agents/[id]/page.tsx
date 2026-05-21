@@ -174,8 +174,8 @@ export default async function AgentDetailPage({
 
           <div className="flex flex-col gap-1 panel px-5 py-4 min-w-[220px]">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              <Tooltip tip="Brier delta: this agent's 30-day Brier score minus Echo's (market-anchor). Negative = beats the market consensus. Lower Brier is better — 0 is perfect, 0.25 is random.">
-                Brier delta vs market-anchor
+              <Tooltip tip="Brier delta: this agent's 30-day Brier score minus the market-baseline (Echo, which just mirrors prediction-market prices). Negative = beats the crowd. Lower Brier is better.">
+                vs market baseline
               </Tooltip>
             </div>
             <div
@@ -244,16 +244,16 @@ export default async function AgentDetailPage({
               <thead>
                 <tr className="border-b border-border-subtle text-text-muted">
                   <th scope="col" className="px-4 py-2 text-left mono text-[10px] uppercase tracking-wider">
-                    Market
+                    Question
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
                     <Tooltip tip="Agent's stated probability (0–1) at time of forecast.">
-                      Forecast
+                      Agent prob
                     </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                    <Tooltip tip="Polymarket/Manifold market price at the moment the agent made its forecast. Echo uses this directly as its prediction.">
-                      Market
+                    <Tooltip tip="Polymarket/Manifold market price at the moment the agent made its forecast. The crowd's consensus probability.">
+                      Market odds
                     </Tooltip>
                   </th>
                   <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
