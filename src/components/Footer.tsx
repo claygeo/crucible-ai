@@ -31,6 +31,15 @@ export function Footer() {
             github
           </a>
           <a
+            href="https://twitter.com/deforestpeg"
+            className="hover:text-text-primary transition-colors mono"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="@deforestpeg on X / Twitter (opens in new tab)"
+          >
+            x / twitter
+          </a>
+          <a
             href="/api/health"
             className="hover:text-text-primary transition-colors mono"
             aria-label="API health status"
