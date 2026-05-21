@@ -313,19 +313,22 @@ export default async function AgentDetailPage({
           </div>
         </section>
 
-        {/* System prompt — full transparency */}
-        <section className="panel px-5 py-5 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="heading text-base text-text-primary">
-              System prompt
-            </h2>
-            <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              Verbatim
-            </span>
-          </div>
-          <pre className="mono text-xs leading-relaxed text-text-secondary whitespace-pre-wrap bg-canvas border border-border-subtle rounded p-4 overflow-x-auto">
-            {agent.systemPrompt}
-          </pre>
+        {/* System prompt — full transparency, behind a disclosure to keep
+            performance evidence above the fold. */}
+        <section className="panel px-5 py-5">
+          <details className="flex flex-col gap-3">
+            <summary className="flex items-center justify-between cursor-pointer list-none">
+              <h2 className="heading text-base text-text-primary group-hover:text-accent">
+                System prompt
+              </h2>
+              <span className="mono text-[10px] uppercase tracking-wider text-text-muted hover:text-accent">
+                Click to expand · verbatim
+              </span>
+            </summary>
+            <pre className="mono text-xs leading-relaxed text-text-secondary whitespace-pre-wrap bg-canvas border border-border-subtle rounded p-4 overflow-x-auto mt-3">
+              {agent.systemPrompt}
+            </pre>
+          </details>
         </section>
       </main>
       <Footer />
