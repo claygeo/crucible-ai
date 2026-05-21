@@ -11,6 +11,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { AGENTS } from "@/lib/agents";
+import { cleanReasoning } from "@/lib/format";
 import {
   DEMO_AGENT_STATS,
   DEMO_EUREKA_CARDS,
@@ -172,7 +173,7 @@ export async function getPredictionsForMarket(
         market_id: p.market_id as string,
         probability: Number(p.probability),
         confidence: (p.confidence as LivePrediction["confidence"]) ?? "medium",
-        reasoning: (p.reasoning as string) ?? "",
+        reasoning: cleanReasoning((p.reasoning as string) ?? ""),
         market_price_at_forecast: Number(p.market_price_at_forecast ?? 0.5),
         created_at: p.created_at as string,
         abstained: Boolean(p.abstained),
@@ -212,7 +213,7 @@ export async function getRecentPredictions(
         market_id: p.market_id as string,
         probability: Number(p.probability),
         confidence: (p.confidence as LivePrediction["confidence"]) ?? "medium",
-        reasoning: (p.reasoning as string) ?? "",
+        reasoning: cleanReasoning((p.reasoning as string) ?? ""),
         market_price_at_forecast: Number(p.market_price_at_forecast ?? 0.5),
         created_at: p.created_at as string,
         abstained: Boolean(p.abstained),
@@ -303,7 +304,8 @@ export async function getLiveForecasts(
         agent_id: row.agent_id,
         probability: Number(row.probability),
         market_price_at_forecast: Number(row.market_price_at_forecast ?? 0.5),
-        reasoning: (row.reasoning ?? "").toString().slice(0, 400),
+        // Strip JSON/code-fence blobs from reasoning before sending to UI
+        reasoning: cleanReasoning((row.reasoning ?? "").toString()).slice(0, 600),
         created_at: row.created_at,
       };
       if (existing) {
@@ -587,7 +589,7 @@ export async function getDisagreements(
       arr.push({
         agent_id: p.agent_id,
         probability: Number(p.probability),
-        reasoning: (p.reasoning ?? "").toString(),
+        reasoning: cleanReasoning((p.reasoning ?? "").toString()),
       });
       byMarket.set(p.market_id, arr);
     }

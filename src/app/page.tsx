@@ -11,7 +11,7 @@ import {
   getEurekaCards,
   getRecentPredictions,
 } from "@/lib/data";
-import { int } from "@/lib/format";
+import { int, cleanReasoning } from "@/lib/format";
 import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
 import { createClient } from "@supabase/supabase-js";
 
@@ -52,7 +52,7 @@ async function getTickerItems(): Promise<TickerItem[]> {
         marketTitle: qById.get(p.market_id as string) ?? "(market)",
         probability: Number(p.probability),
         marketPrice: Number(p.market_price_at_forecast ?? 0.5),
-        reasoning: ((p.reasoning as string) ?? "").slice(0, 240),
+        reasoning: cleanReasoning((p.reasoning as string) ?? "").slice(0, 240),
         ts: p.created_at as string,
       } satisfies TickerItem;
     });
