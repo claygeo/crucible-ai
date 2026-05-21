@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
 import { getLiveForecasts, getCounters } from "@/lib/data";
 import { prob, num, signed, relativeTime } from "@/lib/format";
@@ -143,7 +144,9 @@ export default async function LivePage() {
                     </span>
                     <span aria-hidden="true">·</span>
                     <span>
-                      spread:{" "}
+                      <Tooltip tip="Spread: difference between the highest and lowest agent probability on this market. Larger = more disagreement between agents.">
+                        spread
+                      </Tooltip>:{" "}
                       <span className="text-accent">
                         {num(row.spread, 2)}
                       </span>
@@ -200,8 +203,11 @@ export default async function LivePage() {
                             className={`mono text-[11px] tabular-nums ${
                               delta >= 0 ? "text-accent" : "text-text-muted"
                             }`}
+                            aria-label={`${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(0)} percentage points vs market price`}
+                            title="Agent forecast minus market price at lock time"
                           >
                             {signed(delta, 2)}
+                            <span className="text-text-muted text-[9px] ml-0.5">Δ</span>
                           </span>
                         </div>
                       );
