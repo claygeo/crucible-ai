@@ -15,11 +15,65 @@ import { Tooltip } from "@/components/Tooltip";
  */
 export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
   const echo = stats.find((s) => s.agent_id === "echo");
-  const best = [...stats].sort((a, b) => a.brier_30d - b.brier_30d)[0];
-  if (!best || !echo) return null;
-  const delta = best.brier_30d - echo.brier_30d;
-  const bestAgent = AGENTS.find((a) => a.id === best.agent_id);
+  // 'Best agent vs market baseline' only makes sense if we EXCLUDE Echo
+  // itself from the 'best' candidates — Echo IS the market baseline. If the
+  // raw lowest-Brier is Echo (the market won this month), we need a
+  // dedicated narrative for that case.
+  const nonEchoStats = stats.filter((s) => s.agent_id !== "echo" && s.agent_id !== "ensemble");
+  const bestNonEcho = [...nonEchoStats].sort((a, b) => a.brier_30d - b.brier_30d)[0];
+  const lowestOverall = [...stats].sort((a, b) => a.brier_30d - b.brier_30d)[0];
+  if (!echo || !bestNonEcho || !lowestOverall) return null;
+  const delta = bestNonEcho.brier_30d - echo.brier_30d;
+  const bestAgent = AGENTS.find((a) => a.id === bestNonEcho.agent_id);
   const beatsMarket = delta < 0;
+  // Special case: the market baseline itself has the lowest Brier this month.
+  // No agent has beaten it. Frame the panel as 'market still on top.'
+  const marketWonOutright = lowestOverall.agent_id === "echo";
+
+  if (marketWonOutright) {
+    return (
+      <div className="panel panel-live px-7 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+            This month, the market is still on top
+          </div>
+          <div className="text-text-primary text-lg sm:text-xl leading-snug">
+            <span className="text-text-secondary font-semibold">No agent</span> has
+            beaten the market baseline this month. The best non-baseline agent —{" "}
+            <span className="text-accent font-semibold">{bestAgent?.name}</span> —
+            is within{" "}
+            <span className="text-text-primary">{num(Math.abs(delta), 3)}</span>{" "}
+            Brier of the market baseline (Echo, which just mirrors prediction-market prices).
+          </div>
+          <div className="mono text-[11px] text-text-muted leading-relaxed">
+            <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is chance.">
+              Brier
+            </Tooltip>
+            {" "}
+            <span className="text-text-primary">{num(bestNonEcho.brier_30d, 3)}</span>
+            {" "}vs market{" "}
+            <span className="text-text-secondary">{num(echo.brier_30d, 3)}</span>
+            {" · "}
+            <Tooltip tip="Brier delta: best non-baseline agent's Brier minus Echo's (market-anchor). Positive = market is still ahead.">
+              delta
+            </Tooltip>
+            {" "}
+            <span className="text-rose-400">
+              {signed(delta, 3)}
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
+          <div className="heading text-4xl sm:text-5xl tabular-nums text-text-secondary">
+            {signed(delta, 3)}
+          </div>
+          <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
+            market still on top
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="panel panel-live px-7 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -38,11 +92,11 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
             Brier
           </Tooltip>
           {" "}
-          <span className="text-text-primary">{num(best.brier_30d, 3)}</span>
+          <span className="text-text-primary">{num(bestNonEcho.brier_30d, 3)}</span>
           {" "}vs market{" "}
           <span className="text-text-secondary">{num(echo.brier_30d, 3)}</span>
           {" · "}
-          <Tooltip tip="Brier delta: best agent's Brier score minus Echo's (market-anchor) Brier. Negative = beats the market. Lower Brier is better.">
+          <Tooltip tip="Brier delta: best non-baseline agent's Brier minus Echo's (market-anchor) Brier. Negative = beats the market. Lower Brier is better.">
             delta
           </Tooltip>
           {" "}
