@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { AGENTS } from "@/lib/agents";
+import { cleanReasoning } from "@/lib/format";
 import { DEMO_PREDICTIONS, DEMO_MARKETS } from "@/lib/demo-data";
 
 export const dynamic = "force-dynamic";
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
           market_id: p.market_id as string,
           probability: Number(p.probability),
           confidence: (p.confidence as string) ?? "medium",
-          reasoning: (p.reasoning as string) ?? "",
+          reasoning: cleanReasoning((p.reasoning as string) ?? ""),
           abstained: Boolean(p.abstained),
           market_price_at_forecast: Number(p.market_price_at_forecast ?? 0.5),
           is_backfill: Boolean(p.is_backfill),

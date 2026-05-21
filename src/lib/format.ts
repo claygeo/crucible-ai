@@ -60,3 +60,56 @@ export function trunc(s: string, n: number): string {
   if (s.length <= n) return s;
   return s.slice(0, n - 1) + "…";
 }
+
+/**
+ * Clean agent reasoning text for display.
+ *
+ * Echo and Sage sometimes echo their full forecast as a JSON object (e.g.
+ * ```json {"forecast": 0.13, "rationale": "..."}```) instead of plain prose.
+ * The runner extracts probability fine but stores the raw blob as the
+ * reasoning field. Without cleanup the UI renders the JSON inline — ugly
+ * and unreadable.
+ *
+ * Heuristic: if the text looks like wrapped JSON, parse it and return the
+ * first text-y field we recognize (rationale / reasoning / summary / etc).
+ * Otherwise return the original. Always strips code fences.
+ */
+export function cleanReasoning(raw: string | null | undefined): string {
+  if (!raw) return "";
+  let s = raw.trim();
+  // Strip ```json ... ``` or ``` ... ``` code fences.
+  s = s.replace(/^```(?:json|JSON)?\s*\n?/, "").replace(/```\s*$/, "").trim();
+  // If it still looks like a JSON object, try parsing.
+  if (s.startsWith("{")) {
+    // Try the largest balanced { ... } substring.
+    const first = s.indexOf("{");
+    const last = s.lastIndexOf("}");
+    if (first >= 0 && last > first) {
+      const candidate = s.slice(first, last + 1);
+      try {
+        const obj = JSON.parse(candidate) as Record<string, unknown>;
+        // Look for a prose field, in priority order.
+        const keys = [
+          "rationale",
+          "reasoning",
+          "summary",
+          "explanation",
+          "analysis",
+          "uncertainty",
+          "adjustments",
+        ];
+        for (const k of keys) {
+          const v = obj[k];
+          if (typeof v === "string" && v.trim().length > 8) {
+            return v.trim();
+          }
+        }
+        // If JSON had no prose field, fall through to the raw text (minus
+        // fences) so we at least show something readable.
+      } catch {
+        // Not actually JSON despite the leading brace — fall through.
+      }
+    }
+  }
+  return s;
+}
