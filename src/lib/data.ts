@@ -223,6 +223,135 @@ export async function getRecentPredictions(
   }
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Live forecasts — receipts for the /live page.
+// Returns predictions where is_backfill=false, joined to their market info,
+// grouped by market. Each market shows all agents' locked forecasts side by
+// side, with the lock timestamp + market status (open / pending / resolved).
+// ────────────────────────────────────────────────────────────────────────────
+
+export type LiveForecastRow = {
+  market: {
+    id: string;
+    question: string;
+    source: string;
+    category: string;
+    status: "open" | "pending_resolution" | "resolved";
+    closes_at: string;
+    resolved_at: string | null;
+    resolved_outcome: boolean | null;
+    outcome_yes_price: number;
+    url: string | null;
+  };
+  agentPreds: Array<{
+    agent_id: string;
+    probability: number;
+    market_price_at_forecast: number;
+    reasoning: string;
+    created_at: string;
+  }>;
+  spread: number;
+  earliestLock: string;
+};
+
+export async function getLiveForecasts(
+  limit = 50
+): Promise<{ source: Source; rows: LiveForecastRow[] }> {
+  const client = sb();
+  if (!client || FORCE_DEMO) return { source: "demo", rows: [] };
+  try {
+    // Pull live predictions (newest first) with market info eager-joined.
+    // PostgREST nested select keeps this a single round-trip.
+    const { data } = await client
+      .from("predictions")
+      .select(
+        "id, agent_id, market_id, probability, reasoning, market_price_at_forecast, created_at, markets!inner(id, question, source, category, status, closes_at, resolved_at, resolved_outcome, outcome_yes_price, url)"
+      )
+      .eq("is_backfill", false)
+      .eq("abstained", false)
+      .order("created_at", { ascending: false })
+      .limit(limit * 6); // 6 agents per market, so request the per-market limit's worth
+    if (!data || data.length === 0) return { source: "live", rows: [] };
+
+    type Row = {
+      agent_id: string;
+      market_id: string;
+      probability: number;
+      reasoning: string;
+      market_price_at_forecast: number;
+      created_at: string;
+      markets: {
+        id: string;
+        question: string;
+        source: string;
+        category: string;
+        status: "open" | "pending_resolution" | "resolved";
+        closes_at: string;
+        resolved_at: string | null;
+        resolved_outcome: boolean | null;
+        outcome_yes_price: number;
+        url: string | null;
+      };
+    };
+
+    const byMarket = new Map<string, LiveForecastRow>();
+    for (const row of data as unknown as Row[]) {
+      const mkt = row.markets;
+      if (!mkt) continue;
+      const existing = byMarket.get(mkt.id);
+      const pred = {
+        agent_id: row.agent_id,
+        probability: Number(row.probability),
+        market_price_at_forecast: Number(row.market_price_at_forecast ?? 0.5),
+        reasoning: (row.reasoning ?? "").toString().slice(0, 400),
+        created_at: row.created_at,
+      };
+      if (existing) {
+        existing.agentPreds.push(pred);
+        if (row.created_at < existing.earliestLock) {
+          existing.earliestLock = row.created_at;
+        }
+      } else {
+        byMarket.set(mkt.id, {
+          market: {
+            id: mkt.id,
+            question: mkt.question,
+            source: mkt.source,
+            category: mkt.category ?? "other",
+            status: mkt.status,
+            closes_at: mkt.closes_at,
+            resolved_at: mkt.resolved_at,
+            resolved_outcome: mkt.resolved_outcome,
+            outcome_yes_price: Number(mkt.outcome_yes_price ?? 0.5),
+            url: mkt.url,
+          },
+          agentPreds: [pred],
+          spread: 0,
+          earliestLock: row.created_at,
+        });
+      }
+    }
+
+    // Compute spread per market (exclude synthetic ensemble — it's a mean of
+    // the others, so including it compresses spread artificially).
+    for (const row of byMarket.values()) {
+      const indPreds = row.agentPreds.filter((p) => p.agent_id !== "ensemble");
+      if (indPreds.length === 0) continue;
+      const probs = indPreds.map((p) => p.probability);
+      row.spread = Math.max(...probs) - Math.min(...probs);
+      // Sort agent preds: highest probability first (long-YES at top)
+      row.agentPreds.sort((a, b) => b.probability - a.probability);
+    }
+
+    const rows = Array.from(byMarket.values()).sort(
+      (a, b) => Date.parse(b.earliestLock) - Date.parse(a.earliestLock)
+    );
+    return { source: "live", rows: rows.slice(0, limit) };
+  } catch {
+    return { source: "demo", rows: [] };
+  }
+}
+
 export async function getScoresForAgent(
   agentId: string,
   limit = 50
