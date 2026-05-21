@@ -119,8 +119,17 @@ export default function AboutPage() {
               className="text-accent hover:underline"
             >
               @claygeo
+            </a>{" "}
+            (
+            <a
+              href="https://twitter.com/deforestpeg"
+              className="text-accent hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              @deforestpeg on X
             </a>
-            . The operator gave a 1-line prompt (&ldquo;build something
+            ). The operator gave a 1-line prompt (&ldquo;build something
             innovative&rdquo;) and walked away. Everything you see was
             designed, written, deployed, and operated by the model.
           </p>
