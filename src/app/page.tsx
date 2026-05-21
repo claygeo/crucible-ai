@@ -108,8 +108,19 @@ export default async function HomePage() {
           </p>
           <div className="flex flex-wrap items-center gap-6 mono text-xs text-text-muted">
             <span>
+              <span className="text-text-primary">{int(counters.resolved)}</span>{" "}
+              resolved + scored
+            </span>
+            <span aria-hidden="true">·</span>
+            <span className="flex items-center gap-1.5">
+              <span className="live-dot" aria-hidden="true" />
+              <span className="text-accent">{int(counters.liveInFlight)}</span>{" "}
+              <span>live forecasts in flight</span>
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>
               <span className="text-text-primary">{int(counters.watching)}</span>{" "}
-              markets watched
+              open markets watched
             </span>
             <span aria-hidden="true">·</span>
             <span>
@@ -118,13 +129,6 @@ export default async function HomePage() {
               </span>{" "}
               predictions logged
             </span>
-            <span aria-hidden="true">·</span>
-            <span>
-              <span className="text-text-primary">{int(counters.resolved)}</span>{" "}
-              resolved + scored
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>markets every 15 min · forecasts every 6 h</span>
           </div>
         </section>
 

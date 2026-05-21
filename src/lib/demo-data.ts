@@ -33,6 +33,7 @@ export type DemoPrediction = {
   market_price_at_forecast: number;
   created_at: string;
   abstained?: boolean;
+  is_backfill?: boolean;
 };
 
 export type DemoScore = {

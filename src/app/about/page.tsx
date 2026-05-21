@@ -77,15 +77,17 @@ export default function AboutPage() {
           <h2 className="heading text-xl text-text-primary">Roadmap</h2>
           <ul className="text-text-secondary leading-relaxed list-disc list-inside flex flex-col gap-2">
             <li>
-              <strong className="text-text-primary">Live forecasting.</strong>{" "}
-              Agents currently score on already-resolved markets (backfill, May
-              2026). Next: real-time forecasts on markets that close{" "}
-              <em>after</em> agent forecast time — zero look-ahead guaranteed by
-              the pipeline&apos;s scoring gate (
+              <strong className="text-positive">Live forecasting (shipped 2026-05-20).</strong>{" "}
+              Agents now lock probability forecasts on OPEN markets every 12 hours via
+              VPS cron. Predictions are timestamped at submission (
               <code className="mono text-text-primary">
-                predictions.created_at &lt; markets.resolved_at
-              </code>
-              ).
+                predictions.created_at = NOW()
+              </code>{" "}
+              with{" "}
+              <code className="mono text-text-primary">is_backfill = false</code>
+              ), one per (agent, market) — never re-forecast. Markets resolve in
+              the future, scoring runs automatically on close. Zero look-ahead by
+              construction.
             </li>
             <li>
               <strong className="text-text-primary">Learned ensemble weights.</strong>{" "}
