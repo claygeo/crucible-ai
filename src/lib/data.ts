@@ -385,3 +385,97 @@ export async function getCounters(): Promise<{
     };
   }
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Disagreements — resolved markets sorted by max spread across agent preds.
+// Powers the /benchmark "Top disagreements" panel and the homepage drama feed.
+// ────────────────────────────────────────────────────────────────────────────
+
+export type DisagreementRow = {
+  market: {
+    id: string;
+    question: string;
+    resolved_outcome: "YES" | "NO" | null;
+  };
+  spread: number;
+  agentPreds: Array<{
+    agent_id: string;
+    probability: number;
+    reasoning: string;
+  }>;
+};
+
+export async function getDisagreements(
+  limit = 5
+): Promise<{ source: Source; rows: DisagreementRow[] }> {
+  const client = sb();
+  if (!client || FORCE_DEMO) return { source: "demo", rows: [] };
+  try {
+    // Pull recent resolved markets, then join predictions client-side. Faster
+    // than a SQL join via PostgREST and trivially cacheable by ISR.
+    const { data: markets } = await client
+      .from("markets")
+      .select("id, question, resolved_outcome")
+      .eq("status", "resolved")
+      .order("resolved_at", { ascending: false })
+      .limit(60); // window of recent resolutions to scan for high spread
+    if (!markets || markets.length === 0) return { source: "live", rows: [] };
+
+    const marketIds = (markets as Array<{ id: string }>).map((m) => m.id);
+    const { data: preds } = await client
+      .from("predictions")
+      .select("agent_id, market_id, probability, reasoning, abstained")
+      .in("market_id", marketIds)
+      .eq("abstained", false);
+    if (!preds) return { source: "live", rows: [] };
+
+    const byMarket = new Map<
+      string,
+      Array<{ agent_id: string; probability: number; reasoning: string }>
+    >();
+    for (const p of preds as Array<{
+      agent_id: string;
+      market_id: string;
+      probability: number;
+      reasoning: string;
+    }>) {
+      // Skip synthetic ensemble (it's a mean of the others — counting it
+      // would compress spread artificially).
+      if (p.agent_id === "ensemble") continue;
+      const arr = byMarket.get(p.market_id) ?? [];
+      arr.push({
+        agent_id: p.agent_id,
+        probability: Number(p.probability),
+        reasoning: (p.reasoning ?? "").toString(),
+      });
+      byMarket.set(p.market_id, arr);
+    }
+
+    const rows: DisagreementRow[] = [];
+    for (const m of markets as Array<{
+      id: string;
+      question: string;
+      resolved_outcome: boolean | null;
+    }>) {
+      const ps = byMarket.get(m.id) ?? [];
+      if (ps.length < 2) continue; // need at least 2 agents to compute spread
+      const probs = ps.map((p) => p.probability);
+      const spread = Math.max(...probs) - Math.min(...probs);
+      rows.push({
+        market: {
+          id: m.id,
+          question: m.question,
+          resolved_outcome:
+            m.resolved_outcome === null ? null : m.resolved_outcome ? "YES" : "NO",
+        },
+        spread,
+        agentPreds: ps.sort((a, b) => b.probability - a.probability),
+      });
+    }
+
+    rows.sort((a, b) => b.spread - a.spread);
+    return { source: "live", rows: rows.slice(0, limit) };
+  } catch {
+    return { source: "demo", rows: [] };
+  }
+}
