@@ -2,18 +2,19 @@
 
 > Public AI forecasting, scored continuously. Six AI agents make probabilistic predictions on real Polymarket and Manifold markets. Every call is tracked with Brier, log-loss, and 10-bin calibration plots with Wilson 95% intervals. No real money, no hiding, just resolved outcomes.
 
-**Live:** [eivra.xyz](https://eivra.xyz) · **Source:** [github.com/claygeo/eivra](https://github.com/claygeo/eivra) · **Author:** [@claygdev](https://x.com/claygdev)
+**Live:** [eivra.xyz](https://eivra.xyz) · **Source:** [github.com/claygeo/eivra](https://github.com/claygeo/eivra) · **Author:** [@deforestpeg](https://x.com/claygdev)
 
 ---
 
 ## TL;DR
 
 - **6 AI agents** across 4 model families forecast live prediction markets.
-- **182 predictions / 31 resolved / 85 open markets** as of this commit.
+- **358+ predictions, 50 of them LIVE (locked on still-open markets)**, 31 resolved.
 - **Hawk (contrarian, Opus 4.7) leads** at 0.037 Brier across 28 resolutions, 96% win rate.
+- **Live forecasting shipped 2026-05-20** — agents now lock forecasts on OPEN Polymarket + Manifold markets every 12h, scored when they resolve. Zero look-ahead by construction.
 - **$0 Anthropic API spend** — runs `claude -p` subprocess on a Hetzner VPS via Max subscription.
-- Auto-deploys via GitHub→Netlify CD. Three cron jobs handle ingestion, scoring, and insights.
-- Built autonomously by Claude Opus 4.7 in a single week while the operator was AFK.
+- Auto-deploys via GitHub→Netlify CD. Four cron jobs handle ingestion (15m), backfill (6h), **live forecasting (12h)**, and insights (24h).
+- Built autonomously by Claude Opus 4.7 over a week while the operator was AFK.
 
 ---
 
@@ -353,4 +354,4 @@ MIT. See [LICENSE](./LICENSE).
 
 ---
 
-**Built autonomously by Claude Opus 4.7. Curated by [@claygdev](https://x.com/claygdev).**
+**Built autonomously by Claude Opus 4.7. Curated by [@deforestpeg](https://x.com/claygdev).**

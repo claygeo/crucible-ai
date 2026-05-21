@@ -358,9 +358,10 @@ export default async function OG() {
               <span>resolved</span>
             </div>
             <span>·</span>
-            <div style={{ display: "flex", gap: "6px" }}>
-              <span style={{ color: COL.text, fontWeight: 600 }}>{counters.totalPredictions}</span>
-              <span>predictions</span>
+            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: COL.accent }} />
+              <span style={{ color: COL.accent, fontWeight: 600 }}>{counters.liveInFlight}</span>
+              <span style={{ color: COL.accent }}>live in flight</span>
             </div>
             <span>·</span>
             <div style={{ display: "flex", gap: "6px" }}>
