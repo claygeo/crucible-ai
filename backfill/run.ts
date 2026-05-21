@@ -895,12 +895,34 @@ async function main() {
   const polyMarkets = SOURCE === "manifold" ? [] : await pullPolymarketResolved();
   const manifoldMarkets =
     SOURCE === "polymarket" ? [] : await pullManifoldResolved();
-  const combined = [...polyMarkets, ...manifoldMarkets];
+  const combinedRaw = [...polyMarkets, ...manifoldMarkets];
+
+  // Skip markets where every non-synthetic agent is already cached. Without
+  // this filter the runner re-picks the same top-N markets every cron tick,
+  // hits 100% cache, and produces zero new predictions (the May 5–20 outage).
+  // Cron now naturally rotates through fresh markets as the cache fills.
+  const nonSyntheticAgents = AGENTS.filter((a) => !a.synthetic);
+  const fullyCachedKeys = new Set<string>();
+  for (const m of combinedRaw) {
+    const allCached = nonSyntheticAgents.every((a) =>
+      existsSync(join(CACHE_DIR, cacheKey(a, m)))
+    );
+    if (allCached) fullyCachedKeys.add(`${m.source}/${m.source_id}`);
+  }
+  const combined = combinedRaw.filter(
+    (m) => !fullyCachedKeys.has(`${m.source}/${m.source_id}`)
+  );
+  console.log(
+    `[backfill] ${combinedRaw.length} markets fetched, ${fullyCachedKeys.size} fully-cached, ${combined.length} fresh to pick from`
+  );
+  // Fallback: if every market is cached (cold start case shouldn't trigger,
+  // but defensive), fall back to the raw pool so the cron still runs.
+  const pool = combined.length > 0 ? combined : combinedRaw;
 
   // Diversify: round-robin across categories so we don't overfit to crypto FDV.
   // Group by category, then interleave.
   const byCategory = new Map<string, CommonMarket[]>();
-  for (const m of combined) {
+  for (const m of pool) {
     const arr = byCategory.get(m.category) ?? [];
     arr.push(m);
     byCategory.set(m.category, arr);
@@ -919,7 +941,7 @@ async function main() {
     idx += 1;
     // Bail if all categories exhausted
     if (idx > 1000) break;
-    if (all.length === combined.length) break;
+    if (all.length === pool.length) break;
   }
   console.log(
     `[backfill] using ${all.length} markets total across categories: ${[...byCategory.entries()].map(([c, m]) => `${c}=${m.length}`).join(", ")}`
