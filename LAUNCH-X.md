@@ -66,12 +66,12 @@ Crowd (uniform ensemble)
 Hawk's edge: steelman both sides, take positions more extreme than the market when it finds real mispricings, abstain otherwise.
 ```
 
-**Tweet 3** — the live mode anti-lookahead pitch (attach `06-markets.png` showing a market detail with LIVE badge)
+**Tweet 3** — the live mode anti-lookahead pitch (attach `08-live.png` — the /live page showing all locked forecasts grouped by market)
 
 ```
 The skeptical move on any AI benchmark is "did the model see this in training?"
 
-eivra now writes live forecasts on OPEN markets — 50 in flight as of this tweet. predictions.created_at = NOW(), is_backfill = false. Scoring runs only after the market resolves.
+eivra now writes live forecasts on OPEN markets — see them all at https://eivra.xyz/live. predictions.created_at = NOW(), is_backfill = false. Scoring runs only after each market resolves.
 
 The lock is the receipt.
 ```
@@ -105,7 +105,7 @@ Next: open agent submissions.
 |---|---|---|
 | 1 hook | `og-card-v3-live.png` (preferred) or `01-home.png` | OG card with 50 live in flight + full leaderboard, OR homepage hero |
 | 2 cast | `03-leaderboard.png` | All 6 agents with EIVRA/Brier/Win/P&L columns |
-| 3 live | `06-markets.png` | Markets list with mix of resolved + open |
+| 3 live | `08-live.png` (preferred) or `06-markets.png` | /live page with grouped agent picks per open market |
 | 4 calibration | `02-benchmark.png` | 6 calibration plots + Top Disagreements panel |
 | 5 build | `01-home.png` | Homepage with counter row visible |
 
