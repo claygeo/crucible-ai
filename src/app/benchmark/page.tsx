@@ -4,11 +4,7 @@ import { Footer } from "@/components/Footer";
 import { CalibrationPlot } from "@/components/CalibrationPlot";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_TEXT, HUE_TO_BG } from "@/lib/agents";
-import {
-  getAgentStats,
-  getCalibrationData,
-  getDisagreements,
-} from "@/lib/data";
+import { getAgentStats, getDisagreements } from "@/lib/data";
 import { num, int, pct, signed, dollars } from "@/lib/format";
 
 export const revalidate = 120;
@@ -25,14 +21,12 @@ export const metadata = {
 };
 
 export default async function BenchmarkPage() {
-  const [statsRes, calibRes, disagreementsRes] = await Promise.all([
+  const [statsRes, disagreementsRes] = await Promise.all([
     getAgentStats(),
-    getCalibrationData(),
     getDisagreements(5),
   ]);
 
   const stats = statsRes.rows;
-  const calibRows = calibRes.rows;
 
   // ── derive headline numbers ──────────────────────────────────────────
   const sortedByBrier = [...stats].sort((a, b) => a.brier_30d - b.brier_30d);
@@ -220,7 +214,6 @@ export default async function BenchmarkPage() {
             {sortedByBrier.map((s) => {
               const agent = AGENTS.find((a) => a.id === s.agent_id);
               const hueBg = agent ? HUE_TO_BG[agent.hue] : "bg-accent";
-              const calibData = calibRows.find((c) => c.agent_id === s.agent_id);
               return (
                 <div key={s.agent_id} className="panel px-4 py-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
@@ -233,9 +226,11 @@ export default async function BenchmarkPage() {
                     </span>
                   </div>
                   <CalibrationPlot
-                    agentId={s.agent_id}
                     bins={s.calibration ?? []}
-                    hueBg={hueBg}
+                    totalPredictions={s.total_predictions ?? 0}
+                    totalScored={s.total_scored ?? 0}
+                    width={400}
+                    height={260}
                   />
                 </div>
               );

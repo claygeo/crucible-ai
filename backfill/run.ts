@@ -154,9 +154,12 @@ const SOURCE = (args.find((a) => a.startsWith("--source="))?.split("=")[1] ?? "a
   | "all";
 const DRY = args.includes("--dry");
 const ONLY_AGENT = args.find((a) => a.startsWith("--agent="))?.split("=")[1];
+const MODE = (args.find((a) => a.startsWith("--mode="))?.split("=")[1] ?? "backfill") as
+  | "backfill"
+  | "live";
 
 console.log(
-  `[backfill] limit=${LIMIT} source=${SOURCE} dry=${DRY} only_agent=${ONLY_AGENT ?? "all"}`
+  `[${MODE}] limit=${LIMIT} source=${SOURCE} dry=${DRY} only_agent=${ONLY_AGENT ?? "all"}`
 );
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -648,6 +651,200 @@ async function scorePrediction(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Live-mode forecasting (shipped 2026-05-20)
+//
+// Agents forecast OPEN markets that resolve in the future. No lookahead by
+// construction: prediction.created_at = NOW() (default), market is still open,
+// scoring runs only after market resolves.
+//
+// One forecast per (agent, market) — locked at first generation. Re-running
+// the cron does NOT re-forecast; the Supabase WHERE check is the dedupe.
+// ────────────────────────────────────────────────────────────────────────────
+
+type LiveMarketRow = {
+  id: string; // Supabase UUID
+  source: "polymarket" | "manifold";
+  source_id: string;
+  question: string;
+  description: string | null;
+  url: string | null;
+  category: string | null;
+  outcome_yes_price: number;
+  closes_at: string;
+};
+
+async function getOpenMarketsForLive(): Promise<LiveMarketRow[]> {
+  // Pull open markets with at least 24h before close (so we're not forecasting
+  // markets about to settle). Order by closes_at ASC so we naturally prefer
+  // markets closer to resolution (faster scoring feedback).
+  const cutoff = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await sb
+    .from("markets")
+    .select(
+      "id, source, source_id, question, description, url, category, outcome_yes_price, closes_at"
+    )
+    .eq("status", "open")
+    .gt("closes_at", cutoff)
+    .order("closes_at", { ascending: true })
+    .limit(300);
+  if (error) {
+    throw new Error(`getOpenMarketsForLive: ${error.message}`);
+  }
+  return (data ?? []) as LiveMarketRow[];
+}
+
+async function liveExistsFor(agentId: string, marketDbId: string): Promise<boolean> {
+  const { count } = await sb
+    .from("predictions")
+    .select("*", { count: "exact", head: true })
+    .eq("agent_id", agentId)
+    .eq("market_id", marketDbId)
+    .eq("is_backfill", false);
+  return (count ?? 0) > 0;
+}
+
+function liveMarketToCommon(m: LiveMarketRow): CommonMarket {
+  // CommonMarket type carries resolved_outcome + resolved_at fields that don't
+  // apply to open markets. Supply placeholder values — runClaude only reads
+  // question / description / outcome_yes_price / source / category, and we
+  // write the prediction via insertLivePrediction (NOT insertPrediction) so
+  // the resolved-at-derived fakeCreatedAt path never runs.
+  return {
+    source: m.source,
+    source_id: m.source_id,
+    question: m.question,
+    description: m.description ?? undefined,
+    url: m.url ?? "",
+    category: m.category ?? "other",
+    resolved_outcome: false,
+    resolved_at: m.closes_at,
+    closes_at: m.closes_at,
+    outcome_yes_price: Number(m.outcome_yes_price ?? 0.5),
+    raw: {},
+  };
+}
+
+async function insertLivePrediction(
+  agentId: string,
+  marketDbId: string,
+  marketSnapshotPrice: number,
+  forecast: ForecastResult
+): Promise<string | null> {
+  // is_backfill = false, created_at defaults to NOW() — locks the forecast at
+  // submission time. Market hasn't resolved yet, so no scoring runs here;
+  // refreshAgentStats + resolved-market scoring will pick this up once the
+  // market closes.
+  const { data, error } = await sb
+    .from("predictions")
+    .insert({
+      agent_id: agentId,
+      market_id: marketDbId,
+      probability: forecast.probability,
+      confidence: forecast.confidence,
+      reasoning: forecast.reasoning,
+      abstained: forecast.abstained,
+      market_price_at_forecast: marketSnapshotPrice,
+      is_backfill: false,
+    })
+    .select("id")
+    .single();
+  if (error) {
+    if (error.message.includes("duplicate") || error.code === "23505") {
+      return null;
+    }
+    throw new Error(`insert live prediction: ${error.message}`);
+  }
+  return (data as { id: string }).id;
+}
+
+async function runLiveMode() {
+  console.log("[live] pulling open markets from Supabase...");
+  const openMarkets = await getOpenMarketsForLive();
+  console.log(`[live] ${openMarkets.length} open markets available (closes_at > now+24h)`);
+
+  // Diversify across categories (same round-robin pattern as backfill).
+  const byCat = new Map<string, LiveMarketRow[]>();
+  for (const m of openMarkets) {
+    const cat = m.category ?? "other";
+    const arr = byCat.get(cat) ?? [];
+    arr.push(m);
+    byCat.set(cat, arr);
+  }
+  const cats = Array.from(byCat.keys());
+  const selected: LiveMarketRow[] = [];
+  let idx = 0;
+  while (selected.length < LIMIT && idx < 1000) {
+    const cat = cats[idx % cats.length];
+    if (cat) {
+      const list = byCat.get(cat)!;
+      const taken = selected.filter((s) => (s.category ?? "other") === cat).length;
+      if (taken < list.length) selected.push(list[taken]!);
+    }
+    idx += 1;
+    if (selected.length === openMarkets.length) break;
+  }
+  console.log(
+    `[live] picked ${selected.length} markets across categories: ${[...byCat.entries()].map(([c, m]) => `${c}=${m.length}`).join(", ")}`
+  );
+
+  if (DRY) {
+    console.log("DRY RUN — would forecast on:");
+    for (const m of selected) {
+      console.log(`  - ${m.source}/${m.source_id}: ${m.question.slice(0, 80)}`);
+    }
+    return;
+  }
+
+  const agents = AGENTS.filter((a) => !a.synthetic).filter(
+    (a) => !ONLY_AGENT || a.id === ONLY_AGENT
+  );
+  let calls = 0;
+  let alreadyLocked = 0;
+  let failed = 0;
+  let abstained = 0;
+
+  for (const lm of selected) {
+    const common = liveMarketToCommon(lm);
+    for (const agent of agents) {
+      // Dedupe by Supabase: never re-forecast a market the agent has already
+      // locked in live mode. (The backfill-cache filesystem cache is NOT used
+      // for live mode — the source of truth is the predictions table.)
+      if (await liveExistsFor(agent.id, lm.id)) {
+        alreadyLocked += 1;
+        continue;
+      }
+      try {
+        console.log(
+          `  [${agent.id}] LIVE ${lm.source}/${lm.source_id.slice(0, 8)} :: ${lm.question.slice(0, 60)}...`
+        );
+        const forecast = await runClaude(agent, common);
+        const predId = await insertLivePrediction(
+          agent.id,
+          lm.id,
+          Number(lm.outcome_yes_price),
+          forecast
+        );
+        if (predId) {
+          calls += 1;
+          if (forecast.abstained) abstained += 1;
+        }
+      } catch (e) {
+        console.warn(`  ✗ ${agent.id}: ${e}`);
+        failed += 1;
+      }
+    }
+  }
+
+  console.log(
+    `[live] new=${calls} already_locked=${alreadyLocked} failed=${failed} abstained=${abstained}`
+  );
+
+  // Refresh agent_stats so any newly-resolved markets (whose live predictions
+  // are now scoreable) get reflected on the leaderboard.
+  await refreshAgentStats();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Cache layer (so we can rerun without burning the same calls)
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -891,6 +1088,13 @@ async function computeEnsemblePredictions() {
 // ────────────────────────────────────────────────────────────────────────────
 
 async function main() {
+  // Live mode: forecast OPEN markets that resolve in the future. No lookahead.
+  if (MODE === "live") {
+    await runLiveMode();
+    return;
+  }
+
+  // Default: backfill mode — forecast RESOLVED historical markets w/ is_backfill=true.
   // 1. Pull markets
   const polyMarkets = SOURCE === "manifold" ? [] : await pullPolymarketResolved();
   const manifoldMarkets =

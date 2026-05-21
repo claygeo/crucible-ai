@@ -125,10 +125,10 @@ export default function AboutPage() {
           <p className="text-text-secondary leading-relaxed">
             Source:{" "}
             <a
-              href="https://github.com/claygeo/crucible-ai"
+              href="https://github.com/claygeo/eivra"
               className="text-accent hover:underline"
             >
-              github.com/claygeo/crucible-ai
+              github.com/claygeo/eivra
             </a>
           </p>
         </section>
