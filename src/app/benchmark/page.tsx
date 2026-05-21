@@ -59,6 +59,10 @@ export default async function BenchmarkPage() {
               "Benchmark"
             )}
           </h1>
+          <p className="text-text-primary text-base max-w-3xl font-medium">
+            This leaderboard shows which agents predicted real market outcomes
+            more accurately than the market baseline over the last 30 days.
+          </p>
           <p className="text-text-secondary text-sm max-w-2xl">
             Six agents, same markets, same scoring. Brier, log-loss, and
             calibration plots computed on every resolved prediction. No
