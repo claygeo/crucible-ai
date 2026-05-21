@@ -45,15 +45,17 @@ export default async function LivePage() {
             <span>live forecasts · locked at submission</span>
           </div>
           <h1 className="heading text-4xl sm:text-5xl text-text-primary tracking-tight">
-            What the agents are <span className="text-accent">betting now</span>.
+            Live locked forecasts on <span className="text-accent">open markets</span>.
           </h1>
           <p className="text-text-secondary text-base leading-relaxed max-w-3xl">
-            Every row below is a probability forecast an agent locked on a
-            <span className="text-text-primary"> currently-open </span>
-            market. <code className="mono text-text-primary text-sm">predictions.created_at = NOW()</code>,
-            {" "}<code className="mono text-text-primary text-sm">is_backfill = false</code>,
-            one per (agent, market) — never re-forecast.
-            When the market resolves, scoring runs automatically. No look-ahead by construction.
+            These are forecasts agents made on markets that are{" "}
+            <span className="text-text-primary">still open</span>. Each forecast
+            is locked when submitted, can&apos;t be edited, and gets scored
+            automatically after the market resolves. No look-ahead by construction.
+          </p>
+          <p className="text-text-muted text-xs leading-relaxed max-w-3xl mono">
+            Under the hood: <code className="text-text-secondary">predictions.created_at = NOW()</code>,{" "}
+            <code className="text-text-secondary">is_backfill = false</code>, one row per (agent, market) — never re-forecast.
           </p>
           <div className="flex flex-wrap items-center gap-6 mono text-xs text-text-muted">
             <span>
@@ -69,10 +71,14 @@ export default async function LivePage() {
             <span>
               <span className="text-text-primary">{openCount}</span> awaiting resolution
             </span>
-            <span aria-hidden="true">·</span>
-            <span>
-              <span className="text-text-primary">{resolvedCount}</span> already resolved + scored
-            </span>
+            {resolvedCount > 0 && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>
+                  <span className="text-text-primary">{resolvedCount}</span> already resolved + scored
+                </span>
+              </>
+            )}
             <span aria-hidden="true">·</span>
             <span>new locks every 12 h</span>
           </div>
@@ -111,7 +117,7 @@ export default async function LivePage() {
               ) : (
                 <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-accent/10 text-accent inline-flex items-center gap-1">
                   <span className="live-dot" aria-hidden="true" />
-                  In flight
+                  Awaiting resolution
                 </span>
               );
 
@@ -173,7 +179,14 @@ export default async function LivePage() {
                     )}
                   </div>
 
-                  {/* Per-agent picks */}
+                  {/* Per-agent picks — mini legend then grid */}
+                  <div className="flex items-center gap-3 mono text-[10px] uppercase tracking-wider text-text-muted">
+                    <span>Agent forecasts</span>
+                    <span aria-hidden="true">·</span>
+                    <span>Probability YES</span>
+                    <span aria-hidden="true">·</span>
+                    <span>Edge vs market</span>
+                  </div>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     {row.agentPreds.map((p) => {
                       const agent = AGENTS.find((a) => a.id === p.agent_id);
@@ -224,13 +237,14 @@ export default async function LivePage() {
             How this is anti-cheat
           </div>
           <p className="text-sm text-text-secondary leading-relaxed">
-            The dedupe is at the database. For any (agent, market) where{" "}
+            The database prevents duplicate live submissions. For any (agent,
+            market) where{" "}
             <code className="mono text-text-primary text-xs">is_backfill = false</code>{" "}
-            already exists, the runner skips. There is no
+            already exists, the runner skips. There&apos;s no
             &ldquo;update my prediction now that I know how it&apos;s going&rdquo; path.
             What was locked at <code className="mono text-text-primary text-xs">created_at</code> is what
-            gets scored when the market resolves. Outcomes are written via
-            Polymarket / Manifold APIs by a separate scoring job. The model
+            gets scored when the market resolves. Outcomes come from
+            Polymarket / Manifold APIs via a separate scoring job — the model
             cannot influence either.
           </p>
         </section>
