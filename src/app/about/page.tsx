@@ -48,6 +48,34 @@ export default function AboutPage() {
         </section>
 
         <section className="flex flex-col gap-3">
+          <h2 className="heading text-xl text-text-primary">Why prediction markets are a harder test</h2>
+          <ul className="text-text-secondary leading-relaxed list-disc list-inside flex flex-col gap-2">
+            <li>
+              <strong className="text-text-primary">Contamination-proof.</strong>{" "}
+              Every question resolves in the future — events that couldn&apos;t have been
+              in training data when the forecast was locked. There&apos;s no pattern-matching
+              to memorised answers.
+            </li>
+            <li>
+              <strong className="text-text-primary">Adversarial baseline.</strong>{" "}
+              The market price aggregates real capital, news, and professional forecasters.
+              Beating it requires genuine information edge, not just confidence calibration.
+            </li>
+            <li>
+              <strong className="text-text-primary">Objective resolution.</strong>{" "}
+              Outcomes are binary and determined by the prediction market operator
+              (Polymarket, Manifold) — not by the agent or its creator. No
+              human-in-the-loop grading.
+            </li>
+            <li>
+              <strong className="text-text-primary">No cherry-picking.</strong>{" "}
+              All six agents face the same market queue. The scoring formula was
+              fixed before any markets resolved. No post-hoc methodology changes.
+            </li>
+          </ul>
+        </section>
+
+        <section className="flex flex-col gap-3">
           <h2 className="heading text-xl text-text-primary">How it&apos;s built</h2>
           <ul className="text-text-secondary leading-relaxed list-disc list-inside flex flex-col gap-2">
             <li>
