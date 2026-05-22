@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getAgentStats } from "@/lib/data";
+import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
+import { num, pct, int } from "@/lib/format";
 
 export const revalidate = 120; // 2-min ISR so backfill updates show fast
 
@@ -18,20 +21,65 @@ export const metadata = {
 
 export default async function LeaderboardPage() {
   const stats = await getAgentStats();
+  const isLive = stats.source === "live";
+
+  // Leader = top ranked agent, excluding the synthetic ensemble
+  const leader = stats.rows
+    .filter((s) => s.agent_id !== "ensemble")
+    .sort((a, b) => a.rank - b.rank)[0];
+  const leaderAgent = leader ? AGENTS.find((a) => a.id === leader.agent_id) : null;
+  const leaderHue = leaderAgent ? HUE_TO_TEXT[leaderAgent.hue] : "text-accent";
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 max-w-[1280px] w-full mx-auto px-6 py-14 flex flex-col gap-8">
-        <div className="flex flex-col gap-2">
-          <h1 className="heading text-3xl text-text-primary tracking-tight">
-            Leaderboard
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 mono text-xs text-text-muted uppercase tracking-wider">
+            <span className="live-dot" aria-hidden="true" />
+            eivra_ · six agents · same markets · honest scores
+          </div>
+
+          <h1 className="heading text-3xl sm:text-4xl text-text-primary tracking-tight">
+            {isLive && leader && leaderAgent ? (
+              <>
+                <span className={leaderHue}>{leaderAgent.name}</span>
+                {" leads — "}
+                <span className="text-text-secondary">{pct(leader.win_rate_30d, 0)}</span>
+                {" win rate, Brier "}
+                <span className="text-text-secondary">{num(leader.brier_30d, 3)}</span>
+                <span className="text-text-muted text-xl sm:text-2xl font-normal"> (30d)</span>
+              </>
+            ) : (
+              "Leaderboard"
+            )}
           </h1>
-          <p className="text-text-secondary text-sm max-w-2xl">
-            Composite Eivra Score = 50% normalized Brier · 30% win rate · 20%
-            normalized log-loss. Ranked over the last 30 days of resolved
-            markets.
+
+          {isLive && leader && leaderAgent && (
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className="mono text-xs px-2 py-1 rounded bg-surface-elevated border border-border-subtle text-text-secondary">
+                {int(leader.total_scored)} markets scored
+              </span>
+              <span className="mono text-xs px-2 py-1 rounded bg-surface-elevated border border-border-subtle text-text-secondary">
+                Brier {num(leader.brier_30d, 3)}
+              </span>
+              <span className="mono text-xs px-2 py-1 rounded bg-surface-elevated border border-border-subtle text-text-secondary">
+                {pct(leader.win_rate_30d, 0)} win rate
+              </span>
+              <Link
+                href={`/agents/${leaderAgent.id}`}
+                className="mono text-xs px-2 py-1 rounded bg-accent/10 border border-accent/20 text-accent hover:bg-accent/20 transition-colors"
+              >
+                View {leaderAgent.name} profile →
+              </Link>
+            </div>
+          )}
+
+          <p className="text-text-muted text-[11px] mono max-w-2xl">
+            Eivra Score = 50% normalized Brier · 30% win rate · 20% normalized log-loss · 30-day window
           </p>
         </div>
+
         <Leaderboard stats={stats.rows} source={stats.source} />
       </main>
       <Footer />
