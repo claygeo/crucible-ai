@@ -26,6 +26,10 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
   const delta = bestNonEcho.brier_30d - echo.brier_30d;
   const bestAgent = AGENTS.find((a) => a.id === bestNonEcho.agent_id);
   const beatsMarket = delta < 0;
+  // % improvement/gap vs market baseline — more readable to a first-time visitor than raw delta
+  const pctVsMarket = echo.brier_30d > 0
+    ? Math.round(Math.abs(delta) / echo.brier_30d * 100)
+    : 0;
   // Special case: the market baseline itself has the lowest Brier this month.
   // No agent has beaten it. Frame the panel as 'market still on top.'
   const marketWonOutright = lowestOverall.agent_id === "echo";
@@ -41,9 +45,9 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
             <span className="text-text-secondary font-semibold">No agent</span> has
             beaten the market baseline this month. The best non-baseline agent —{" "}
             <span className="text-accent font-semibold">{bestAgent?.name}</span> —
-            is within{" "}
-            <span className="text-text-primary">{num(Math.abs(delta), 3)}</span>{" "}
-            Brier of the market baseline (Echo, which just mirrors prediction-market prices).
+            trails market-prior (Echo) by{" "}
+            <span className="text-rose-400">{pctVsMarket}%</span>{" "}
+            on Brier.
           </div>
           <div className="mono text-[11px] text-text-muted leading-relaxed">
             <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is chance.">
@@ -64,11 +68,11 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
           </div>
         </div>
         <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
-          <div className="heading text-4xl sm:text-5xl tabular-nums text-text-secondary">
-            {signed(delta, 3)}
+          <div className="heading text-4xl sm:text-5xl tabular-nums text-rose-400">
+            +{pctVsMarket}%
           </div>
           <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
-            market still on top
+            behind market baseline
           </div>
         </div>
       </div>
@@ -84,8 +88,10 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
         <div className="text-text-primary text-lg sm:text-xl leading-snug">
           <span className="text-accent font-semibold">{bestAgent?.name}</span> is
           the most accurate agent this month,{" "}
-          {beatsMarket ? "slightly beating" : "trailing"} the market baseline
-          (Echo, which just mirrors prediction-market prices).
+          {beatsMarket
+            ? <><span className="text-positive">{pctVsMarket}% better Brier</span> than</>
+            : `${pctVsMarket}% behind`
+          }{" "}the market baseline (Echo, which just mirrors prediction-market prices).
         </div>
         <div className="mono text-[11px] text-text-muted leading-relaxed">
           <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is chance.">
@@ -111,10 +117,10 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
             beatsMarket ? "text-positive" : "text-rose-400"
           }`}
         >
-          {signed(delta, 3)}
+          {pctVsMarket}%
         </div>
         <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
-          {beatsMarket ? "beats consensus" : "trails consensus"}
+          {beatsMarket ? "better Brier than market" : "behind market baseline"}
         </div>
       </div>
     </div>
