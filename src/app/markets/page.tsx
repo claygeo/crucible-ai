@@ -67,14 +67,22 @@ export default async function MarketsPage() {
                     </span>
                   </div>
                   <Link
-                    href={m.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors flex items-start gap-1.5"
+                    href={`/markets/${m.id}`}
+                    className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
                   >
-                    <span className="flex-1 min-w-0">{m.question}</span>
-                    <ExternalLink size={12} className="shrink-0 mt-0.5 text-text-muted" aria-label="opens in new tab" />
+                    {m.question}
                   </Link>
+                  {m.url && m.url !== "#" && (
+                    <a
+                      href={m.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 mt-0.5"
+                      aria-label="View on source"
+                    >
+                      <ExternalLink size={12} className="text-text-muted hover:text-accent transition-colors" />
+                    </a>
+                  )}
                   <div className="shrink-0 flex flex-col items-end gap-0.5">
                     <span className="mono text-xs text-text-muted whitespace-nowrap">
                       closes {relativeTime(m.closes_at)}
