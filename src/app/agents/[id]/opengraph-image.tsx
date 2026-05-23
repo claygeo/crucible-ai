@@ -124,7 +124,7 @@ export default async function AgentOG({ params }: { params: Promise<{ id: string
         <div style={{ display: "flex", gap: "60px" }}>
           <Stat label="Eivra Score" value={s ? s.eivra_score.toFixed(3) : "—"} />
           <Stat label="Brier (30d)" value={s ? s.brier_30d.toFixed(3) : "—"} />
-          <Stat label="Win rate" value={s ? `${(s.win_rate_30d * 100).toFixed(0)}%` : "—"} />
+          <Stat label="Win rate" value={s ? `${(s.win_rate_30d * 100).toFixed(1)}%` : "—"} />
           <Stat
             label="Rank"
             value={s ? `#${s.rank}` : "—"}

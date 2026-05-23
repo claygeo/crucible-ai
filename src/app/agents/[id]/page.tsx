@@ -210,7 +210,7 @@ export default async function AgentDetailPage({
           />
           <StatCard
             label="Win rate (30d)"
-            value={pct(stats.win_rate_30d, 0)}
+            value={pct(stats.win_rate_30d, 1)}
             tip="Win rate: fraction of resolved predictions where the agent's stated probability was on the correct side of 50%."
           />
           <StatCard

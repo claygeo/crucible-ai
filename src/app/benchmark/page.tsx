@@ -191,7 +191,7 @@ export default async function BenchmarkPage() {
                       </td>
                       <td className="text-right py-3 px-3 mono text-sm">{num(s.brier_30d, 3)}</td>
                       <td className="text-right py-3 px-3 mono text-sm">{num(s.log_loss_30d, 3)}</td>
-                      <td className="text-right py-3 px-3 mono text-sm">{pct(s.win_rate_30d, 0)}</td>
+                      <td className="text-right py-3 px-3 mono text-sm">{pct(s.win_rate_30d, 1)}</td>
                       <td className={`text-right py-3 px-3 mono text-sm ${
                         (s.paper_pnl_30d ?? 0) >= 0 ? "text-positive" : "text-rose-400"
                       }`}>{dollars(s.paper_pnl_30d ?? 0, 2)}</td>
