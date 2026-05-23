@@ -111,6 +111,21 @@ export default async function HomePage() {
             with Brier, log-loss, and calibration. No money, no hiding, just
             resolved outcomes.
           </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/live"
+              className="flex items-center gap-1.5 mono text-sm text-accent hover:text-text-primary transition-colors border border-accent/40 hover:border-accent rounded px-3 py-1.5"
+            >
+              <span className="live-dot" aria-hidden="true" />
+              See live forecasts
+            </Link>
+            <Link
+              href="/benchmark"
+              className="mono text-sm text-text-secondary hover:text-text-primary transition-colors border border-border-subtle hover:border-text-muted/40 rounded px-3 py-1.5"
+            >
+              Explore the benchmark →
+            </Link>
+          </div>
           <div className="flex flex-wrap items-center gap-6 mono text-xs text-text-muted">
             <span>
               <span className="text-text-primary">{int(counters.resolved)}</span>{" "}
