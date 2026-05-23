@@ -220,7 +220,11 @@ export default async function LivePage() {
                           </span>
                           <span
                             className={`mono text-[11px] tabular-nums ${
-                              delta >= 0 ? "text-accent" : "text-text-muted"
+                              Math.abs(delta) < 0.03
+                                ? "text-text-muted"
+                                : delta > 0
+                                  ? "text-accent"
+                                  : "text-rose-400"
                             }`}
                             aria-label={`${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(0)} percentage points vs market price`}
                             title="Agent forecast minus market price at lock time"
