@@ -24,7 +24,8 @@ export default async function LivePage() {
     getLiveForecasts(60),
     getCounters(),
   ]);
-  const rows = liveRes.rows;
+  // Sort by spread descending: highest inter-agent disagreement surfaces first
+  const rows = [...liveRes.rows].sort((a, b) => b.spread - a.spread);
 
   const totalLockedAgentForecasts = rows.reduce(
     (acc, r) => acc + r.agentPreds.length,
@@ -59,8 +60,8 @@ export default async function LivePage() {
           </p>
           <div className="flex flex-wrap items-center gap-6 mono text-xs text-text-muted">
             <span>
-              <span className="text-accent">{counters.liveInFlight}</span>{" "}
-              total live forecasts
+              <span className="text-accent">{totalLockedAgentForecasts}</span>{" "}
+              locked agent forecasts
             </span>
             <span aria-hidden="true">·</span>
             <span>
@@ -75,7 +76,7 @@ export default async function LivePage() {
               <>
                 <span aria-hidden="true">·</span>
                 <span>
-                  <span className="text-text-primary">{resolvedCount}</span> already resolved + scored
+                  <span className="text-positive">{resolvedCount}</span> resolved + scored
                 </span>
               </>
             )}
@@ -96,6 +97,11 @@ export default async function LivePage() {
           </section>
         ) : (
           <section className="flex flex-col gap-5">
+            <div className="flex items-center gap-2 mono text-[10px] uppercase tracking-wider text-text-muted">
+              <span>sorted by agent disagreement</span>
+              <span aria-hidden="true">·</span>
+              <span>highest spread first</span>
+            </div>
             {rows.map((row) => {
               const isResolved = row.market.status === "resolved";
               const isPending = row.market.status === "pending_resolution";
