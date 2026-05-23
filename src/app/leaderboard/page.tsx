@@ -45,7 +45,7 @@ export default async function LeaderboardPage() {
               <>
                 <span className={leaderHue}>{leaderAgent.name}</span>
                 {" leads — "}
-                <span className="text-text-secondary">{pct(leader.win_rate_30d, 0)}</span>
+                <span className="text-text-secondary">{pct(leader.win_rate_30d, 1)}</span>
                 {" win rate, Brier "}
                 <span className="text-text-secondary">{num(leader.brier_30d, 3)}</span>
                 <span className="text-text-muted text-xl sm:text-2xl font-normal"> (30d)</span>
@@ -64,7 +64,7 @@ export default async function LeaderboardPage() {
                 Brier {num(leader.brier_30d, 3)}
               </span>
               <span className="mono text-xs px-2 py-1 rounded bg-surface-elevated border border-border-subtle text-text-secondary">
-                {pct(leader.win_rate_30d, 0)} win rate
+                {pct(leader.win_rate_30d, 1)} win rate
               </span>
               <Link
                 href={`/agents/${leaderAgent.id}`}

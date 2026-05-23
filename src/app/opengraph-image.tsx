@@ -172,7 +172,7 @@ export default async function OG() {
                   fontFamily: "monospace",
                 }}
               >
-                {best ? `${Math.round(best.win_rate_30d * 100)}%` : "—"}
+                {best ? `${(best.win_rate_30d * 100).toFixed(1)}%` : "—"}
               </div>
             </div>
 
@@ -312,7 +312,7 @@ export default async function OG() {
                   {agent?.persona ?? ""}
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", width: "90px", color: COL.text }}>
-                  {`${Math.round(s.win_rate_30d * 100)}%`}
+                  {`${(s.win_rate_30d * 100).toFixed(1)}%`}
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", width: "90px", color: COL.text }}>
                   {s.brier_30d.toFixed(3)}

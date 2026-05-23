@@ -78,7 +78,7 @@ export default async function AgentsPage() {
                       />
                       <Stat
                         label="Win %"
-                        value={pct(stat.win_rate_30d, 0)}
+                        value={pct(stat.win_rate_30d, 1)}
                         tip="Win rate (30-day rolling): fraction of resolved predictions where the agent's probability was on the correct side of 50%. A coin-flip baseline scores 50%."
                       />
                       <Stat

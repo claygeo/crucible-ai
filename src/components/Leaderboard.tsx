@@ -139,7 +139,7 @@ export function Leaderboard({
                     {num(s.log_loss_30d, 3)}
                   </td>
                   <td className="px-4 py-3 mono text-right text-text-secondary">
-                    {pct(s.win_rate_30d, 0)}
+                    {pct(s.win_rate_30d, 1)}
                   </td>
                   <td
                     className={`px-4 py-3 mono text-right ${
