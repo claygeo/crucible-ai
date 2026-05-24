@@ -30,10 +30,22 @@ export default async function BenchmarkPage() {
 
   // ── derive headline numbers ──────────────────────────────────────────
   const sortedByBrier = [...stats].sort((a, b) => a.brier_30d - b.brier_30d);
-  const best = sortedByBrier[0];
   const echo = stats.find((s) => s.agent_id === "echo");
-  const bestAgent = best ? AGENTS.find((a) => a.id === best.agent_id) : null;
-  const bestHueTxt = bestAgent ? HUE_TO_TEXT[bestAgent.hue] : "text-accent";
+  // Best reasoning agent = best Brier excluding market-prior (echo) and synthetic ensemble
+  const reasoningStats = stats.filter(
+    (s) => s.agent_id !== "echo" && s.agent_id !== "ensemble"
+  );
+  const bestReasoning = [...reasoningStats].sort(
+    (a, b) => a.brier_30d - b.brier_30d
+  )[0];
+  const bestReasoningAgent = bestReasoning
+    ? AGENTS.find((a) => a.id === bestReasoning.agent_id)
+    : null;
+  const bestReasoningHueTxt = bestReasoningAgent
+    ? HUE_TO_TEXT[bestReasoningAgent.hue]
+    : "text-accent";
+  const reasoningBeatsMarket =
+    echo && bestReasoning && bestReasoning.brier_30d < echo.brier_30d;
 
   // Disagreements: list of { market, spread, agentPreds }
   const disagreements = disagreementsRes.rows;
@@ -50,18 +62,18 @@ export default async function BenchmarkPage() {
             eivra_ · methodology &amp; results
           </div>
           <h1 className="heading text-4xl text-text-primary tracking-tight">
-            {best && bestAgent ? (
+            {reasoningBeatsMarket && bestReasoningAgent ? (
               <>
-                <span className={bestHueTxt}>{bestAgent.name}</span> leads on
-                Brier
+                <span className={bestReasoningHueTxt}>{bestReasoningAgent.name}</span>{" "}
+                beats the market-prior
               </>
             ) : (
-              "Benchmark"
+              <>Market-prior holds <span className="text-text-muted">·</span> reasoning agents close behind</>
             )}
           </h1>
           <p className="text-text-primary text-base max-w-3xl font-medium">
-            This leaderboard shows which agents predicted real market outcomes
-            more accurately than the market baseline over the last 30 days.
+            Echo mirrors the market price — it&apos;s the baseline. Can reasoning agents beat it?
+            Here&apos;s 30-day Brier on every resolved market.
           </p>
           <p className="text-text-secondary text-sm max-w-2xl">
             Six agents, same markets, same scoring. Brier, log-loss, and
@@ -94,37 +106,36 @@ export default async function BenchmarkPage() {
         <section className="flex flex-col gap-4">
           <h2 className="heading text-xl text-text-primary">All-agent summary</h2>
 
-          {best && echo && (
+          {echo && bestReasoning && bestReasoningAgent && (
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="panel px-5 py-4 flex flex-col gap-1">
                 <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                  Best Brier (30d)
+                  Market-prior · Echo (baseline)
                 </div>
-                <div className={`heading text-3xl ${bestHueTxt}`}>
-                  {num(best.brier_30d, 3)}
+                <div className="heading text-3xl text-white">
+                  {num(echo.brier_30d, 3)}
                 </div>
                 <div className="text-xs text-text-secondary">
-                  {bestAgent?.name} across {int(best.total_scored)} resolved markets.
+                  Brier. Echo mirrors the market price — this is the bar to beat.
                 </div>
               </div>
               <div className="panel px-5 py-4 flex flex-col gap-1">
                 <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                  vs Market-prior (Echo)
+                  Best reasoning agent
                 </div>
-                <div className="heading text-3xl text-text-primary">
-                  <span className="mono">{num(echo.brier_30d, 3)}</span> Brier.
+                <div className={`heading text-3xl ${bestReasoningHueTxt}`}>
+                  {num(bestReasoning.brier_30d, 3)}
                 </div>
                 <div className="text-xs text-text-secondary">
-                  Brier delta vs market
-                  prior:{" "}
+                  {bestReasoningAgent.name} · delta vs market-prior:{" "}
                   <span
                     className={
-                      best.brier_30d - echo.brier_30d < 0
+                      bestReasoning.brier_30d - echo.brier_30d < 0
                         ? "text-positive"
                         : "text-rose-400"
                     }
                   >
-                    {signed(best.brier_30d - echo.brier_30d, 3)}
+                    {signed(bestReasoning.brier_30d - echo.brier_30d, 3)}
                   </span>
                 </div>
               </div>
@@ -133,7 +144,7 @@ export default async function BenchmarkPage() {
                   Markets scored
                 </div>
                 <div className="heading text-3xl text-text-primary">
-                  {int(best.total_scored)}
+                  {int(echo.total_scored)}
                 </div>
                 <div className="text-xs text-text-secondary">
                   Resolved predictions with ground-truth outcome.
