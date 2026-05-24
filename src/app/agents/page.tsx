@@ -37,8 +37,11 @@ export default async function AgentsPage() {
         </p>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {AGENTS.map((agent) => {
+          {[...AGENTS]
+            .sort((a, b) => (byId[a.id]?.rank ?? 99) - (byId[b.id]?.rank ?? 99))
+            .map((agent) => {
             const stat = byId[agent.id];
+            const rank = stat?.rank;
             return (
               <Link
                 key={agent.id}
@@ -54,6 +57,16 @@ export default async function AgentsPage() {
                     <h2 className="heading text-lg text-text-primary">
                       {agent.name}
                     </h2>
+                    {rank != null && (
+                      <span
+                        className={`mono text-[10px] font-semibold uppercase tracking-wider ${
+                          rank === 1 ? "text-accent" : "text-text-muted"
+                        }`}
+                        aria-label={`Rank ${rank}`}
+                      >
+                        #{rank}
+                      </span>
+                    )}
                   </div>
                   <span className="mono text-[10px] text-text-muted uppercase tracking-wider">
                     {agent.model}
@@ -67,8 +80,16 @@ export default async function AgentsPage() {
 
                 {stat && (
                   <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-border-subtle">
-                    <div className="mono text-[9px] uppercase tracking-wider text-text-muted">
-                      Rolling 30-day window
+                    <div className="flex items-center justify-between">
+                      <div className="mono text-[9px] uppercase tracking-wider text-text-muted">
+                        Rolling 30-day
+                      </div>
+                      <div className="flex items-center gap-1.5 mono text-[9px] text-text-muted uppercase tracking-wider">
+                        <Tooltip tip="Eivra Score: composite ranking — 50% normalized Brier, 30% win rate, 20% normalized log-loss. Higher is better. Range 0–1.">
+                          Eivra
+                        </Tooltip>
+                        <span className="text-text-secondary">{num(stat.eivra_score, 3)}</span>
+                      </div>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <Stat
