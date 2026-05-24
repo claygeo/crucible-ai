@@ -14,7 +14,7 @@ export function Tooltip({
 
   return (
     <span
-      className="relative inline-flex items-center cursor-help"
+      className="relative inline-flex items-center cursor-help border-b border-dotted border-[rgba(123,133,149,0.4)]"
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
       onFocus={() => setVisible(true)}
