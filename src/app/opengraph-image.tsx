@@ -7,6 +7,14 @@ export const alt = "Eivra — public AI forecasting, scored continuously";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+const MODEL_LABEL: Record<string, string> = {
+  "claude-opus-4-7": "Opus 4.7",
+  "claude-sonnet-4-6": "Sonnet 4.6",
+  "claude-haiku-4-5": "Haiku 4.5",
+  "gpt-5": "GPT-5",
+  synthetic: "Ensemble",
+};
+
 const COL = {
   bg: "#0a0b0d",
   text: "#e6e9ee",
@@ -138,7 +146,7 @@ export default async function OG() {
               textTransform: "uppercase",
             }}
           >
-            {`── leader · ${bestAgent?.persona ?? "—"} · ${bestAgent?.model.replace("claude-", "").replace("-", " ").toUpperCase() ?? "—"} ──`}
+            {`── leader · ${bestAgent?.persona ?? "—"} · ${bestAgent ? (MODEL_LABEL[bestAgent.model] ?? bestAgent.model) : "—"} ──`}
           </div>
 
           <div
@@ -241,7 +249,7 @@ export default async function OG() {
               fontFamily: "monospace",
             }}
           >
-            {`On ${best?.total_scored ?? 0} resolved Polymarket + Manifold markets. Beat 5 sibling agents and the uniform ensemble.`}
+            {`Beats 5 rival agents across ${best?.total_scored ?? 0} resolved Polymarket + Manifold markets.`}
           </div>
         </div>
 
@@ -369,7 +377,7 @@ export default async function OG() {
               <span>open</span>
             </div>
             <span>·</span>
-            <span style={{ color: COL.accent }}>$0 Anthropic API spend</span>
+            <span style={{ color: COL.accent }}>Max subscription</span>
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
             {[
