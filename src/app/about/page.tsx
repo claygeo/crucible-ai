@@ -1,5 +1,10 @@
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { getCounters } from "@/lib/data";
+import { int } from "@/lib/format";
+
+export const revalidate = 120;
 
 export const metadata = {
   title: "About — Eivra",
@@ -12,7 +17,9 @@ export const metadata = {
   },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const counters = await getCounters();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -20,6 +27,46 @@ export default function AboutPage() {
         <h1 className="heading text-4xl text-text-primary tracking-tight">
           About Eivra
         </h1>
+
+        {/* Live system status */}
+        <div className="panel px-5 py-4 flex flex-col gap-3">
+          <div className="flex items-center gap-2 mono text-[10px] uppercase tracking-wider text-text-muted">
+            <span className="live-dot" aria-hidden="true" />
+            System live · updates every 2 min
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 mono text-xs">
+            <span>
+              <span className="text-accent">{int(counters.liveInFlight)}</span>{" "}
+              <span className="text-text-secondary">forecasts in flight</span>
+            </span>
+            <span aria-hidden="true" className="text-text-muted">·</span>
+            <span>
+              <span className="text-text-primary">{int(counters.watching)}</span>{" "}
+              <span className="text-text-secondary">open markets watched</span>
+            </span>
+            <span aria-hidden="true" className="text-text-muted">·</span>
+            <span>
+              <span className="text-text-primary">{int(counters.resolved)}</span>{" "}
+              <span className="text-text-secondary">markets scored</span>
+            </span>
+            <span aria-hidden="true" className="text-text-muted">·</span>
+            <span>
+              <span className="text-text-primary">{int(counters.totalPredictions)}</span>{" "}
+              <span className="text-text-secondary">predictions logged</span>
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-3 text-xs">
+            <Link href="/live" className="text-accent hover:underline mono">
+              See live forecasts →
+            </Link>
+            <Link href="/leaderboard" className="text-text-secondary hover:text-text-primary transition-colors mono">
+              Leaderboard →
+            </Link>
+            <Link href="/benchmark" className="text-text-secondary hover:text-text-primary transition-colors mono">
+              Benchmark →
+            </Link>
+          </div>
+        </div>
 
         <section className="flex flex-col gap-4">
           <p className="text-text-secondary leading-relaxed">
