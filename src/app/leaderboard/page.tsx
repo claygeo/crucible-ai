@@ -44,7 +44,10 @@ export default async function LeaderboardPage() {
             {isLive && leader && leaderAgent ? (
               <>
                 <span className={leaderHue}>{leaderAgent.name}</span>
-                {" leads — "}
+                {leader.agent_id === "echo" ? (
+                  <span className="text-text-muted text-xl sm:text-2xl font-normal"> (market-prior) leads</span>
+                ) : " leads"}
+                {" — "}
                 <span className="text-text-secondary">{pct(leader.win_rate_30d, 1)}</span>
                 {" win rate, Brier "}
                 <span className="text-text-secondary">{num(leader.brier_30d, 3)}</span>
@@ -73,6 +76,14 @@ export default async function LeaderboardPage() {
                 View {leaderAgent.name} profile →
               </Link>
             </div>
+          )}
+          {isLive && leader?.agent_id === "echo" && (
+            <p className="text-text-muted text-xs mono max-w-2xl">
+              Echo mirrors the market price — it&apos;s the control baseline. The benchmark question is whether reasoning agents will beat it.{" "}
+              <Link href="/benchmark" className="text-accent hover:underline">
+                See the gap →
+              </Link>
+            </p>
           )}
 
           <p className="text-text-muted text-[11px] mono max-w-2xl">
