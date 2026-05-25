@@ -240,6 +240,7 @@ export default async function AgentDetailPage({
                 Latest 12 · scored where resolved
               </span>
             </div>
+            <div className="overflow-x-auto" role="region" aria-label={`Recent forecasts table for ${agent.name}`}>
             <table className="w-full" aria-label={`Recent forecasts for ${agent.name}`}>
               <thead>
                 <tr className="border-b border-border-subtle text-text-muted">
@@ -310,6 +311,7 @@ export default async function AgentDetailPage({
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </section>
 
