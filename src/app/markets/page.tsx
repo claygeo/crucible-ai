@@ -18,50 +18,120 @@ export const metadata = {
   },
 };
 
-export default async function MarketsPage() {
+const CATEGORY_TABS = [
+  { key: "all", label: "All" },
+  { key: "politics", label: "Politics" },
+  { key: "sports", label: "Sports" },
+  { key: "ai-tech", label: "AI & Tech" },
+  { key: "crypto", label: "Crypto" },
+  { key: "other", label: "Other" },
+] as const;
+
+type CategoryKey = (typeof CATEGORY_TABS)[number]["key"];
+
+export default async function MarketsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category } = await searchParams;
+  const activeCategory: CategoryKey =
+    (CATEGORY_TABS.find((c) => c.key === category)?.key as CategoryKey) ?? "all";
+
   const [openRes, resolvedRes] = await Promise.all([
     getMarkets({ status: "open", limit: 200 }),
     getMarkets({ status: "resolved", limit: 200 }),
   ]);
-  const open = openRes.rows;
-  const resolved = resolvedRes.rows;
+  const allOpen = openRes.rows;
+  const allResolved = resolvedRes.rows;
+
+  const filteredOpen =
+    activeCategory === "all"
+      ? allOpen
+      : allOpen.filter((m) => m.category === activeCategory);
+
+  const filteredResolved =
+    activeCategory === "all"
+      ? allResolved
+      : allResolved.filter((m) => m.category === activeCategory);
+
+  const tabs = CATEGORY_TABS.map((c) => ({
+    ...c,
+    count:
+      c.key === "all"
+        ? allOpen.length
+        : allOpen.filter((m) => m.category === c.key).length,
+  })).filter((c) => c.count > 0 || c.key === "all");
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 max-w-[1280px] w-full mx-auto px-6 py-14 flex flex-col gap-12">
+      <main className="flex-1 max-w-[1280px] w-full mx-auto px-6 py-14 flex flex-col gap-10">
+
+        {/* Hero */}
         <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3 mono text-xs text-text-muted uppercase tracking-wider">
+            <span className="live-dot" aria-hidden="true" />
+            eivra_ · tracked markets
+          </div>
           <h1 className="heading text-3xl text-text-primary tracking-tight">
-            Markets
+            {allOpen.length} open markets{" "}
+            <span className="text-text-muted font-normal">·</span>{" "}
+            <span className="text-text-secondary">{allResolved.length} resolved</span>
           </h1>
           <p className="text-text-secondary text-sm max-w-2xl">
-            Every question Eivra&apos;s agents are currently tracking, plus the
+            Every question Eivra&apos;s agents are currently forecasting, plus the
             archive of resolved events with outcome verdicts.
           </p>
         </div>
 
+        {/* Category filter tabs */}
+        <nav aria-label="Filter markets by category">
+          <div className="flex flex-wrap gap-2">
+            {tabs.map((c) => (
+              <Link
+                key={c.key}
+                href={c.key === "all" ? "/markets" : `/markets?category=${c.key}`}
+                aria-current={activeCategory === c.key ? "page" : undefined}
+                className={`mono text-xs px-3 py-1.5 rounded border transition-colors ${
+                  activeCategory === c.key
+                    ? "bg-accent/10 border-accent/30 text-accent"
+                    : "bg-surface-elevated border-border-subtle text-text-muted hover:text-text-primary hover:border-text-muted/30"
+                }`}
+              >
+                {c.label}{" "}
+                <span className={activeCategory === c.key ? "opacity-70" : "opacity-50"}>
+                  {c.count}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </nav>
+
+        {/* Open markets */}
         <section className="flex flex-col gap-3">
           <h2 className="heading text-lg text-text-primary">
-            Open ({open.length})
+            Open ({filteredOpen.length})
           </h2>
           <div className="panel divide-y divide-border-subtle">
-            {open.length === 0 ? (
+            {filteredOpen.length === 0 ? (
               <div className="px-5 py-8 mono text-xs text-text-muted">
-                [ ] No open markets pulled yet. The /15-min cron should populate
-                this within minutes.
+                [ ] No{activeCategory !== "all" ? ` ${activeCategory}` : ""} markets open right now.
               </div>
             ) : (
-              open.map((m) => (
+              filteredOpen.map((m) => (
                 <div
                   key={m.id}
                   className="px-5 py-4 panel-hover flex items-start gap-4"
                 >
                   <div className="shrink-0 flex flex-col items-start gap-1">
-                    <span
-                      className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
-                    >
-                      {m.category}
-                    </span>
+                    {activeCategory === "all" && (
+                      <span
+                        className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
+                      >
+                        {m.category}
+                      </span>
+                    )}
                     <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${sourceClass(m.source)}`}>
                       {m.source}
                     </span>
@@ -97,27 +167,30 @@ export default async function MarketsPage() {
           </div>
         </section>
 
+        {/* Resolved markets */}
         <section className="flex flex-col gap-3">
           <h2 className="heading text-lg text-text-primary">
-            Resolved ({resolved.length})
+            Resolved ({filteredResolved.length})
           </h2>
           <div className="panel divide-y divide-border-subtle">
-            {resolved.length === 0 ? (
+            {filteredResolved.length === 0 ? (
               <div className="px-5 py-8 mono text-xs text-text-muted">
-                [ ] No resolved markets scored yet. First scores in ~6h.
+                [ ] No{activeCategory !== "all" ? ` ${activeCategory}` : ""} resolved markets scored yet.
               </div>
             ) : (
-              resolved.map((m) => (
+              filteredResolved.map((m) => (
                 <div
                   key={m.id}
                   className="px-5 py-4 panel-hover flex items-start gap-4"
                 >
                   <div className="shrink-0 flex flex-col items-start gap-1">
-                    <span
-                      className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
-                    >
-                      {m.category}
-                    </span>
+                    {activeCategory === "all" && (
+                      <span
+                        className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
+                      >
+                        {m.category}
+                      </span>
+                    )}
                     <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${sourceClass(m.source)}`}>
                       {m.source}
                     </span>
@@ -147,6 +220,7 @@ export default async function MarketsPage() {
             )}
           </div>
         </section>
+
       </main>
       <Footer />
     </div>
