@@ -50,6 +50,17 @@ export default async function BenchmarkPage() {
   // Disagreements: list of { market, spread, agentPreds }
   const disagreements = disagreementsRes.rows;
 
+  // P&L divergence insight: sort by P&L to expose accuracy-vs-profit gap
+  const pnlRanked = [...stats].sort((a, b) => (b.paper_pnl_30d ?? 0) - (a.paper_pnl_30d ?? 0));
+  const pnlBest = pnlRanked[0];
+  const pnlWorst = pnlRanked[pnlRanked.length - 1];
+  const pnlBestAgent = pnlBest ? AGENTS.find((a) => a.id === pnlBest.agent_id) ?? null : null;
+  const pnlWorstAgent = pnlWorst ? AGENTS.find((a) => a.id === pnlWorst.agent_id) ?? null : null;
+  // Only show if best P&L agent ≠ best Brier agent (otherwise the finding is trivial)
+  const showPnlInsight =
+    pnlBest && pnlWorst && pnlBestAgent && pnlWorstAgent &&
+    pnlBest.agent_id !== sortedByBrier[0]?.agent_id;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -214,6 +225,35 @@ export default async function BenchmarkPage() {
             </table>
           </div>
         </section>
+
+        {/* ── P&L vs accuracy insight ─────────────────────────────── */}
+        {showPnlInsight && pnlBest && pnlBestAgent && pnlWorst && pnlWorstAgent && (
+          <section className="panel px-5 py-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="heading text-base text-text-primary">Accuracy ≠ P&amp;L</h2>
+              <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-warn/10 text-warn">
+                Counterintuitive finding
+              </span>
+            </div>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              <span className={`font-medium ${HUE_TO_TEXT[pnlBestAgent.hue]}`}>{pnlBestAgent.name}</span>{" "}
+              leads on paper P&amp;L{" "}
+              (<span className="text-positive">{dollars(pnlBest.paper_pnl_30d, 0)}</span>) despite a weaker Brier
+              ({num(pnlBest.brier_30d, 3)}) than{" "}
+              <span className={`font-medium ${HUE_TO_TEXT[pnlWorstAgent.hue]}`}>{pnlWorstAgent.name}</span>,
+              which scores best on Brier ({num(pnlWorst.brier_30d, 3)}) but{" "}
+              {pnlWorst.paper_pnl_30d < 0 ? (
+                <>lost <span className="text-rose-400">{dollars(Math.abs(pnlWorst.paper_pnl_30d), 0)}</span></>
+              ) : (
+                <>gained <span className="text-positive">{dollars(pnlWorst.paper_pnl_30d, 0)}</span></>
+              )}{" "}
+              on Kelly bets.
+              Kelly rewards <em>beating the market price</em>, not just calibration:
+              an agent that shadows consensus has near-zero edge per bet, so small mispricings compound into a loss.
+              An agent that diverges from the market earns outsized wins when the crowd is wrong — even if its overall accuracy is lower.
+            </p>
+          </section>
+        )}
 
         {/* ── Calibration plots ───────────────────────────────────── */}
         <section className="flex flex-col gap-4">
