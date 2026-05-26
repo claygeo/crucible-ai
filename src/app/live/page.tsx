@@ -200,10 +200,21 @@ export default async function LivePage() {
                       const hueBg = HUE_TO_BG[agent.hue];
                       const hueTxt = HUE_TO_TEXT[agent.hue];
                       const delta = p.probability - p.market_price_at_forecast;
+                      const outcome = row.market.resolved_outcome;
+                      const wasCorrect =
+                        outcome !== null
+                          ? (p.probability > 0.5) === outcome
+                          : null;
                       return (
                         <div
                           key={p.agent_id}
-                          className="bg-surface-elevated/40 border border-border-subtle rounded px-3 py-2 flex items-center gap-2"
+                          className={`bg-surface-elevated/40 border rounded px-3 py-2 flex items-center gap-2 ${
+                            wasCorrect === true
+                              ? "border-positive/40"
+                              : wasCorrect === false
+                                ? "border-rose-400/30"
+                                : "border-border-subtle"
+                          }`}
                         >
                           <span
                             className={`w-2 h-2 rounded-full shrink-0 ${hueBg}`}
@@ -218,20 +229,30 @@ export default async function LivePage() {
                           <span className="mono text-sm text-text-primary ml-auto tabular-nums">
                             {prob(p.probability)}
                           </span>
-                          <span
-                            className={`mono text-[11px] tabular-nums ${
-                              Math.abs(delta) < 0.03
-                                ? "text-text-muted"
-                                : delta > 0
-                                  ? "text-accent"
-                                  : "text-rose-400"
-                            }`}
-                            aria-label={`${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(0)} percentage points vs market price`}
-                            title="Agent forecast minus market price at lock time"
-                          >
-                            {signed(delta, 2)}
-                            <span className="text-text-muted text-[9px] ml-0.5">Δ</span>
-                          </span>
+                          {wasCorrect !== null ? (
+                            <span
+                              className={`mono text-[11px] font-bold shrink-0 ${wasCorrect ? "text-positive" : "text-rose-400"}`}
+                              aria-label={wasCorrect ? "Correct" : "Incorrect"}
+                              title={wasCorrect ? "Agent was on the correct side of 50%" : "Agent was on the wrong side of 50%"}
+                            >
+                              {wasCorrect ? "✓" : "✗"}
+                            </span>
+                          ) : (
+                            <span
+                              className={`mono text-[11px] tabular-nums shrink-0 ${
+                                Math.abs(delta) < 0.03
+                                  ? "text-text-muted"
+                                  : delta > 0
+                                    ? "text-accent"
+                                    : "text-rose-400"
+                              }`}
+                              aria-label={`${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(0)} percentage points vs market price`}
+                              title="Agent forecast minus market price at lock time"
+                            >
+                              {signed(delta, 2)}
+                              <span className="text-text-muted text-[9px] ml-0.5">Δ</span>
+                            </span>
+                          )}
                         </div>
                       );
                     })}
