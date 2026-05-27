@@ -1,4 +1,5 @@
 import type { PublishedPaperTradingArtifactProof } from "@/lib/trading-artifacts";
+import { PAPER_TRADING_PROOF_RULES } from "@/lib/trading";
 import type {
   DurableProofStatus,
   PaperTradingAgentEdgeProofRow,
@@ -13,9 +14,33 @@ export type PaperTradingAgentEdgeProofSource =
 
 export type PaperTradingAgentEdgeProfitabilityStatus =
   | "profitable"
+  | "positive_unproven"
   | "flat"
   | "loss_making"
   | "unresolved";
+
+export type PaperTradingAgentEdgeProfitabilityEvidence = {
+  status: PaperTradingAgentEdgeProfitabilityStatus;
+  status_label: string;
+  minimum_sample_met: boolean;
+  capture_sample_met: boolean;
+  resolved_sample_met: boolean;
+  positive_pnl_met: boolean;
+  positive_roi_met: boolean;
+  drawdown_limit_met: boolean;
+  profitability_proven: boolean;
+  resolved_trades: number;
+  required_resolved_trades: number;
+  missing_resolved_trades: number;
+  captured_days: number;
+  required_captured_days: number;
+  missing_capture_days: number;
+  net_pnl_usd: number;
+  roi_on_stake: number;
+  max_drawdown_usd: number;
+  max_allowed_drawdown_usd: number;
+  blockers: string[];
+};
 
 export type PaperTradingAgentEdgeProofLeaderboardRow =
   PaperTradingAgentEdgeProofRow & {
@@ -23,9 +48,29 @@ export type PaperTradingAgentEdgeProofLeaderboardRow =
     source: PaperTradingAgentEdgeProofSource;
     profitability_status: PaperTradingAgentEdgeProfitabilityStatus;
     profitability_status_label: string;
+    profitability_evidence: PaperTradingAgentEdgeProfitabilityEvidence;
     is_profitable: boolean;
+    is_positive_unproven: boolean;
     is_reviewable_candidate: boolean;
   };
+
+export type PaperTradingAgentEdgeProfitabilityGuard = {
+  status: "reviewable" | "collecting" | "unavailable";
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  required_resolved_trades_per_rule: number;
+  required_captured_days_per_rule: number;
+  min_resolved_net_pnl_usd: number;
+  min_roi_on_stake: number;
+  max_allowed_drawdown_usd: number;
+  rules_with_minimum_sample: number;
+  rules_positive_but_unproven: number;
+  rules_with_profitability_proven: number;
+  blockers: string[];
+};
 
 export type PaperTradingAgentEdgeProof = {
   schema_version: "1";
@@ -41,7 +86,9 @@ export type PaperTradingAgentEdgeProof = {
   rule_count: number;
   candidate_count: number;
   profitable_rule_count: number;
+  positive_unproven_rule_count: number;
   unresolved_rule_count: number;
+  profitability_guard: PaperTradingAgentEdgeProfitabilityGuard;
   latest_snapshot_date: string | null;
   latest_captured_at: string | null;
   best_resolved_rule: PaperTradingAgentEdgeProofLeaderboardRow | null;
@@ -164,26 +211,105 @@ function normalizeArtifactAgentEdgeRow(
   };
 }
 
-function profitabilityStatus(
-  row: PaperTradingAgentEdgeProofRow,
-): PaperTradingAgentEdgeProfitabilityStatus {
-  if (row.resolved_trades <= 0) return "unresolved";
-  if (row.window_pnl_usd > 0 && row.window_roi_on_stake > 0) {
-    return "profitable";
-  }
-  if (row.window_pnl_usd < 0 || row.window_roi_on_stake < 0) {
-    return "loss_making";
-  }
-  return "flat";
+function uniqueStrings(items: string[]): string[] {
+  return Array.from(new Set(items.filter((item) => item.length > 0)));
 }
 
 function profitabilityStatusLabel(
   status: PaperTradingAgentEdgeProfitabilityStatus,
 ): string {
-  if (status === "profitable") return "Profitable";
+  if (status === "profitable") return "Profitability proven";
+  if (status === "positive_unproven") return "Positive, unproven";
   if (status === "loss_making") return "Loss making";
   if (status === "flat") return "Flat";
   return "Unresolved";
+}
+
+function buildProfitabilityEvidence(
+  row: PaperTradingAgentEdgeProofRow,
+): PaperTradingAgentEdgeProfitabilityEvidence {
+  const missingResolvedTrades = Math.max(
+    0,
+    row.required_resolved_trades - row.resolved_trades,
+  );
+  const captureSampleMet =
+    row.captured_days >= row.required_captured_days &&
+    row.missing_capture_days === 0;
+  const resolvedSampleMet = missingResolvedTrades === 0;
+  const minimumSampleMet = captureSampleMet && resolvedSampleMet;
+  const positivePnlMet =
+    row.window_pnl_usd >= PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd;
+  const positiveRoiMet =
+    row.window_roi_on_stake > PAPER_TRADING_PROOF_RULES.minRoiOnStake;
+  const drawdownLimitMet =
+    row.max_drawdown_usd <= PAPER_TRADING_PROOF_RULES.maxDrawdownUsd;
+  const profitabilityProven =
+    row.proof_status === "candidate" &&
+    minimumSampleMet &&
+    positivePnlMet &&
+    positiveRoiMet &&
+    drawdownLimitMet;
+  const blockers = new Set(row.blockers);
+
+  if (!captureSampleMet) {
+    if (row.captured_days < row.required_captured_days) {
+      blockers.add(
+        `${row.required_captured_days - row.captured_days} more captured proof days needed.`,
+      );
+    }
+    if (row.missing_capture_days > 0) {
+      blockers.add(`${row.missing_capture_days} missing proof days.`);
+    }
+  }
+  if (!resolvedSampleMet) {
+    blockers.add(`${missingResolvedTrades} more resolved trades needed.`);
+  }
+  if (row.resolved_trades <= 0) {
+    blockers.add("No resolved trades in proof window.");
+  }
+  if (!positivePnlMet) {
+    blockers.add("Resolved paper P&L is not positive.");
+  }
+  if (!positiveRoiMet) {
+    blockers.add("Resolved ROI is not positive.");
+  }
+  if (!drawdownLimitMet) {
+    blockers.add("Drawdown exceeds proof limit.");
+  }
+
+  const status: PaperTradingAgentEdgeProfitabilityStatus =
+    row.resolved_trades <= 0
+      ? "unresolved"
+      : profitabilityProven
+        ? "profitable"
+        : positivePnlMet && positiveRoiMet
+          ? "positive_unproven"
+          : row.window_pnl_usd < 0 || row.window_roi_on_stake < 0
+            ? "loss_making"
+            : "flat";
+
+  return {
+    status,
+    status_label: profitabilityStatusLabel(status),
+    minimum_sample_met: minimumSampleMet,
+    capture_sample_met: captureSampleMet,
+    resolved_sample_met: resolvedSampleMet,
+    positive_pnl_met: positivePnlMet,
+    positive_roi_met: positiveRoiMet,
+    drawdown_limit_met: drawdownLimitMet,
+    profitability_proven: profitabilityProven,
+    resolved_trades: row.resolved_trades,
+    required_resolved_trades: row.required_resolved_trades,
+    missing_resolved_trades: missingResolvedTrades,
+    captured_days: row.captured_days,
+    required_captured_days: row.required_captured_days,
+    missing_capture_days: row.missing_capture_days,
+    net_pnl_usd: row.window_pnl_usd,
+    roi_on_stake: row.window_roi_on_stake,
+    max_drawdown_usd: row.max_drawdown_usd,
+    max_allowed_drawdown_usd: PAPER_TRADING_PROOF_RULES.maxDrawdownUsd,
+    blockers: uniqueStrings(Array.from(blockers)),
+  };
 }
 
 function proofStatusRank(status: DurableProofStatus): number {
@@ -254,6 +380,71 @@ function latestCapturedAt(
   );
 }
 
+function buildProfitabilityGuard(
+  rows: PaperTradingAgentEdgeProofLeaderboardRow[],
+  source: PaperTradingAgentEdgeProofSource,
+): PaperTradingAgentEdgeProfitabilityGuard {
+  const provenRules = rows.filter(
+    (row) => row.profitability_evidence.profitability_proven,
+  );
+  const positiveUnprovenRules = rows.filter(
+    (row) => row.profitability_status === "positive_unproven",
+  );
+  const minimumSampleRules = rows.filter(
+    (row) => row.profitability_evidence.minimum_sample_met,
+  );
+  const blockers =
+    rows.length === 0
+      ? ["No canonical agent-edge proof rows are available."]
+      : uniqueStrings(
+          rows.flatMap((row) => row.profitability_evidence.blockers),
+        );
+  const status: PaperTradingAgentEdgeProfitabilityGuard["status"] =
+    rows.length === 0
+      ? "unavailable"
+      : provenRules.length > 0
+        ? "reviewable"
+        : "collecting";
+
+  return {
+    status,
+    status_label:
+      status === "reviewable"
+        ? "Reviewable"
+        : status === "collecting"
+          ? "Collecting"
+          : "Unavailable",
+    message:
+      status === "reviewable"
+        ? "At least one agent-edge rule has positive realized results after the full paper proof gate."
+        : status === "collecting" && positiveUnprovenRules.length > 0
+          ? "Some agent-edge rules are positive, but the sample is not large enough to call them profitable."
+          : status === "collecting"
+            ? "Agent-edge profitability proof is still collecting resolved live paper tickets."
+            : "No agent-edge profitability proof source is available.",
+    next_required_action:
+      status === "reviewable"
+        ? "Operator review can inspect the proven paper rows; execution remains disabled."
+        : source === "none"
+          ? "Run the paper snapshot workflow and publish a proof artifact."
+          : positiveUnprovenRules.length > 0
+            ? "Keep collecting until each positive rule also clears the 30-day and 30-resolved-ticket gates."
+            : "Wait for live paper markets to resolve before judging profitability.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    required_resolved_trades_per_rule:
+      PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
+    required_captured_days_per_rule: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+    min_resolved_net_pnl_usd: PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd,
+    min_roi_on_stake: PAPER_TRADING_PROOF_RULES.minRoiOnStake,
+    max_allowed_drawdown_usd: PAPER_TRADING_PROOF_RULES.maxDrawdownUsd,
+    rules_with_minimum_sample: minimumSampleRules.length,
+    rules_positive_but_unproven: positiveUnprovenRules.length,
+    rules_with_profitability_proven: provenRules.length,
+    blockers,
+  };
+}
+
 export function buildPaperTradingAgentEdgeProof(args: {
   persistedRows: PaperTradingAgentEdgeProofRow[];
   publishedArtifactProof: PublishedPaperTradingArtifactProof;
@@ -288,14 +479,17 @@ export function buildPaperTradingAgentEdgeProofFromRows(args: {
 }): PaperTradingAgentEdgeProof {
   const sortedRows = args.rows.slice().sort(compareAgentEdgeRows);
   const rows = sortedRows.map((row, index) => {
-    const status = profitabilityStatus(row);
+    const profitabilityEvidence = buildProfitabilityEvidence(row);
     return {
       ...row,
       rank: index + 1,
       source: args.source,
-      profitability_status: status,
-      profitability_status_label: profitabilityStatusLabel(status),
-      is_profitable: status === "profitable",
+      profitability_status: profitabilityEvidence.status,
+      profitability_status_label: profitabilityEvidence.status_label,
+      profitability_evidence: profitabilityEvidence,
+      is_profitable: profitabilityEvidence.profitability_proven,
+      is_positive_unproven:
+        profitabilityEvidence.status === "positive_unproven",
       is_reviewable_candidate: row.proof_status === "candidate",
     };
   });
@@ -303,9 +497,13 @@ export function buildPaperTradingAgentEdgeProofFromRows(args: {
     (row) => row.is_reviewable_candidate,
   ).length;
   const profitableRuleCount = rows.filter((row) => row.is_profitable).length;
+  const positiveUnprovenRuleCount = rows.filter(
+    (row) => row.is_positive_unproven,
+  ).length;
   const unresolvedRuleCount = rows.filter(
     (row) => row.profitability_status === "unresolved",
   ).length;
+  const profitabilityGuard = buildProfitabilityGuard(rows, args.source);
   const bestResolvedRule =
     rows
       .filter((row) => row.resolved_trades > 0)
@@ -353,7 +551,9 @@ export function buildPaperTradingAgentEdgeProofFromRows(args: {
     rule_count: rows.length,
     candidate_count: candidateCount,
     profitable_rule_count: profitableRuleCount,
+    positive_unproven_rule_count: positiveUnprovenRuleCount,
     unresolved_rule_count: unresolvedRuleCount,
+    profitability_guard: profitabilityGuard,
     latest_snapshot_date: latestDate(rows),
     latest_captured_at: latestCapturedAt(rows),
     best_resolved_rule: bestResolvedRule,
