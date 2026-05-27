@@ -1,19 +1,19 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-05-27T10:03:05.103Z",
+  "generated_at": "2026-05-27T10:37:13.013Z",
   "source": "github_actions_artifact_audit",
   "paper_only": true,
   "real_money_execution_allowed": false,
   "repository": "claygeo/eivra",
   "workflow_path": ".github/workflows/paper-trading-snapshot.yml",
   "workflow_run": {
-    "id": "26504533944",
-    "url": "https://github.com/claygeo/eivra/actions/runs/26504533944",
+    "id": "26506080109",
+    "url": "https://github.com/claygeo/eivra/actions/runs/26506080109",
     "event": "workflow_dispatch",
     "ref": "main",
-    "head_sha": "49aa8c629fcf08b8e5b224a5cce0b7ed0e48046c",
-    "artifact_name": "paper-trading-proof-26504533944",
-    "download_command": "gh run download 26504533944 --repo claygeo/eivra --dir ./paper-artifacts"
+    "head_sha": "0ac5b141fb86970867f304e3321ea6bb82ab081b",
+    "artifact_name": "paper-trading-proof-26506080109",
+    "download_command": "gh run download 26506080109 --repo claygeo/eivra --dir ./paper-artifacts"
   },
   "artifact_contract": {
     "repository": "claygeo/eivra",
@@ -40,9 +40,797 @@
     "write_enabled": false,
     "mode_reason": "missing SUPABASE_SERVICE_ROLE_KEY; read-only artifacts only"
   },
+  "agent_edge_proof": {
+    "schema_version": "1",
+    "generated_at": "2026-05-27T10:37:12.304Z",
+    "status": "collecting",
+    "status_label": "Collecting",
+    "message": "Canonical agent-edge rules are being captured, but no live paper trades have resolved in the proof window yet.",
+    "next_required_action": "Wait for live paper markets to resolve before treating open EV as realized profit.",
+    "paper_only": true,
+    "real_money_execution_allowed": false,
+    "source": "published_artifact",
+    "source_label": "Published artifact",
+    "rule_count": 12,
+    "candidate_count": 0,
+    "profitable_rule_count": 0,
+    "unresolved_rule_count": 12,
+    "latest_snapshot_date": "2026-05-27",
+    "latest_captured_at": "2026-05-27T10:37:09.417Z",
+    "best_resolved_rule": null,
+    "best_open_ev_rule": {
+      "strategy_id": "sage-live-edge-10",
+      "strategy_label": "Sage live, edge >= 10pp",
+      "agent_id": "sage",
+      "agent_name": "Sage",
+      "min_edge": 0.1,
+      "proof_status": "collecting",
+      "proof_status_label": "Collecting",
+      "captured_days": 1,
+      "required_captured_days": 30,
+      "missing_capture_days": 0,
+      "resolved_trades": 0,
+      "required_resolved_trades": 30,
+      "win_rate": 0,
+      "avg_pnl_per_trade_usd": 0,
+      "daily_profit_factor": null,
+      "evidence_grade": "none",
+      "evidence_grade_label": "No sample",
+      "window_pnl_usd": 0,
+      "window_roi_on_stake": 0,
+      "max_drawdown_usd": 0,
+      "open_exposure_usd": 500,
+      "open_expected_pnl_usd": 654.71,
+      "latest_snapshot_date": "2026-05-27",
+      "latest_captured_at": "2026-05-27T10:37:09.417Z",
+      "proof_quality": {
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "resolved_trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "avg_stake_usd": 0,
+        "winning_days": 0,
+        "losing_days": 0,
+        "flat_days": 0,
+        "avg_daily_pnl_usd": 0,
+        "daily_profit_factor": null,
+        "blockers": [
+          "No resolved trades in proof window.",
+          "29 more capture days needed.",
+          "30 more resolved trades needed.",
+          "No daily P&L series in proof window.",
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ]
+      },
+      "blockers": [
+        "29 more persisted capture days needed.",
+        "30 more resolved live trades needed."
+      ],
+      "rank": 1,
+      "source": "published_artifact",
+      "profitability_status": "unresolved",
+      "profitability_status_label": "Unresolved",
+      "is_profitable": false,
+      "is_reviewable_candidate": false
+    },
+    "rows": [
+      {
+        "strategy_id": "sage-live-edge-10",
+        "strategy_label": "Sage live, edge >= 10pp",
+        "agent_id": "sage",
+        "agent_name": "Sage",
+        "min_edge": 0.1,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 500,
+        "open_expected_pnl_usd": 654.71,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 1,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "sage-live-edge-05",
+        "strategy_label": "Sage live, edge >= 5pp",
+        "agent_id": "sage",
+        "agent_name": "Sage",
+        "min_edge": 0.05,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 500,
+        "open_expected_pnl_usd": 551.42,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 2,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "magpie-live-edge-10",
+        "strategy_label": "Magpie live, edge >= 10pp",
+        "agent_id": "magpie",
+        "agent_name": "Magpie",
+        "min_edge": 0.1,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 300,
+        "open_expected_pnl_usd": 223.7,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 3,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "mirror-live-edge-10",
+        "strategy_label": "Mirror live, edge >= 10pp",
+        "agent_id": "mirror",
+        "agent_name": "Mirror",
+        "min_edge": 0.1,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 300,
+        "open_expected_pnl_usd": 215.04,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 4,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "mirror-live-edge-05",
+        "strategy_label": "Mirror live, edge >= 5pp",
+        "agent_id": "mirror",
+        "agent_name": "Mirror",
+        "min_edge": 0.05,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 500,
+        "open_expected_pnl_usd": 164.21,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 5,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "hawk-live-edge-10",
+        "strategy_label": "Hawk live, edge >= 10pp",
+        "agent_id": "hawk",
+        "agent_name": "Hawk",
+        "min_edge": 0.1,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 500,
+        "open_expected_pnl_usd": 161.2,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 6,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "magpie-live-edge-05",
+        "strategy_label": "Magpie live, edge >= 5pp",
+        "agent_id": "magpie",
+        "agent_name": "Magpie",
+        "min_edge": 0.05,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 500,
+        "open_expected_pnl_usd": 125.04,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 7,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "hawk-live-edge-05",
+        "strategy_label": "Hawk live, edge >= 5pp",
+        "agent_id": "hawk",
+        "agent_name": "Hawk",
+        "min_edge": 0.05,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 500,
+        "open_expected_pnl_usd": 109.88,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 8,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "echo-live-edge-05",
+        "strategy_label": "Echo live, edge >= 5pp",
+        "agent_id": "echo",
+        "agent_name": "Echo",
+        "min_edge": 0.05,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 0,
+        "open_expected_pnl_usd": 0,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 9,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "echo-live-edge-10",
+        "strategy_label": "Echo live, edge >= 10pp",
+        "agent_id": "echo",
+        "agent_name": "Echo",
+        "min_edge": 0.1,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 0,
+        "open_expected_pnl_usd": 0,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 10,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "ensemble-live-edge-05",
+        "strategy_label": "Crowd live, edge >= 5pp",
+        "agent_id": "ensemble",
+        "agent_name": "Crowd",
+        "min_edge": 0.05,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 0,
+        "open_expected_pnl_usd": 0,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 11,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      {
+        "strategy_id": "ensemble-live-edge-10",
+        "strategy_label": "Crowd live, edge >= 10pp",
+        "agent_id": "ensemble",
+        "agent_name": "Crowd",
+        "min_edge": 0.1,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 0,
+        "open_expected_pnl_usd": 0,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 12,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      }
+    ]
+  },
   "artifact_audit": {
     "verdict": "pass",
-    "checked_at": "2026-05-27T10:03:04.262Z",
+    "checked_at": "2026-05-27T10:37:12.305Z",
     "exit_code": 0,
     "artifact_count": 1,
     "latest_snapshot_date": "2026-05-27",
@@ -61,7 +849,7 @@
       {
         "path": "/home/runner/work/eivra/eivra/paper-snapshot-result.json",
         "source": "live",
-        "generated_at": "2026-05-27T10:03:02.020Z",
+        "generated_at": "2026-05-27T10:37:09.417Z",
         "snapshot_date": "2026-05-27",
         "resolution_watch": {
           "status": "overdue_resolution",
@@ -97,8 +885,8 @@
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
               "tradability_status": "needs_review",
-              "days_until_close": -0.42,
-              "age_days": 1.91
+              "days_until_close": -0.44,
+              "age_days": 1.93
             },
             {
               "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
@@ -116,8 +904,8 @@
               "created_at": "2026-05-26T00:19:14.77882+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.58,
-              "age_days": 1.41
+              "days_until_close": 0.56,
+              "age_days": 1.43
             },
             {
               "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
@@ -135,8 +923,8 @@
               "created_at": "2026-05-26T00:19:23.812179+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.58,
-              "age_days": 1.41
+              "days_until_close": 0.56,
+              "age_days": 1.43
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -154,8 +942,8 @@
               "created_at": "2026-05-26T00:19:36.083882+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.58,
-              "age_days": 1.41
+              "days_until_close": 0.56,
+              "age_days": 1.43
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -173,8 +961,8 @@
               "created_at": "2026-05-26T00:20:04.586579+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.58,
-              "age_days": 1.4
+              "days_until_close": 0.56,
+              "age_days": 1.43
             },
             {
               "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
@@ -192,8 +980,8 @@
               "created_at": "2026-05-24T12:19:25.197698+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 1.74,
-              "age_days": 2.91
+              "days_until_close": 1.72,
+              "age_days": 2.93
             },
             {
               "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
@@ -211,8 +999,8 @@
               "created_at": "2026-05-26T00:20:32.626001+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 3.24,
-              "age_days": 1.4
+              "days_until_close": 3.22,
+              "age_days": 1.43
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -230,8 +1018,8 @@
               "created_at": "2026-05-25T12:20:09.746582+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.34,
-              "age_days": 1.9
+              "days_until_close": 4.32,
+              "age_days": 1.93
             },
             {
               "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -249,8 +1037,8 @@
               "created_at": "2026-05-25T12:20:20.681026+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.34,
-              "age_days": 1.9
+              "days_until_close": 4.32,
+              "age_days": 1.93
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -268,8 +1056,8 @@
               "created_at": "2026-05-21T00:45:32.748096+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.39
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -287,8 +1075,8 @@
               "created_at": "2026-05-21T00:45:42.837675+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.39
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
@@ -306,14 +1094,14 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.38
+              "days_until_close": 4.56,
+              "age_days": 6.41
             }
           ]
         },
         "strategy_registry": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T10:03:02.020Z",
+          "generated_at": "2026-05-27T10:37:09.417Z",
           "paper_only": true,
           "real_money_execution_allowed": false,
           "config": {
@@ -722,7 +1510,7 @@
         },
         "would_trade_today": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T10:03:02.020Z",
+          "generated_at": "2026-05-27T10:37:09.417Z",
           "status": "blocked",
           "status_label": "Blocked",
           "message": "1 global live paper market need resolution review before any would-trade watchlist is trusted.",
@@ -770,8 +1558,8 @@
                 "created_at": "2026-05-21T00:51:06.72125+00:00",
                 "close_status": "closing_next_7d",
                 "tradability_status": "tradable",
-                "days_until_close": 4.58,
-                "age_days": 6.38
+                "days_until_close": 4.56,
+                "age_days": 6.41
               },
               {
                 "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -794,8 +1582,8 @@
                 "created_at": "2026-05-21T00:52:03.42215+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 34.58,
-                "age_days": 6.38
+                "days_until_close": 34.56,
+                "age_days": 6.41
               },
               {
                 "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -818,8 +1606,8 @@
                 "created_at": "2026-05-21T00:52:14.669044+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 34.58,
-                "age_days": 6.38
+                "days_until_close": 34.56,
+                "age_days": 6.41
               },
               {
                 "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -842,8 +1630,8 @@
                 "created_at": "2026-05-21T01:22:28.731906+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 218.58,
-                "age_days": 6.36
+                "days_until_close": 218.56,
+                "age_days": 6.39
               },
               {
                 "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -866,8 +1654,8 @@
                 "created_at": "2026-05-21T00:48:41.661021+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 21.62,
-                "age_days": 6.38
+                "days_until_close": 21.6,
+                "age_days": 6.41
               }
             ],
             "paper_only": true,
@@ -896,8 +1684,8 @@
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
               "tradability_status": "needs_review",
-              "days_until_close": -0.42,
-              "age_days": 1.91
+              "days_until_close": -0.44,
+              "age_days": 1.93
             }
           ],
           "unique_open_signals": 30,
@@ -947,8 +1735,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.38
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -971,8 +1759,8 @@
                   "created_at": "2026-05-25T12:20:09.746582+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.34,
-                  "age_days": 1.9
+                  "days_until_close": 4.32,
+                  "age_days": 1.93
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -995,8 +1783,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.58,
-                  "age_days": 6.38
+                  "days_until_close": 34.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -1019,8 +1807,8 @@
                   "created_at": "2026-05-21T01:22:28.731906+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 218.58,
-                  "age_days": 6.36
+                  "days_until_close": 218.56,
+                  "age_days": 6.39
                 },
                 {
                   "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -1043,8 +1831,8 @@
                   "created_at": "2026-05-21T01:24:34.379932+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.87,
-                  "age_days": 6.36
+                  "days_until_close": 4.85,
+                  "age_days": 6.38
                 }
               ],
               "paper_only": true,
@@ -1089,8 +1877,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.38
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1113,8 +1901,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.58,
-                  "age_days": 6.38
+                  "days_until_close": 34.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -1137,8 +1925,8 @@
                   "created_at": "2026-05-21T00:52:14.669044+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.58,
-                  "age_days": 6.38
+                  "days_until_close": 34.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -1161,8 +1949,8 @@
                   "created_at": "2026-05-21T01:22:28.731906+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 218.58,
-                  "age_days": 6.36
+                  "days_until_close": 218.56,
+                  "age_days": 6.39
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -1185,8 +1973,8 @@
                   "created_at": "2026-05-21T00:48:41.661021+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 21.62,
-                  "age_days": 6.38
+                  "days_until_close": 21.6,
+                  "age_days": 6.41
                 }
               ],
               "paper_only": true,
@@ -1231,8 +2019,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.38
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1255,8 +2043,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.58,
-                  "age_days": 6.38
+                  "days_until_close": 34.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -1279,8 +2067,8 @@
                   "created_at": "2026-05-21T00:52:14.669044+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.58,
-                  "age_days": 6.38
+                  "days_until_close": 34.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -1303,8 +2091,8 @@
                   "created_at": "2026-05-21T01:22:28.731906+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 218.58,
-                  "age_days": 6.36
+                  "days_until_close": 218.56,
+                  "age_days": 6.39
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -1327,8 +2115,8 @@
                   "created_at": "2026-05-21T00:48:41.661021+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 21.62,
-                  "age_days": 6.38
+                  "days_until_close": 21.6,
+                  "age_days": 6.41
                 }
               ],
               "paper_only": true,
@@ -1373,8 +2161,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.38
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1397,8 +2185,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.58,
-                  "age_days": 6.38
+                  "days_until_close": 34.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -1421,8 +2209,8 @@
                   "created_at": "2026-05-21T01:22:28.731906+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 218.58,
-                  "age_days": 6.36
+                  "days_until_close": 218.56,
+                  "age_days": 6.39
                 },
                 {
                   "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -1445,8 +2233,8 @@
                   "created_at": "2026-05-21T00:45:32.748096+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.39
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "f661b165-9ed0-4b8a-a3e7-bacdb97797f5",
@@ -1469,8 +2257,8 @@
                   "created_at": "2026-05-21T01:18:21.232109+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.69,
-                  "age_days": 6.36
+                  "days_until_close": 76.67,
+                  "age_days": 6.39
                 }
               ],
               "paper_only": true,
@@ -1515,8 +2303,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.38
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -1539,8 +2327,8 @@
                   "created_at": "2026-05-21T01:24:34.379932+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.87,
-                  "age_days": 6.36
+                  "days_until_close": 4.85,
+                  "age_days": 6.38
                 },
                 {
                   "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -1563,8 +2351,8 @@
                   "created_at": "2026-05-21T00:45:32.748096+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.39
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -1587,8 +2375,8 @@
                   "created_at": "2026-05-21T00:45:42.837675+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.39
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "a8cf8cf0-f847-4afd-b2c5-0ea0d8505e9e",
@@ -1611,8 +2399,8 @@
                   "created_at": "2026-05-21T00:51:18.194778+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 6.38
+                  "days_until_close": 4.56,
+                  "age_days": 6.41
                 }
               ],
               "paper_only": true,
@@ -1657,8 +2445,8 @@
                   "created_at": "2026-05-25T12:25:26.573026+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 24.58,
-                  "age_days": 1.9
+                  "days_until_close": 24.56,
+                  "age_days": 1.92
                 },
                 {
                   "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -1681,8 +2469,8 @@
                   "created_at": "2026-05-25T12:25:44.977834+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 24.58,
-                  "age_days": 1.9
+                  "days_until_close": 24.56,
+                  "age_days": 1.92
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1705,8 +2493,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.58,
-                  "age_days": 6.38
+                  "days_until_close": 34.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -1729,8 +2517,8 @@
                   "created_at": "2026-05-21T00:52:14.669044+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.58,
-                  "age_days": 6.38
+                  "days_until_close": 34.56,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "2beccc28-c763-4f47-836e-18aac6183b89",
@@ -1753,8 +2541,8 @@
                   "created_at": "2026-05-25T12:21:20.761642+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 1.9
+                  "days_until_close": 4.56,
+                  "age_days": 1.93
                 }
               ],
               "paper_only": true,
@@ -1799,8 +2587,8 @@
                   "created_at": "2026-05-25T12:22:45.827441+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 1.9
+                  "days_until_close": 4.56,
+                  "age_days": 1.93
                 },
                 {
                   "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -1823,8 +2611,8 @@
                   "created_at": "2026-05-26T00:19:36.083882+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 0.58,
-                  "age_days": 1.41
+                  "days_until_close": 0.56,
+                  "age_days": 1.43
                 },
                 {
                   "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -1847,8 +2635,8 @@
                   "created_at": "2026-05-25T12:25:44.977834+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 24.58,
-                  "age_days": 1.9
+                  "days_until_close": 24.56,
+                  "age_days": 1.92
                 }
               ],
               "paper_only": true,
@@ -1893,8 +2681,8 @@
                   "created_at": "2026-05-25T12:23:14.250271+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.58,
-                  "age_days": 1.9
+                  "days_until_close": 4.56,
+                  "age_days": 1.93
                 },
                 {
                   "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -1917,8 +2705,8 @@
                   "created_at": "2026-05-26T00:20:04.586579+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 0.58,
-                  "age_days": 1.4
+                  "days_until_close": 0.56,
+                  "age_days": 1.43
                 },
                 {
                   "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -1941,8 +2729,8 @@
                   "created_at": "2026-05-25T12:26:11.241279+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 24.58,
-                  "age_days": 1.9
+                  "days_until_close": 24.56,
+                  "age_days": 1.92
                 }
               ],
               "paper_only": true,
@@ -1952,7 +2740,7 @@
         },
         "market_exposure_digest": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T10:03:02.020Z",
+          "generated_at": "2026-05-27T10:37:09.417Z",
           "status": "observing",
           "status_label": "Observing",
           "message": "Open live paper exposure is grouped by market so repeated agent bets are visible before review.",
@@ -2848,7 +3636,7 @@
       "write_enabled": false,
       "mode_reason": "missing SUPABASE_SERVICE_ROLE_KEY; read-only artifacts only"
     },
-    "latest_captured_at": "2026-05-27T10:03:02.020Z",
+    "latest_captured_at": "2026-05-27T10:37:09.417Z",
     "proof_summary": {
       "status": "collecting",
       "status_label": "Collecting",
@@ -2959,8 +3747,8 @@
               "market_closes_at": "2026-05-26T23:59:00+00:00",
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
-              "days_until_close": -0.42,
-              "age_days": 1.91
+              "days_until_close": -0.44,
+              "age_days": 1.93
             }
           ]
         },
@@ -3088,7 +3876,7 @@
     },
     "capital_review_packet": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:03:04.262Z",
+      "generated_at": "2026-05-27T10:37:12.305Z",
       "status": "not_reviewable",
       "status_label": "Not reviewable",
       "decision": "do_not_allocate_capital",
@@ -3207,8 +3995,8 @@
               "market_closes_at": "2026-05-26T23:59:00+00:00",
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
-              "days_until_close": -0.42,
-              "age_days": 1.91
+              "days_until_close": -0.44,
+              "age_days": 1.93
             }
           ]
         },
@@ -3320,7 +4108,7 @@
       "cron": "22 5 * * *",
       "scheduled_time_utc": "05:22",
       "stale_after_hours": 36,
-      "latest_captured_at": "2026-05-27T10:03:02.020Z",
+      "latest_captured_at": "2026-05-27T10:37:09.417Z",
       "previous_expected_capture_at": "2026-05-27T05:22:00.000Z",
       "next_expected_capture_at": "2026-05-28T05:22:00.000Z",
       "status": "fresh",
@@ -3390,7 +4178,7 @@
             "sage-live-edge-10",
             "sports-live-edge-10"
           ],
-          "latest_captured_at": "2026-05-27T10:03:02.020Z"
+          "latest_captured_at": "2026-05-27T10:37:09.417Z"
         }
       ]
     },
@@ -3428,8 +4216,8 @@
           "created_at": "2026-05-25T12:19:22.529011+00:00",
           "close_status": "overdue",
           "tradability_status": "needs_review",
-          "days_until_close": -0.42,
-          "age_days": 1.91
+          "days_until_close": -0.44,
+          "age_days": 1.93
         },
         {
           "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
@@ -3447,8 +4235,8 @@
           "created_at": "2026-05-26T00:19:14.77882+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.58,
-          "age_days": 1.41
+          "days_until_close": 0.56,
+          "age_days": 1.43
         },
         {
           "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
@@ -3466,8 +4254,8 @@
           "created_at": "2026-05-26T00:19:23.812179+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.58,
-          "age_days": 1.41
+          "days_until_close": 0.56,
+          "age_days": 1.43
         },
         {
           "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -3485,8 +4273,8 @@
           "created_at": "2026-05-26T00:19:36.083882+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.58,
-          "age_days": 1.41
+          "days_until_close": 0.56,
+          "age_days": 1.43
         },
         {
           "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -3504,8 +4292,8 @@
           "created_at": "2026-05-26T00:20:04.586579+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.58,
-          "age_days": 1.4
+          "days_until_close": 0.56,
+          "age_days": 1.43
         },
         {
           "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
@@ -3523,8 +4311,8 @@
           "created_at": "2026-05-24T12:19:25.197698+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 1.74,
-          "age_days": 2.91
+          "days_until_close": 1.72,
+          "age_days": 2.93
         },
         {
           "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
@@ -3542,8 +4330,8 @@
           "created_at": "2026-05-26T00:20:32.626001+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 3.24,
-          "age_days": 1.4
+          "days_until_close": 3.22,
+          "age_days": 1.43
         },
         {
           "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -3561,8 +4349,8 @@
           "created_at": "2026-05-25T12:20:09.746582+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.34,
-          "age_days": 1.9
+          "days_until_close": 4.32,
+          "age_days": 1.93
         },
         {
           "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -3580,8 +4368,8 @@
           "created_at": "2026-05-25T12:20:20.681026+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.34,
-          "age_days": 1.9
+          "days_until_close": 4.32,
+          "age_days": 1.93
         },
         {
           "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -3599,8 +4387,8 @@
           "created_at": "2026-05-21T00:45:32.748096+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.58,
-          "age_days": 6.39
+          "days_until_close": 4.56,
+          "age_days": 6.41
         },
         {
           "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -3618,8 +4406,8 @@
           "created_at": "2026-05-21T00:45:42.837675+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.58,
-          "age_days": 6.39
+          "days_until_close": 4.56,
+          "age_days": 6.41
         },
         {
           "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
@@ -3637,14 +4425,14 @@
           "created_at": "2026-05-21T00:51:06.72125+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.58,
-          "age_days": 6.38
+          "days_until_close": 4.56,
+          "age_days": 6.41
         }
       ]
     },
     "strategy_registry": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:03:02.020Z",
+      "generated_at": "2026-05-27T10:37:09.417Z",
       "paper_only": true,
       "real_money_execution_allowed": false,
       "config": {
@@ -4053,7 +4841,7 @@
     },
     "would_trade_today": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:03:02.020Z",
+      "generated_at": "2026-05-27T10:37:09.417Z",
       "status": "blocked",
       "status_label": "Blocked",
       "message": "1 global live paper market need resolution review before any would-trade watchlist is trusted.",
@@ -4101,8 +4889,8 @@
             "created_at": "2026-05-21T00:51:06.72125+00:00",
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
-            "days_until_close": 4.58,
-            "age_days": 6.38
+            "days_until_close": 4.56,
+            "age_days": 6.41
           },
           {
             "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -4125,8 +4913,8 @@
             "created_at": "2026-05-21T00:52:03.42215+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 34.58,
-            "age_days": 6.38
+            "days_until_close": 34.56,
+            "age_days": 6.41
           },
           {
             "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -4149,8 +4937,8 @@
             "created_at": "2026-05-21T00:52:14.669044+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 34.58,
-            "age_days": 6.38
+            "days_until_close": 34.56,
+            "age_days": 6.41
           },
           {
             "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -4173,8 +4961,8 @@
             "created_at": "2026-05-21T01:22:28.731906+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 218.58,
-            "age_days": 6.36
+            "days_until_close": 218.56,
+            "age_days": 6.39
           },
           {
             "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -4197,8 +4985,8 @@
             "created_at": "2026-05-21T00:48:41.661021+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 21.62,
-            "age_days": 6.38
+            "days_until_close": 21.6,
+            "age_days": 6.41
           }
         ],
         "paper_only": true,
@@ -4227,8 +5015,8 @@
           "created_at": "2026-05-25T12:19:22.529011+00:00",
           "close_status": "overdue",
           "tradability_status": "needs_review",
-          "days_until_close": -0.42,
-          "age_days": 1.91
+          "days_until_close": -0.44,
+          "age_days": 1.93
         }
       ],
       "unique_open_signals": 30,
@@ -4278,8 +5066,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.38
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -4302,8 +5090,8 @@
               "created_at": "2026-05-25T12:20:09.746582+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.34,
-              "age_days": 1.9
+              "days_until_close": 4.32,
+              "age_days": 1.93
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -4326,8 +5114,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.58,
-              "age_days": 6.38
+              "days_until_close": 34.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -4350,8 +5138,8 @@
               "created_at": "2026-05-21T01:22:28.731906+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 218.58,
-              "age_days": 6.36
+              "days_until_close": 218.56,
+              "age_days": 6.39
             },
             {
               "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -4374,8 +5162,8 @@
               "created_at": "2026-05-21T01:24:34.379932+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.87,
-              "age_days": 6.36
+              "days_until_close": 4.85,
+              "age_days": 6.38
             }
           ],
           "paper_only": true,
@@ -4420,8 +5208,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.38
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -4444,8 +5232,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.58,
-              "age_days": 6.38
+              "days_until_close": 34.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -4468,8 +5256,8 @@
               "created_at": "2026-05-21T00:52:14.669044+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.58,
-              "age_days": 6.38
+              "days_until_close": 34.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -4492,8 +5280,8 @@
               "created_at": "2026-05-21T01:22:28.731906+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 218.58,
-              "age_days": 6.36
+              "days_until_close": 218.56,
+              "age_days": 6.39
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -4516,8 +5304,8 @@
               "created_at": "2026-05-21T00:48:41.661021+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 21.62,
-              "age_days": 6.38
+              "days_until_close": 21.6,
+              "age_days": 6.41
             }
           ],
           "paper_only": true,
@@ -4562,8 +5350,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.38
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -4586,8 +5374,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.58,
-              "age_days": 6.38
+              "days_until_close": 34.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -4610,8 +5398,8 @@
               "created_at": "2026-05-21T00:52:14.669044+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.58,
-              "age_days": 6.38
+              "days_until_close": 34.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -4634,8 +5422,8 @@
               "created_at": "2026-05-21T01:22:28.731906+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 218.58,
-              "age_days": 6.36
+              "days_until_close": 218.56,
+              "age_days": 6.39
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -4658,8 +5446,8 @@
               "created_at": "2026-05-21T00:48:41.661021+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 21.62,
-              "age_days": 6.38
+              "days_until_close": 21.6,
+              "age_days": 6.41
             }
           ],
           "paper_only": true,
@@ -4704,8 +5492,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.38
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -4728,8 +5516,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.58,
-              "age_days": 6.38
+              "days_until_close": 34.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -4752,8 +5540,8 @@
               "created_at": "2026-05-21T01:22:28.731906+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 218.58,
-              "age_days": 6.36
+              "days_until_close": 218.56,
+              "age_days": 6.39
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -4776,8 +5564,8 @@
               "created_at": "2026-05-21T00:45:32.748096+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.39
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "f661b165-9ed0-4b8a-a3e7-bacdb97797f5",
@@ -4800,8 +5588,8 @@
               "created_at": "2026-05-21T01:18:21.232109+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.69,
-              "age_days": 6.36
+              "days_until_close": 76.67,
+              "age_days": 6.39
             }
           ],
           "paper_only": true,
@@ -4846,8 +5634,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.38
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -4870,8 +5658,8 @@
               "created_at": "2026-05-21T01:24:34.379932+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.87,
-              "age_days": 6.36
+              "days_until_close": 4.85,
+              "age_days": 6.38
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -4894,8 +5682,8 @@
               "created_at": "2026-05-21T00:45:32.748096+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.39
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -4918,8 +5706,8 @@
               "created_at": "2026-05-21T00:45:42.837675+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.39
+              "days_until_close": 4.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "a8cf8cf0-f847-4afd-b2c5-0ea0d8505e9e",
@@ -4942,8 +5730,8 @@
               "created_at": "2026-05-21T00:51:18.194778+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 6.38
+              "days_until_close": 4.56,
+              "age_days": 6.41
             }
           ],
           "paper_only": true,
@@ -4988,8 +5776,8 @@
               "created_at": "2026-05-25T12:25:26.573026+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 24.58,
-              "age_days": 1.9
+              "days_until_close": 24.56,
+              "age_days": 1.92
             },
             {
               "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -5012,8 +5800,8 @@
               "created_at": "2026-05-25T12:25:44.977834+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 24.58,
-              "age_days": 1.9
+              "days_until_close": 24.56,
+              "age_days": 1.92
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5036,8 +5824,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.58,
-              "age_days": 6.38
+              "days_until_close": 34.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -5060,8 +5848,8 @@
               "created_at": "2026-05-21T00:52:14.669044+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.58,
-              "age_days": 6.38
+              "days_until_close": 34.56,
+              "age_days": 6.41
             },
             {
               "prediction_id": "2beccc28-c763-4f47-836e-18aac6183b89",
@@ -5084,8 +5872,8 @@
               "created_at": "2026-05-25T12:21:20.761642+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 1.9
+              "days_until_close": 4.56,
+              "age_days": 1.93
             }
           ],
           "paper_only": true,
@@ -5130,8 +5918,8 @@
               "created_at": "2026-05-25T12:22:45.827441+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 1.9
+              "days_until_close": 4.56,
+              "age_days": 1.93
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -5154,8 +5942,8 @@
               "created_at": "2026-05-26T00:19:36.083882+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.58,
-              "age_days": 1.41
+              "days_until_close": 0.56,
+              "age_days": 1.43
             },
             {
               "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -5178,8 +5966,8 @@
               "created_at": "2026-05-25T12:25:44.977834+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 24.58,
-              "age_days": 1.9
+              "days_until_close": 24.56,
+              "age_days": 1.92
             }
           ],
           "paper_only": true,
@@ -5224,8 +6012,8 @@
               "created_at": "2026-05-25T12:23:14.250271+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.58,
-              "age_days": 1.9
+              "days_until_close": 4.56,
+              "age_days": 1.93
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -5248,8 +6036,8 @@
               "created_at": "2026-05-26T00:20:04.586579+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.58,
-              "age_days": 1.4
+              "days_until_close": 0.56,
+              "age_days": 1.43
             },
             {
               "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -5272,8 +6060,8 @@
               "created_at": "2026-05-25T12:26:11.241279+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 24.58,
-              "age_days": 1.9
+              "days_until_close": 24.56,
+              "age_days": 1.92
             }
           ],
           "paper_only": true,
@@ -5283,7 +6071,7 @@
     },
     "market_exposure_digest": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:03:02.020Z",
+      "generated_at": "2026-05-27T10:37:09.417Z",
       "status": "observing",
       "status_label": "Observing",
       "message": "Open live paper exposure is grouped by market so repeated agent bets are visible before review.",
@@ -6163,6 +6951,794 @@
         }
       ]
     },
+    "agent_edge_proof": {
+      "schema_version": "1",
+      "generated_at": "2026-05-27T10:37:12.304Z",
+      "status": "collecting",
+      "status_label": "Collecting",
+      "message": "Canonical agent-edge rules are being captured, but no live paper trades have resolved in the proof window yet.",
+      "next_required_action": "Wait for live paper markets to resolve before treating open EV as realized profit.",
+      "paper_only": true,
+      "real_money_execution_allowed": false,
+      "source": "published_artifact",
+      "source_label": "Published artifact",
+      "rule_count": 12,
+      "candidate_count": 0,
+      "profitable_rule_count": 0,
+      "unresolved_rule_count": 12,
+      "latest_snapshot_date": "2026-05-27",
+      "latest_captured_at": "2026-05-27T10:37:09.417Z",
+      "best_resolved_rule": null,
+      "best_open_ev_rule": {
+        "strategy_id": "sage-live-edge-10",
+        "strategy_label": "Sage live, edge >= 10pp",
+        "agent_id": "sage",
+        "agent_name": "Sage",
+        "min_edge": 0.1,
+        "proof_status": "collecting",
+        "proof_status_label": "Collecting",
+        "captured_days": 1,
+        "required_captured_days": 30,
+        "missing_capture_days": 0,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "win_rate": 0,
+        "avg_pnl_per_trade_usd": 0,
+        "daily_profit_factor": null,
+        "evidence_grade": "none",
+        "evidence_grade_label": "No sample",
+        "window_pnl_usd": 0,
+        "window_roi_on_stake": 0,
+        "max_drawdown_usd": 0,
+        "open_exposure_usd": 500,
+        "open_expected_pnl_usd": 654.71,
+        "latest_snapshot_date": "2026-05-27",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
+        "proof_quality": {
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "resolved_trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "avg_stake_usd": 0,
+          "winning_days": 0,
+          "losing_days": 0,
+          "flat_days": 0,
+          "avg_daily_pnl_usd": 0,
+          "daily_profit_factor": null,
+          "blockers": [
+            "No resolved trades in proof window.",
+            "29 more capture days needed.",
+            "30 more resolved trades needed.",
+            "No daily P&L series in proof window.",
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ]
+        },
+        "blockers": [
+          "29 more persisted capture days needed.",
+          "30 more resolved live trades needed."
+        ],
+        "rank": 1,
+        "source": "published_artifact",
+        "profitability_status": "unresolved",
+        "profitability_status_label": "Unresolved",
+        "is_profitable": false,
+        "is_reviewable_candidate": false
+      },
+      "rows": [
+        {
+          "strategy_id": "sage-live-edge-10",
+          "strategy_label": "Sage live, edge >= 10pp",
+          "agent_id": "sage",
+          "agent_name": "Sage",
+          "min_edge": 0.1,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 500,
+          "open_expected_pnl_usd": 654.71,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 1,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "sage-live-edge-05",
+          "strategy_label": "Sage live, edge >= 5pp",
+          "agent_id": "sage",
+          "agent_name": "Sage",
+          "min_edge": 0.05,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 500,
+          "open_expected_pnl_usd": 551.42,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 2,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "magpie-live-edge-10",
+          "strategy_label": "Magpie live, edge >= 10pp",
+          "agent_id": "magpie",
+          "agent_name": "Magpie",
+          "min_edge": 0.1,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 300,
+          "open_expected_pnl_usd": 223.7,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 3,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "mirror-live-edge-10",
+          "strategy_label": "Mirror live, edge >= 10pp",
+          "agent_id": "mirror",
+          "agent_name": "Mirror",
+          "min_edge": 0.1,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 300,
+          "open_expected_pnl_usd": 215.04,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 4,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "mirror-live-edge-05",
+          "strategy_label": "Mirror live, edge >= 5pp",
+          "agent_id": "mirror",
+          "agent_name": "Mirror",
+          "min_edge": 0.05,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 500,
+          "open_expected_pnl_usd": 164.21,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 5,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "hawk-live-edge-10",
+          "strategy_label": "Hawk live, edge >= 10pp",
+          "agent_id": "hawk",
+          "agent_name": "Hawk",
+          "min_edge": 0.1,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 500,
+          "open_expected_pnl_usd": 161.2,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 6,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "magpie-live-edge-05",
+          "strategy_label": "Magpie live, edge >= 5pp",
+          "agent_id": "magpie",
+          "agent_name": "Magpie",
+          "min_edge": 0.05,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 500,
+          "open_expected_pnl_usd": 125.04,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 7,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "hawk-live-edge-05",
+          "strategy_label": "Hawk live, edge >= 5pp",
+          "agent_id": "hawk",
+          "agent_name": "Hawk",
+          "min_edge": 0.05,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 500,
+          "open_expected_pnl_usd": 109.88,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 8,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "echo-live-edge-05",
+          "strategy_label": "Echo live, edge >= 5pp",
+          "agent_id": "echo",
+          "agent_name": "Echo",
+          "min_edge": 0.05,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 0,
+          "open_expected_pnl_usd": 0,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 9,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "echo-live-edge-10",
+          "strategy_label": "Echo live, edge >= 10pp",
+          "agent_id": "echo",
+          "agent_name": "Echo",
+          "min_edge": 0.1,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 0,
+          "open_expected_pnl_usd": 0,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 10,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "ensemble-live-edge-05",
+          "strategy_label": "Crowd live, edge >= 5pp",
+          "agent_id": "ensemble",
+          "agent_name": "Crowd",
+          "min_edge": 0.05,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 0,
+          "open_expected_pnl_usd": 0,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 11,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        },
+        {
+          "strategy_id": "ensemble-live-edge-10",
+          "strategy_label": "Crowd live, edge >= 10pp",
+          "agent_id": "ensemble",
+          "agent_name": "Crowd",
+          "min_edge": 0.1,
+          "proof_status": "collecting",
+          "proof_status_label": "Collecting",
+          "captured_days": 1,
+          "required_captured_days": 30,
+          "missing_capture_days": 0,
+          "resolved_trades": 0,
+          "required_resolved_trades": 30,
+          "win_rate": 0,
+          "avg_pnl_per_trade_usd": 0,
+          "daily_profit_factor": null,
+          "evidence_grade": "none",
+          "evidence_grade_label": "No sample",
+          "window_pnl_usd": 0,
+          "window_roi_on_stake": 0,
+          "max_drawdown_usd": 0,
+          "open_exposure_usd": 0,
+          "open_expected_pnl_usd": 0,
+          "latest_snapshot_date": "2026-05-27",
+          "latest_captured_at": "2026-05-27T10:37:09.417Z",
+          "proof_quality": {
+            "evidence_grade": "none",
+            "evidence_grade_label": "No sample",
+            "resolved_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0,
+            "avg_pnl_per_trade_usd": 0,
+            "avg_stake_usd": 0,
+            "winning_days": 0,
+            "losing_days": 0,
+            "flat_days": 0,
+            "avg_daily_pnl_usd": 0,
+            "daily_profit_factor": null,
+            "blockers": [
+              "No resolved trades in proof window.",
+              "29 more capture days needed.",
+              "30 more resolved trades needed.",
+              "No daily P&L series in proof window.",
+              "29 more persisted capture days needed.",
+              "30 more resolved live trades needed."
+            ]
+          },
+          "blockers": [
+            "29 more persisted capture days needed.",
+            "30 more resolved live trades needed."
+          ],
+          "rank": 12,
+          "source": "published_artifact",
+          "profitability_status": "unresolved",
+          "profitability_status_label": "Unresolved",
+          "is_profitable": false,
+          "is_reviewable_candidate": false
+        }
+      ]
+    },
     "agent_edge_proof_matrix": [
       {
         "strategy_id": "sage-live-edge-05",
@@ -6188,7 +7764,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 551.42,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6241,7 +7817,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6294,7 +7870,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 109.88,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6347,7 +7923,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 161.2,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6400,7 +7976,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 125.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6453,7 +8029,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 223.7,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6506,7 +8082,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6559,7 +8135,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6612,7 +8188,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 164.21,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6665,7 +8241,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 215.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6718,7 +8294,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -6771,7 +8347,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:03:02.020Z",
+        "latest_captured_at": "2026-05-27T10:37:09.417Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
