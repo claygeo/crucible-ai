@@ -405,6 +405,13 @@ export type PaperTradingProofRunway = {
   milestones: PaperTradingProofRunwayMilestone[];
 };
 
+export type PaperTradingWorkflowMode = {
+  requested_dry_run: boolean;
+  effective_dry_run: boolean;
+  write_enabled: boolean;
+  mode_reason: string;
+};
+
 export type PaperTradingCapitalReviewStatus =
   | "reviewable_paper_candidate"
   | "not_reviewable"
@@ -425,6 +432,7 @@ export type PaperTradingCapitalReviewPacket = {
   real_money_execution_allowed: false;
   execution_path_present: false;
   capital_review_allowed: boolean;
+  workflow_mode: PaperTradingWorkflowMode | null;
   earliest_capital_review_at: string | null;
   earliest_capital_review_date: string | null;
   blockers: string[];
@@ -2479,9 +2487,11 @@ export function buildPaperTradingCapitalReviewPacket(args: {
   proofSummary: PaperTradingProofSummary;
   proofReadiness: PaperTradingProofReadiness;
   proofRunway: PaperTradingProofRunway;
+  workflowMode?: PaperTradingWorkflowMode | null;
   generatedAt?: string;
 }): PaperTradingCapitalReviewPacket {
   const generatedAt = args.generatedAt ?? new Date().toISOString();
+  const writeDisabled = args.workflowMode?.write_enabled === false;
   const status: PaperTradingCapitalReviewStatus =
     args.proofReadiness.status === "unavailable" ||
     args.proofSummary.capital_review_status === "unavailable" ||
@@ -2489,7 +2499,8 @@ export function buildPaperTradingCapitalReviewPacket(args: {
       ? "unavailable"
       : args.proofReadiness.ready_for_capital_review &&
           args.proofSummary.capital_review_status === "reviewable" &&
-          args.proofRunway.status === "reviewable"
+          args.proofRunway.status === "reviewable" &&
+          !writeDisabled
         ? "reviewable_paper_candidate"
         : "not_reviewable";
   const decision: PaperTradingCapitalReviewPacket["decision"] =
@@ -2505,6 +2516,11 @@ export function buildPaperTradingCapitalReviewPacket(args: {
     status === "reviewable_paper_candidate"
       ? []
       : [
+          writeDisabled
+            ? `Supabase snapshot writes are disabled: ${
+                args.workflowMode?.mode_reason || "read-only artifact capture"
+              }.`
+            : "",
           ...args.proofSummary.capital_review_blockers,
           ...itemBlockers,
           args.proofRunway.blocker_summary,
@@ -2529,6 +2545,7 @@ export function buildPaperTradingCapitalReviewPacket(args: {
     real_money_execution_allowed: false,
     execution_path_present: false,
     capital_review_allowed: status === "reviewable_paper_candidate",
+    workflow_mode: args.workflowMode ?? null,
     earliest_capital_review_at: args.proofRunway.earliest_capital_review_at,
     earliest_capital_review_date: args.proofRunway.earliest_capital_review_date,
     blockers,

@@ -48,6 +48,7 @@ type CliOptions = {
   soft: boolean;
   minLiveRows: number;
   snapshotSummaryPath: string | null;
+  workflowPath: string | null;
   inputs: string[];
 };
 
@@ -100,6 +101,16 @@ type SnapshotSummaryContext = {
   message: string;
 };
 
+type WorkflowModeContext = {
+  path: string;
+  requested_dry_run: boolean;
+  effective_dry_run: boolean;
+  write_enabled: boolean;
+  mode_reason: string;
+  status: "available" | "missing" | "error";
+  message: string;
+};
+
 type StrategyRollupSummary = {
   strategy_id: string;
   strategy_label: string;
@@ -124,6 +135,7 @@ function parseArgs(argv: string[]): CliOptions {
   let soft = process.env.npm_config_soft === "true";
   let minLiveRows = DEFAULT_MIN_LIVE_ROWS;
   let snapshotSummaryPath: string | null = null;
+  let workflowPath: string | null = null;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -148,6 +160,8 @@ function parseArgs(argv: string[]): CliOptions {
       minLiveRows = parsed;
     } else if (flag === "--snapshot-summary") {
       snapshotSummaryPath = nextValue();
+    } else if (flag === "--workflow") {
+      workflowPath = nextValue();
     } else if (flag === "--dir" || flag === "--file") {
       inputs.push(nextValue());
     } else if (arg === "--help" || arg === "-h") {
@@ -164,6 +178,7 @@ function parseArgs(argv: string[]): CliOptions {
     soft,
     minLiveRows,
     snapshotSummaryPath,
+    workflowPath,
     inputs: inputs.length > 0 ? inputs : ["."],
   };
 }
@@ -186,6 +201,7 @@ Options:
   --allow-demo               Do not fail demo-sourced artifacts.
   --min-live-rows <number>   Minimum live strategy rows required per artifact. Default ${DEFAULT_MIN_LIVE_ROWS}.
   --snapshot-summary <file>  Optional paper-snapshot-result.json for live resolution context.
+  --workflow <file>          Optional paper-snapshot-workflow.json write-mode context.
 
 The report also includes artifact_proof: a read-only strategy proof rollup built
 from valid artifact rows with the same paper-only logic used by persisted
@@ -199,6 +215,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function optionalBoolean(value: unknown): boolean | null {
+  return typeof value === "boolean" ? value : null;
 }
 
 function optionalString(value: unknown): string | null {
@@ -346,6 +366,77 @@ function readSnapshotSummary(
       strategy_registry: null,
       would_trade_today: null,
       market_exposure_digest: null,
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+function readWorkflowMode(path: string | null): WorkflowModeContext | null {
+  if (!path) return null;
+  const resolvedPath = resolve(process.cwd(), path);
+  if (!existsSync(resolvedPath)) {
+    return {
+      path: resolvedPath,
+      requested_dry_run: false,
+      effective_dry_run: false,
+      write_enabled: false,
+      mode_reason: "",
+      status: "missing",
+      message: "Workflow mode file was not found.",
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(resolvedPath, "utf8"));
+    if (!isRecord(parsed)) {
+      return {
+        path: resolvedPath,
+        requested_dry_run: false,
+        effective_dry_run: false,
+        write_enabled: false,
+        mode_reason: "",
+        status: "error",
+        message: "Workflow mode JSON is not an object.",
+      };
+    }
+    const requestedDryRun = optionalBoolean(parsed.requested_dry_run);
+    const effectiveDryRun = optionalBoolean(parsed.effective_dry_run);
+    const writeEnabled = optionalBoolean(parsed.write_enabled);
+    const modeReason = optionalString(parsed.mode_reason) ?? "";
+    if (
+      requestedDryRun === null ||
+      effectiveDryRun === null ||
+      writeEnabled === null
+    ) {
+      return {
+        path: resolvedPath,
+        requested_dry_run: false,
+        effective_dry_run: false,
+        write_enabled: false,
+        mode_reason: modeReason,
+        status: "error",
+        message:
+          "Workflow mode JSON must include requested_dry_run, effective_dry_run, and write_enabled booleans.",
+      };
+    }
+
+    return {
+      path: resolvedPath,
+      requested_dry_run: requestedDryRun,
+      effective_dry_run: effectiveDryRun,
+      write_enabled: writeEnabled,
+      mode_reason: modeReason,
+      status: "available",
+      message: "Workflow mode context loaded.",
+    };
+  } catch (error) {
+    return {
+      path: resolvedPath,
+      requested_dry_run: false,
+      effective_dry_run: false,
+      write_enabled: false,
+      mode_reason: "",
       status: "error",
       message: error instanceof Error ? error.message : String(error),
     };
@@ -720,7 +811,18 @@ async function buildArtifactProof(
   strategyRegistry: Record<string, unknown> | null,
   wouldTradeToday: Record<string, unknown> | null,
   marketExposureDigest: Record<string, unknown> | null,
+  workflowMode: WorkflowModeContext | null,
 ) {
+  const workflowModePayload =
+    workflowMode?.status === "available"
+      ? {
+          requested_dry_run: workflowMode.requested_dry_run,
+          effective_dry_run: workflowMode.effective_dry_run,
+          write_enabled: workflowMode.write_enabled,
+          mode_reason: workflowMode.mode_reason,
+        }
+      : null;
+
   if (blocked || proofRows.length === 0) {
     return {
       status: "unavailable",
@@ -729,6 +831,7 @@ async function buildArtifactProof(
         : "No artifact rows are available for proof rollup.",
       paper_only: true,
       real_money_execution_allowed: false,
+      workflow_mode: workflowModePayload,
       latest_captured_at: null,
       proof_summary: null,
       proof_readiness: null,
@@ -788,6 +891,7 @@ async function buildArtifactProof(
     proofSummary,
     proofReadiness,
     proofRunway,
+    workflowMode: workflowModePayload,
   });
 
   return {
@@ -796,6 +900,7 @@ async function buildArtifactProof(
       "Artifact rows were rolled up with the same paper-only proof logic used for persisted snapshots.",
     paper_only: true,
     real_money_execution_allowed: false,
+    workflow_mode: workflowModePayload,
     latest_captured_at: latestCapturedAt,
     proof_summary: proofSummary,
     proof_readiness: proofReadiness,
@@ -815,6 +920,7 @@ async function buildArtifactProof(
 }
 
 async function buildReport(options: CliOptions, files: string[]) {
+  const workflowMode = readWorkflowMode(options.workflowPath);
   const scans = files.map((file) => scanArtifact(file, options));
   const artifactAudits = scans.map((scan) => scan.audit);
   const failedChecks: FailedCheck[] = artifactAudits.flatMap((artifact) =>
@@ -842,6 +948,14 @@ async function buildReport(options: CliOptions, files: string[]) {
       code: "artifact_discovery",
       label: "Artifact discovery",
       detail: `No ${ARTIFACT_FILE_NAME} files found in the requested path(s).`,
+    });
+  }
+  if (workflowMode && workflowMode.status !== "available") {
+    failedChecks.push({
+      path: workflowMode.path,
+      code: "workflow_mode",
+      label: "Workflow mode context",
+      detail: workflowMode.message,
     });
   }
   for (const scan of scans) {
@@ -988,6 +1102,7 @@ async function buildReport(options: CliOptions, files: string[]) {
     latestSnapshotSummary?.strategy_registry ?? null,
     latestSnapshotSummary?.would_trade_today ?? null,
     latestSnapshotSummary?.market_exposure_digest ?? null,
+    workflowMode,
   );
   const capitalReviewPacket = isRecord(proof.capital_review_packet)
     ? proof.capital_review_packet
@@ -1013,6 +1128,43 @@ async function buildReport(options: CliOptions, files: string[]) {
       detail:
         "capital_review_packet must keep paper_only=true, real_money_execution_allowed=false, and execution_path_present=false.",
     });
+  }
+  const proofWorkflowMode = isRecord(proof.workflow_mode)
+    ? proof.workflow_mode
+    : null;
+  if (workflowMode?.status === "available" && !proofWorkflowMode) {
+    failedChecks.push({
+      path: workflowMode.path,
+      code: "artifact_proof_workflow_mode",
+      label: "Artifact proof workflow mode",
+      detail: "Artifact proof must include workflow_mode when provided.",
+    });
+  }
+  if (workflowMode?.status === "available" && capitalReviewPacket) {
+    const packetWorkflowMode = isRecord(capitalReviewPacket.workflow_mode)
+      ? capitalReviewPacket.workflow_mode
+      : null;
+    if (!packetWorkflowMode) {
+      failedChecks.push({
+        path: workflowMode.path,
+        code: "capital_review_workflow_mode",
+        label: "Capital review workflow mode",
+        detail:
+          "Capital review packet must include workflow_mode when provided.",
+      });
+    }
+    if (
+      workflowMode.write_enabled === false &&
+      capitalReviewPacket.decision !== "do_not_allocate_capital"
+    ) {
+      failedChecks.push({
+        path: workflowMode.path,
+        code: "capital_review_write_disabled",
+        label: "Capital review write-disabled guard",
+        detail:
+          "Capital review packet must say do_not_allocate_capital when Supabase snapshot writes are disabled.",
+      });
+    }
   }
 
   return {
@@ -1060,6 +1212,7 @@ async function buildReport(options: CliOptions, files: string[]) {
       ...new Set(artifactAudits.flatMap((artifact) => artifact.missing_fields)),
     ].sort(),
     failed_checks: failedChecks,
+    workflow_mode: workflowMode,
     snapshot_summaries: snapshotSummaries,
     latest_snapshot_summary: latestSnapshotSummary,
     artifact_proof: proof,
