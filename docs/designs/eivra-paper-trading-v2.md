@@ -184,6 +184,9 @@ The 30-day proof window now has a durable audit surface:
   also imports the canonical agent-edge proof matrix, requires at least one
   rule to clear profitability proof before capital review, and keeps missed
   capacity P&L visible but explicitly excluded from proof.
+- `/api/trading.json` embeds the same contract as `paper_proof_audit` and
+  `persistence.proof_audit`, so the main public trading feed carries the
+  capital-review gate alongside the raw snapshot, artifact, and strategy data.
 - A Netlify scheduled function runs the writer once per day on published deploys.
 - `.github/workflows/paper-trading-snapshot.yml` is the deploy-independent
   fallback recorder. It runs the same local snapshot builder daily at 05:22 UTC,
