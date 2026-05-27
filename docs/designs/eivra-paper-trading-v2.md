@@ -142,11 +142,12 @@ The 30-day proof window now has a durable audit surface:
 - `.github/workflows/paper-trading-snapshot.yml` is the deploy-independent
   fallback recorder. It runs the same local snapshot builder daily at 05:22 UTC,
   refuses demo-sourced writes by default, runs the soft proof audit after each
-  capture attempt, and stores the workflow-mode, snapshot, and audit JSON
-  outputs as 30-day GitHub Actions artifacts. If the service-role repository
-  secret is missing, scheduled runs degrade to read-only live artifact capture
-  instead of failing before evidence is collected. Persisted writes still require
-  `SUPABASE_SERVICE_ROLE_KEY`; manual dry runs remain safe and do not insert rows.
+  capture attempt, and stores the workflow-mode, snapshot summary, full snapshot
+  rows, and audit JSON outputs as 30-day GitHub Actions artifacts. If the
+  service-role repository secret is missing, scheduled runs degrade to read-only
+  live artifact capture instead of failing before evidence is collected.
+  Persisted writes still require `SUPABASE_SERVICE_ROLE_KEY`; manual dry runs
+  remain safe and do not insert rows.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.
