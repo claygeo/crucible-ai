@@ -114,8 +114,9 @@ tracks how many live signals are still awaiting market resolution, how many are
 past their market close time, how many close in the next seven days, the next
 known close time, and a compact watchlist of unresolved tickets. It also splits
 open live exposure into tradable versus needs-review buckets, so overdue or
-unknown-close markets cannot inflate the actionable EV number. This keeps the
-proof gap explicit: open EV is not profit until the market resolves.
+unknown-close markets cannot inflate the actionable EV number or pass the
+resolution-hygiene capital gate. This keeps the proof gap explicit: open EV is
+not profit until the market resolves.
 
 ## Persisted Proof Log
 
