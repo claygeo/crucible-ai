@@ -58,6 +58,7 @@ export type PaperTradingPersistenceRead = {
   capture_health: PaperTradingCaptureHealth;
   capture_calendar: PaperTradingCaptureCalendar;
   proof_summary: PaperTradingProofSummary;
+  proof_readiness: PaperTradingProofReadiness;
   agent_edge_proof_matrix: PaperTradingAgentEdgeProofRow[];
   snapshots: PaperTradingSnapshotRow[];
   strategy_rollups: PaperTradingStrategyProofRollup[];
@@ -258,6 +259,32 @@ export type PaperTradingProofSummary = {
   best_live_captured_days: number;
   best_live_missing_capture_days: number;
   best_live_blockers: string[];
+};
+
+export type PaperTradingProofReadinessStatus =
+  | "pass"
+  | "collecting"
+  | "blocked"
+  | "unavailable";
+
+export type PaperTradingProofReadinessItem = {
+  id: string;
+  label: string;
+  status: PaperTradingProofReadinessStatus;
+  status_label: string;
+  current: string;
+  target: string;
+  detail: string;
+};
+
+export type PaperTradingProofReadiness = {
+  status: PaperTradingProofReadinessStatus;
+  status_label: string;
+  ready_for_capital_review: boolean;
+  real_money_execution_allowed: false;
+  paper_only: true;
+  next_required_action: string;
+  items: PaperTradingProofReadinessItem[];
 };
 
 function getSupabaseEnv(): { url: string; key: string } | null {
@@ -1384,24 +1411,294 @@ export function buildPaperTradingAgentEdgeProofMatrix(
     });
 }
 
+function readinessStatusLabel(status: PaperTradingProofReadinessStatus): string {
+  if (status === "pass") return "Pass";
+  if (status === "blocked") return "Blocked";
+  if (status === "unavailable") return "Unavailable";
+  return "Collecting";
+}
+
+function readinessItem(
+  id: string,
+  label: string,
+  status: PaperTradingProofReadinessStatus,
+  current: string,
+  target: string,
+  detail: string
+): PaperTradingProofReadinessItem {
+  return {
+    id,
+    label,
+    status,
+    status_label: readinessStatusLabel(status),
+    current,
+    target,
+    detail,
+  };
+}
+
+function proofReadinessNextAction(
+  args: {
+    persistenceStatus: PaperTradingPersistenceRead["status"];
+    proofSummary: PaperTradingProofSummary;
+    captureHealth: PaperTradingCaptureHealth;
+    captureCalendar: PaperTradingCaptureCalendar;
+    registrySync?: PaperTradingStrategyRegistrySync | null;
+  },
+  evidenceWindowReady: boolean
+): string {
+  if (args.persistenceStatus !== "available") {
+    return "Restore persisted paper snapshot storage before reading proof metrics.";
+  }
+  if (args.captureHealth.status !== "fresh") {
+    return "Restore the daily snapshot writer before trusting proof metrics.";
+  }
+  if (args.registrySync && args.registrySync.status === "pending_capture") {
+    return "Wait for the next daily snapshot to capture the current strategy registry.";
+  }
+  if (
+    args.captureCalendar.missing_days > 0 ||
+    args.captureCalendar.partial_days > 0
+  ) {
+    return "Repair missing or partial daily captures in the proof window.";
+  }
+  if (args.proofSummary.best_live_captured_days < REQUIRED_PROOF_DAYS) {
+    return `Collect ${REQUIRED_PROOF_DAYS - args.proofSummary.best_live_captured_days} more persisted daily capture days.`;
+  }
+  if (
+    args.proofSummary.best_live_resolved_trades <
+    PAPER_TRADING_PROOF_RULES.requiredResolvedTrades
+  ) {
+    return `Wait for ${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - args.proofSummary.best_live_resolved_trades} more live paper tickets to resolve.`;
+  }
+  if (!evidenceWindowReady || args.proofSummary.status === "collecting") {
+    return "Continue paper-only collection until the proof window is complete.";
+  }
+  if (args.proofSummary.capital_review_status === "reviewable") {
+    return "A durable candidate is ready for operator capital review; execution remains disabled.";
+  }
+  return "Do not allocate capital; inspect the durable proof blockers.";
+}
+
+export function buildPaperTradingProofReadiness(args: {
+  persistenceStatus: PaperTradingPersistenceRead["status"];
+  proofSummary: PaperTradingProofSummary;
+  captureHealth: PaperTradingCaptureHealth;
+  captureCalendar: PaperTradingCaptureCalendar;
+  registrySync?: PaperTradingStrategyRegistrySync | null;
+}): PaperTradingProofReadiness {
+  const registryStatus: PaperTradingProofReadinessStatus = !args.registrySync
+    ? "unavailable"
+    : args.registrySync.status === "synced"
+      ? "pass"
+      : args.registrySync.status === "pending_capture"
+        ? "collecting"
+        : "unavailable";
+  const captureWindowReady =
+    args.captureCalendar.complete_days >= REQUIRED_PROOF_DAYS &&
+    args.captureCalendar.missing_days === 0 &&
+    args.captureCalendar.partial_days === 0;
+  const evidenceWindowReady =
+    captureWindowReady &&
+    args.proofSummary.best_live_resolved_trades >=
+      PAPER_TRADING_PROOF_RULES.requiredResolvedTrades;
+  const captureWindowStatus: PaperTradingProofReadinessStatus =
+    args.captureCalendar.status === "unavailable"
+      ? "unavailable"
+      : args.captureCalendar.missing_days > 0 ||
+          args.captureCalendar.partial_days > 0
+        ? "blocked"
+        : captureWindowReady
+          ? "pass"
+          : "collecting";
+  const resolvedTradesStatus: PaperTradingProofReadinessStatus =
+    args.proofSummary.best_live_strategy_id === null
+      ? "unavailable"
+      : args.proofSummary.best_live_resolved_trades >=
+          PAPER_TRADING_PROOF_RULES.requiredResolvedTrades
+        ? "pass"
+        : "collecting";
+  const pendingEvidenceStatus: PaperTradingProofReadinessStatus =
+    evidenceWindowReady ? "pass" : "collecting";
+  const capitalReviewStatus: PaperTradingProofReadinessStatus =
+    args.proofSummary.capital_review_status === "reviewable"
+      ? "pass"
+      : args.proofSummary.capital_review_status === "unavailable"
+        ? "unavailable"
+        : args.proofSummary.status === "not_qualified" ||
+            args.proofSummary.status === "stale"
+          ? "blocked"
+          : "collecting";
+
+  const items = [
+    readinessItem(
+      "archive",
+      "Persisted proof archive",
+      args.persistenceStatus === "available" ? "pass" : "unavailable",
+      args.persistenceStatus.replace("_", " "),
+      "available",
+      "Stored snapshots must be readable before the lab can prove anything."
+    ),
+    readinessItem(
+      "paper_only",
+      "Paper-only lock",
+      args.proofSummary.paper_only && !args.proofSummary.real_money_execution_allowed
+        ? "pass"
+        : "blocked",
+      args.proofSummary.real_money_execution_allowed ? "execution enabled" : "execution disabled",
+      "execution disabled",
+      "The proof lab must never enable orders, wallets, leverage, or live capital."
+    ),
+    readinessItem(
+      "capture_freshness",
+      "Daily capture freshness",
+      args.captureHealth.status === "fresh"
+        ? "pass"
+        : args.captureHealth.status === "waiting_first_capture"
+          ? "collecting"
+          : args.captureHealth.status === "stale"
+            ? "blocked"
+            : "unavailable",
+      args.captureHealth.status_label,
+      "fresh",
+      args.captureHealth.message
+    ),
+    readinessItem(
+      "registry_sync",
+      "Strategy registry sync",
+      registryStatus,
+      args.registrySync
+        ? `${args.registrySync.persisted_latest_live_strategy_count}/${args.registrySync.current_live_strategy_count} live`
+        : "not checked",
+      "current live registry captured",
+      args.registrySync?.message ?? "Only /api/trading.json can compare current and persisted registries."
+    ),
+    readinessItem(
+      "capture_window",
+      "30-day capture window",
+      captureWindowStatus,
+      `${args.captureCalendar.complete_days}/${REQUIRED_PROOF_DAYS} complete days`,
+      `${REQUIRED_PROOF_DAYS} complete days, 0 missing`,
+      `${args.captureCalendar.missing_days} missing, ${args.captureCalendar.partial_days} partial.`
+    ),
+    readinessItem(
+      "resolved_trades",
+      "Resolved live trades",
+      resolvedTradesStatus,
+      `${args.proofSummary.best_live_resolved_trades}/${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades}`,
+      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades} resolved live paper trades`,
+      args.proofSummary.best_live_strategy_label
+        ? `Best live rollup: ${args.proofSummary.best_live_strategy_label}.`
+        : "No live rollup is available yet."
+    ),
+    readinessItem(
+      "window_pnl",
+      "Positive window P&L",
+      evidenceWindowReady
+        ? args.proofSummary.best_live_window_pnl_usd >=
+          PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd
+          ? "pass"
+          : "blocked"
+        : pendingEvidenceStatus,
+      `$${args.proofSummary.best_live_window_pnl_usd.toFixed(2)}`,
+      `>= $${PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd.toFixed(2)}`,
+      evidenceWindowReady
+        ? "Measured on the durable rolling proof window."
+        : "Waiting for enough captured days and resolved trades."
+    ),
+    readinessItem(
+      "window_roi",
+      "Positive window ROI",
+      evidenceWindowReady
+        ? args.proofSummary.best_live_window_roi_on_stake >
+          PAPER_TRADING_PROOF_RULES.minRoiOnStake
+          ? "pass"
+          : "blocked"
+        : pendingEvidenceStatus,
+      `${(args.proofSummary.best_live_window_roi_on_stake * 100).toFixed(1)}%`,
+      `> ${(PAPER_TRADING_PROOF_RULES.minRoiOnStake * 100).toFixed(1)}%`,
+      evidenceWindowReady
+        ? "Measured only after the proof window has enough evidence."
+        : "ROI is not judged until the proof window is complete."
+    ),
+    readinessItem(
+      "drawdown",
+      "Drawdown limit",
+      evidenceWindowReady
+        ? args.proofSummary.best_live_blockers.some((blocker) =>
+            blocker.toLowerCase().includes("drawdown")
+          )
+          ? "blocked"
+          : "pass"
+        : pendingEvidenceStatus,
+      "tracked in rollups",
+      `<= $${PAPER_TRADING_PROOF_RULES.maxDrawdownUsd.toFixed(0)}`,
+      evidenceWindowReady
+        ? "Drawdown blockers come from durable proof gates."
+        : "Drawdown is not final until the proof window is complete."
+    ),
+    readinessItem(
+      "capital_review",
+      "Capital review boundary",
+      capitalReviewStatus,
+      args.proofSummary.capital_review_status_label,
+      "reviewable candidate, execution still disabled",
+      args.proofSummary.capital_review_blockers[0] ??
+        "A candidate can become reviewable, but this app never enables execution."
+    ),
+  ];
+
+  const overallStatus: PaperTradingProofReadinessStatus =
+    args.persistenceStatus !== "available" || args.proofSummary.status === "unavailable"
+      ? "unavailable"
+      : items.some((item) => item.status === "blocked")
+        ? "blocked"
+        : args.proofSummary.capital_review_status === "reviewable"
+          ? "pass"
+          : "collecting";
+
+  return {
+    status: overallStatus,
+    status_label:
+      overallStatus === "pass"
+        ? "Ready for review"
+        : readinessStatusLabel(overallStatus),
+    ready_for_capital_review:
+      args.proofSummary.capital_review_status === "reviewable",
+    real_money_execution_allowed: false,
+    paper_only: true,
+    next_required_action: proofReadinessNextAction(args, evidenceWindowReady),
+    items,
+  };
+}
+
 export async function loadPaperTradingSnapshotHistory(
   limit = DEFAULT_HISTORY_LIMIT
 ): Promise<PaperTradingPersistenceRead> {
   const env = getSupabaseEnv();
   if (!env) {
+    const captureHealth = unavailableCaptureHealth(
+      "Unconfigured",
+      "Supabase env is not configured for persisted paper-trading snapshots."
+    );
+    const captureCalendar = emptyCaptureCalendar("Unconfigured");
+    const proofSummary = emptyPaperTradingProofSummary(
+      "unavailable",
+      "Unconfigured"
+    );
     return {
       status: "unconfigured",
       message: "Supabase env is not configured for persisted paper-trading snapshots.",
       latest_captured_at: null,
-      capture_health: unavailableCaptureHealth(
-        "Unconfigured",
-        "Supabase env is not configured for persisted paper-trading snapshots."
-      ),
-      capture_calendar: emptyCaptureCalendar("Unconfigured"),
-      proof_summary: emptyPaperTradingProofSummary(
-        "unavailable",
-        "Unconfigured"
-      ),
+      capture_health: captureHealth,
+      capture_calendar: captureCalendar,
+      proof_summary: proofSummary,
+      proof_readiness: buildPaperTradingProofReadiness({
+        persistenceStatus: "unconfigured",
+        proofSummary,
+        captureHealth,
+        captureCalendar,
+      }),
       agent_edge_proof_matrix: [],
       snapshots: [],
       strategy_rollups: [],
@@ -1416,21 +1713,27 @@ export async function loadPaperTradingSnapshotHistory(
     .limit(Math.max(1, Math.min(limit, 1000)));
 
   if (error) {
+    const status = isMissingTableError(error) ? "table_missing" : "error";
+    const statusLabel = isMissingTableError(error) ? "Table missing" : "Error";
+    const captureHealth = unavailableCaptureHealth(statusLabel, error.message);
+    const captureCalendar = emptyCaptureCalendar(statusLabel);
+    const proofSummary = emptyPaperTradingProofSummary(
+      "unavailable",
+      statusLabel
+    );
     return {
-      status: isMissingTableError(error) ? "table_missing" : "error",
+      status,
       message: error.message,
       latest_captured_at: null,
-      capture_health: unavailableCaptureHealth(
-        isMissingTableError(error) ? "Table missing" : "Error",
-        error.message
-      ),
-      capture_calendar: emptyCaptureCalendar(
-        isMissingTableError(error) ? "Table missing" : "Error"
-      ),
-      proof_summary: emptyPaperTradingProofSummary(
-        "unavailable",
-        isMissingTableError(error) ? "Table missing" : "Error"
-      ),
+      capture_health: captureHealth,
+      capture_calendar: captureCalendar,
+      proof_summary: proofSummary,
+      proof_readiness: buildPaperTradingProofReadiness({
+        persistenceStatus: status,
+        proofSummary,
+        captureHealth,
+        captureCalendar,
+      }),
       agent_edge_proof_matrix: [],
       snapshots: [],
       strategy_rollups: [],
@@ -1448,13 +1751,20 @@ export async function loadPaperTradingSnapshotHistory(
   const strategyRollups = buildPaperTradingStrategyRollups(snapshots, captureHealth);
   const agentEdgeProofMatrix =
     buildPaperTradingAgentEdgeProofMatrix(strategyRollups);
+  const proofSummary = buildPaperTradingProofSummary(strategyRollups);
   return {
     status: "available",
     message: "Persisted paper-trading snapshots loaded.",
     latest_captured_at: snapshots[0]?.captured_at ?? null,
     capture_health: captureHealth,
     capture_calendar: captureCalendar,
-    proof_summary: buildPaperTradingProofSummary(strategyRollups),
+    proof_summary: proofSummary,
+    proof_readiness: buildPaperTradingProofReadiness({
+      persistenceStatus: "available",
+      proofSummary,
+      captureHealth,
+      captureCalendar,
+    }),
     agent_edge_proof_matrix: agentEdgeProofMatrix,
     snapshots,
     strategy_rollups: strategyRollups,
