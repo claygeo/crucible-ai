@@ -75,6 +75,13 @@ unless a URL-selected custom strategy explicitly sets `bankroll_usd`. This lets
 operators replay questions such as "`$800` Mirror-only" without rewriting the
 durable agent-edge proof defaults or mutating historical snapshot rows.
 
+Every selected replay now exposes `selected_bankroll_risk` in `/api/trading.json`
+and the dashboard summary. It converts the selected strategy into operator math:
+realized equity, open exposure, worst-case open-ticket loss, bankroll after all
+open tickets lose, exposure percentage of bankroll, and remaining paper capacity.
+This is a risk display only; it does not change capital-review gates or enable
+execution.
+
 ## Canonical Agent Edge Matrix
 
 The lab now tracks every house agent with two live-only rules:

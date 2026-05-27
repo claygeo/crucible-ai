@@ -155,8 +155,14 @@ export type PaperTradingLabStatus = {
   tradability: {
     selected_accepted_resolved_trades: number;
     selected_accepted_open_signals: number;
+    selected_bankroll_usd: number;
     selected_accepted_resolved_pnl_usd: number;
+    selected_realized_equity_usd: number;
     selected_open_exposure_usd: number;
+    selected_open_exposure_pct_of_bankroll: number;
+    selected_worst_case_open_loss_usd: number;
+    selected_bankroll_after_worst_case_usd: number;
+    selected_remaining_open_capacity_usd: number;
     selected_peak_open_exposure_usd: number;
     selected_max_open_exposure_usd: number;
     skipped_open_signals: number;
@@ -779,10 +785,21 @@ export function buildPaperTradingLabStatus(args: {
       selected_accepted_resolved_trades:
         exposureLedger.accepted_resolved_trades,
       selected_accepted_open_signals: exposureLedger.accepted_open_signals,
+      selected_bankroll_usd: args.snapshot.selected_bankroll_risk.bankroll_usd,
       selected_accepted_resolved_pnl_usd: round2(
         exposureLedger.accepted_resolved_net_pnl_usd,
       ),
+      selected_realized_equity_usd:
+        args.snapshot.selected_bankroll_risk.realized_equity_usd,
       selected_open_exposure_usd: exposureLedger.current_open_exposure_usd,
+      selected_open_exposure_pct_of_bankroll:
+        args.snapshot.selected_bankroll_risk.open_exposure_pct_of_bankroll,
+      selected_worst_case_open_loss_usd:
+        args.snapshot.selected_bankroll_risk.worst_case_open_loss_usd,
+      selected_bankroll_after_worst_case_usd:
+        args.snapshot.selected_bankroll_risk.bankroll_after_worst_case_usd,
+      selected_remaining_open_capacity_usd:
+        args.snapshot.selected_bankroll_risk.remaining_open_capacity_usd,
       selected_peak_open_exposure_usd: exposureLedger.peak_open_exposure_usd,
       selected_max_open_exposure_usd: exposureLedger.max_open_exposure_usd,
       skipped_open_signals: exposureLedger.skipped_open_signals,
