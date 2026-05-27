@@ -82,6 +82,12 @@ These canonical rules are exposed as `agent_edge_matrix` in `/api/trading.json`
 and rendered on the dashboard as "Agent edge rules." The matrix is separate
 from custom URL controls so the 30-day lab can compare Sage, Hawk, Magpie, Echo,
 Mirror, and Crowd under the same stake caps, exposure cap, and proof gates.
+Each matrix row also exposes exposure-cap leakage fields:
+`skipped_open_signals`, `skipped_resolved_trades`,
+`skipped_profitable_resolved_trades`, `skipped_loss_resolved_trades`,
+`skipped_resolved_net_pnl_usd`, and `missed_pnl_counts_as_proof: false`. These
+make a profitable missed signal visible without counting it as accepted proof
+P&L for that agent/edge rule.
 
 ## Exposure Ledger
 
@@ -237,8 +243,8 @@ The 30-day proof window now has a durable audit surface:
   exposure-cap leakage, and capital-review packet into one status:
   `reviewable`, `collecting`, `degraded`, `blocked`, or `unavailable`. It keeps
   accepted proof P&L separate from skipped resolved P&L, reports
-  `missed_pnl_counts_as_proof: false`, and always carries
-  `real_money_execution_allowed: false`.
+  `missed_pnl_counts_as_proof: false`, summarizes the top canonical agent-edge
+  capacity leak, and always carries `real_money_execution_allowed: false`.
 - `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
   the latest paper-proof workflow run, matching artifact bundle, expiry, run
   URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,

@@ -497,6 +497,13 @@ export type AgentEdgeRuleSummary = {
   resolved_trades: number;
   open_signals: number;
   skipped_trades: number;
+  skipped_open_signals: number;
+  skipped_resolved_trades: number;
+  skipped_profitable_resolved_trades: number;
+  skipped_loss_resolved_trades: number;
+  skipped_resolved_net_pnl_usd: number;
+  skipped_expected_open_pnl_usd: number;
+  missed_pnl_counts_as_proof: false;
   resolved_net_pnl_usd: number;
   resolved_roi_on_stake: number;
   avg_edge: number;
@@ -2255,6 +2262,18 @@ function buildAgentEdgeMatrix(
         resolved_trades: strategy.resolved_trades,
         open_signals: strategy.open_signals,
         skipped_trades: strategy.exposure_ledger.skipped_trades,
+        skipped_open_signals: strategy.exposure_ledger.skipped_open_signals,
+        skipped_resolved_trades:
+          strategy.exposure_ledger.skipped_resolved_trades,
+        skipped_profitable_resolved_trades:
+          strategy.exposure_ledger.skipped_profitable_resolved_trades,
+        skipped_loss_resolved_trades:
+          strategy.exposure_ledger.skipped_loss_resolved_trades,
+        skipped_resolved_net_pnl_usd:
+          strategy.exposure_ledger.skipped_resolved_net_pnl_usd,
+        skipped_expected_open_pnl_usd:
+          strategy.exposure_ledger.skipped_expected_open_pnl_usd,
+        missed_pnl_counts_as_proof: false as const,
         resolved_net_pnl_usd: strategy.net_pnl_usd,
         resolved_roi_on_stake: strategy.roi_on_stake,
         avg_edge: strategy.avg_edge,
@@ -2687,10 +2706,7 @@ function buildAgentEdgeProofRunway(
       (sum, rule) => sum + rule.resolved_trades_remaining,
       0,
     ),
-    total_open_signals: rules.reduce(
-      (sum, rule) => sum + rule.open_signals,
-      0,
-    ),
+    total_open_signals: rules.reduce((sum, rule) => sum + rule.open_signals, 0),
     total_tradable_open_signals: rules.reduce(
       (sum, rule) => sum + rule.tradable_open_signals,
       0,
