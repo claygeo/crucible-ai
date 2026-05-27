@@ -698,7 +698,7 @@ export default async function TradingPage({
                   Live variants
                 </div>
                 <div className="heading text-xl text-text-primary mt-1">
-                  {int(captureCalendar.expected_live_strategy_rows)}
+                  {int(captureCalendar.expected_live_strategy_count)}
                 </div>
               </div>
               <div>
@@ -742,8 +742,8 @@ export default async function TradingPage({
                           {int(day.captured_rows)}
                         </td>
                         <td className="py-3 px-3 mono text-right text-text-secondary">
-                          {int(day.live_strategy_rows)}/
-                          {int(day.expected_live_strategy_rows)}
+                          {int(day.live_strategy_count)}/
+                          {int(day.expected_live_strategy_count)}
                         </td>
                         <td className="py-3 px-3 mono text-right text-text-secondary">
                           {int(day.control_rows)}
