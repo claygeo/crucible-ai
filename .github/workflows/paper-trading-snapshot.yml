@@ -119,6 +119,22 @@ jobs:
           npx tsx scripts/paper-trading-proof-audit.ts --soft --json \
             | tee paper-audit-result.json
 
+      - name: Run artifact proof rollup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f paper-snapshot-rows.json ]]; then
+            node -e 'const fs = require("fs"); fs.writeFileSync("paper-artifact-audit-result.json", JSON.stringify({ verdict: "blocked", checked_at: new Date().toISOString(), artifact_proof: { status: "unavailable", paper_only: true, real_money_execution_allowed: false }, failed_checks: [{ path: null, code: "artifact_discovery", label: "Artifact discovery", detail: "paper-snapshot-rows.json was not produced." }], exit_code: 1 }, null, 2) + "\n");'
+            exit 1
+          fi
+
+          npx tsx scripts/paper-trading-artifact-audit.ts \
+            --file paper-snapshot-rows.json \
+            --json \
+            | tee paper-artifact-audit-result.json
+
       - name: Upload proof artifacts
         if: always()
         uses: actions/upload-artifact@v7
@@ -129,5 +145,6 @@ jobs:
             paper-snapshot-result.json
             paper-snapshot-rows.json
             paper-audit-result.json
+            paper-artifact-audit-result.json
           if-no-files-found: ignore
           retention-days: 30
