@@ -136,6 +136,11 @@ The 30-day proof window now has a durable audit surface:
 - `persistence.capture_calendar` reports the proof window day by day, including
   complete, partial, and missing capture days plus the number of unique live
   strategy rules recorded for each expected snapshot date.
+- `persistence.proof_readiness` and the top-level
+  `persisted_proof_readiness` turn the durable evidence into explicit
+  pass/collecting/blocked gates: archive availability, paper-only lock, capture
+  freshness, registry sync, 30-day capture window, resolved-trade minimum,
+  positive window P&L/ROI, drawdown, and capital-review boundary.
 
 The database table is public-read, service-role-write, and RLS-enabled. Snapshot
 rows are analytics evidence only; they do not create wallets, orders, leverage,
@@ -199,6 +204,10 @@ The dashboard renders the persisted agent-edge proof matrix separately from the
 current in-memory matrix. The persisted table is the one to watch for the
 30-day capital decision because it is built from stored rollups, capture
 coverage, resolved trades, rolling-window P&L, drawdown, and blockers.
+
+The dashboard also renders a proof-readiness checklist above the persisted
+tables. This is the operator surface for "what is blocking real-money review
+right now"; it never enables execution and always keeps `paper_only: true`.
 
 Capture health is `fresh` while the latest persisted row is less than 36 hours
 old. It becomes `stale` after that window, which makes a missed daily snapshot

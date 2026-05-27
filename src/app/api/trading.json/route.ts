@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
 import {
+  buildPaperTradingProofReadiness,
   buildPaperTradingStrategyRegistrySync,
   loadPaperTradingSnapshotHistory,
 } from "@/lib/trading-snapshots";
@@ -18,6 +19,13 @@ export async function GET(request: Request) {
     snapshot.strategy_variants,
     persisted.snapshots
   );
+  const proofReadiness = buildPaperTradingProofReadiness({
+    persistenceStatus: persisted.status,
+    proofSummary: persisted.proof_summary,
+    captureHealth: persisted.capture_health,
+    captureCalendar: persisted.capture_calendar,
+    registrySync,
+  });
 
   return NextResponse.json(
     {
@@ -25,6 +33,7 @@ export async function GET(request: Request) {
       persisted_daily_snapshots: persisted.snapshots,
       persisted_strategy_rollups: persisted.strategy_rollups,
       persisted_proof_summary: persisted.proof_summary,
+      persisted_proof_readiness: proofReadiness,
       persisted_capture_calendar: persisted.capture_calendar,
       persisted_agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       persistence: {
@@ -35,6 +44,7 @@ export async function GET(request: Request) {
         capture_calendar: persisted.capture_calendar,
         registry_sync: registrySync,
         proof_summary: persisted.proof_summary,
+        proof_readiness: proofReadiness,
         agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       },
       persisted_registry_sync: registrySync,

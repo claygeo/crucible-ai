@@ -15,6 +15,7 @@ import {
   tradingControlsToQuery,
 } from "@/lib/trading";
 import {
+  buildPaperTradingProofReadiness,
   buildPaperTradingStrategyRegistrySync,
   loadPaperTradingSnapshotHistory,
 } from "@/lib/trading-snapshots";
@@ -97,6 +98,13 @@ function resolutionWatchClass(status: string) {
   return "text-text-muted";
 }
 
+function readinessStatusClass(status: string) {
+  if (status === "pass") return "bg-positive/10 text-positive";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
+  return "bg-warn/10 text-warn";
+}
+
 function edgePoints(n: number) {
   return `${Math.round(n * 100)}pp`;
 }
@@ -172,6 +180,13 @@ export default async function TradingPage({
     snapshot.strategy_variants,
     persisted.snapshots
   );
+  const proofReadiness = buildPaperTradingProofReadiness({
+    persistenceStatus: persisted.status,
+    proofSummary,
+    captureHealth,
+    captureCalendar,
+    registrySync,
+  });
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -689,6 +704,66 @@ export default async function TradingPage({
                 age {captureHealth.latest_capture_age_hours.toFixed(1)}h
               </span>
             ) : null}
+          </div>
+          <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="heading text-sm text-text-primary">
+                  Proof readiness checklist
+                </h3>
+                <p className="text-xs text-text-muted mt-1">
+                  {proofReadiness.next_required_action}
+                </p>
+              </div>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${readinessStatusClass(
+                  proofReadiness.status
+                )}`}
+              >
+                {proofReadiness.status_label}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full" aria-label="Proof readiness checklist">
+                <thead>
+                  <tr className="border-b border-border-subtle text-text-muted">
+                    <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Gate</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Status</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Current</th>
+                    <th className="text-left py-2 pl-3 mono text-[10px] uppercase tracking-wider">Target</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle/60">
+                  {proofReadiness.items.map((item) => (
+                    <tr key={item.id}>
+                      <td className="py-3 pr-3">
+                        <div className="text-sm text-text-primary">
+                          {item.label}
+                        </div>
+                        <div className="text-xs text-text-muted leading-relaxed max-w-xl">
+                          {item.detail}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <span
+                          className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${readinessStatusClass(
+                            item.status
+                          )}`}
+                        >
+                          {item.status_label}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {item.current}
+                      </td>
+                      <td className="py-3 pl-3 mono text-left text-text-secondary">
+                        {item.target}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
           <div className="border-t border-border-subtle pt-4 flex flex-col gap-4">
             <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
