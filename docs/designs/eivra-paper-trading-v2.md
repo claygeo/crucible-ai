@@ -231,6 +231,12 @@ The 30-day proof window now has a durable audit surface:
   ticket. The workflow snapshot summary and published artifact proof carry the
   same `agent_edge_trade_ledger`, so a future profitable-rule claim can be
   audited back to individual resolved tickets rather than only rollup totals.
+- `GET /api/trading-agent-edge-attribution` turns canonical resolved paper
+  tickets into source, category, and market attribution. It flags rules whose
+  positive P&L or resolved ticket count is concentrated in one market/source
+  before they are treated as repeatable agent-edge profit. The dashboard renders
+  the same review-only attribution table beside the agent-edge ledger, and
+  `/api/trading.json` exposes `paper_agent_edge_attribution` for public audit.
 - `GET /api/trading-agent-edge-watchlist` exposes the paper-only open-signal
   ledger for those same canonical rules. It records tradable versus
   review-required open live paper tickets, exposure, open EV, close timing, and

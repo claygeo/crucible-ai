@@ -133,6 +133,13 @@ function readinessStatusClass(status: string) {
   return "bg-warn/10 text-warn";
 }
 
+function attributionStatusClass(status: string) {
+  if (status === "diversified") return "bg-positive/10 text-positive";
+  if (status === "concentrated") return "bg-warn/10 text-warn";
+  if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
+  return "bg-accent/10 text-accent";
+}
+
 function resolutionQueueStatusClass(status: string) {
   if (status === "clear") return "bg-positive/10 text-positive";
   if (status === "blocked") return "bg-rose-400/10 text-rose-400";
@@ -406,6 +413,7 @@ export default async function TradingPage({
   const agentEdgeWatchlist = snapshot.agent_edge_watchlist;
   const agentEdgeRunway = snapshot.agent_edge_runway;
   const agentEdgeTradeLedger = snapshot.agent_edge_trade_ledger;
+  const agentEdgeAttribution = snapshot.agent_edge_attribution;
   const agentEdgeLedgerByRule = new Map(
     agentEdgeTradeLedger.rules.map((rule) => [
       `${rule.agent_id}-${rule.min_edge}`,
@@ -472,6 +480,7 @@ export default async function TradingPage({
   const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
   const agentEdgeEvidenceJsonHref = `/api/trading-agent-edge-evidence?${selectedQuery}`;
   const agentEdgeDossierJsonHref = `/api/trading-agent-edge-dossier?${selectedQuery}`;
+  const agentEdgeAttributionJsonHref = `/api/trading-agent-edge-attribution?${selectedQuery}`;
   const liquidityReviewJsonHref = `/api/trading-liquidity-review?${selectedQuery}`;
   const agentEdgeTradesJsonHref = `/api/trading-agent-edge-trades?${selectedQuery}`;
   const agentEdgeWatchlistJsonHref = `/api/trading-agent-edge-watchlist?${selectedQuery}`;
@@ -3789,6 +3798,173 @@ export default async function TradingPage({
             )}
           </div>
 
+          <div className="panel px-5 py-5 flex flex-col gap-4 min-w-0 lg:col-span-2">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="heading text-base text-text-primary">
+                  Agent-edge profit attribution
+                </h2>
+                <p className="text-xs text-text-muted mt-1">
+                  Resolved paper P&amp;L grouped by source, category, and market.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={agentEdgeAttributionJsonHref}
+                  className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+                >
+                  attribution json
+                </Link>
+                <span
+                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${attributionStatusClass(
+                    agentEdgeAttribution.status
+                  )}`}
+                >
+                  {agentEdgeAttribution.status_label}
+                </span>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Resolved
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(agentEdgeAttribution.total_resolved_trades)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  P&amp;L
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${pnlClass(
+                    agentEdgeAttribution.total_net_pnl_usd
+                  )}`}
+                >
+                  {dollars(agentEdgeAttribution.total_net_pnl_usd, 0)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Profitable
+                </div>
+                <div className="heading text-xl text-positive mt-1">
+                  {int(agentEdgeAttribution.profitable_rule_count)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Concentrated
+                </div>
+                <div className="heading text-xl text-warn mt-1">
+                  {int(agentEdgeAttribution.concentrated_rule_count)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Diversified
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(agentEdgeAttribution.diversified_rule_count)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Threshold
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {pct(
+                    agentEdgeAttribution.rules.topPnlShareConcentrationThreshold,
+                    0
+                  )}
+                </div>
+              </div>
+            </div>
+            {agentEdgeAttribution.rules_by_strategy.length === 0 ? (
+              <div className="text-sm text-text-muted mono">
+                [no canonical agent-edge attribution rows yet]
+              </div>
+            ) : (
+              <div className="overflow-x-auto border-t border-border-subtle pt-3">
+                <table
+                  className="w-full"
+                  aria-label="Agent-edge profit attribution"
+                >
+                  <thead>
+                    <tr className="border-b border-border-subtle text-text-muted">
+                      <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Rule</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Status</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Resolved</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">P&amp;L</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Sources</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Markets</th>
+                      <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Top market</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-subtle/60">
+                    {agentEdgeAttribution.rules_by_strategy
+                      .slice(0, 8)
+                      .map((rule) => (
+                        <tr key={rule.strategy_id}>
+                          <td className="py-3 pr-3">
+                            <div className="text-sm text-text-primary">
+                              {rule.agent_name} / {edgePoints(rule.min_edge)}
+                            </div>
+                            <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                              {rule.concentration_flags[0] ??
+                                "attribution collecting"}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <span
+                              className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${attributionStatusClass(
+                                rule.status
+                              )}`}
+                            >
+                              {rule.status_label}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {int(rule.resolved_trades)}/
+                            {int(rule.required_resolved_trades)}
+                          </td>
+                          <td
+                            className={`py-3 px-3 mono text-right ${pnlClass(
+                              rule.net_pnl_usd
+                            )}`}
+                          >
+                            {dollars(rule.net_pnl_usd, 0)}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {int(rule.distinct_sources)}
+                            {rule.by_source[0] ? (
+                              <div className="mt-1 text-[10px] text-text-muted">
+                                top {pct(rule.by_source[0].pnl_share, 0)}
+                              </div>
+                            ) : null}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {int(rule.distinct_markets)}
+                          </td>
+                          <td className="py-3 pl-3 mono text-right text-text-secondary">
+                            {pct(rule.top_market_pnl_share, 0)}
+                            {rule.top_markets[0] ? (
+                              <div className="mt-1 text-[10px] text-text-muted truncate max-w-[180px]">
+                                {rule.top_markets[0].market_source}
+                              </div>
+                            ) : null}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="border-t border-border-subtle pt-3 text-xs text-text-muted">
+              {agentEdgeAttribution.next_required_action}
+            </div>
+          </div>
           <div className="panel px-5 py-5 flex flex-col gap-4 min-w-0 lg:col-span-2">
             <div className="flex items-start justify-between gap-3">
               <div>
