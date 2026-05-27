@@ -9,6 +9,26 @@ export type ResolutionReviewQueueSource =
   | "current_snapshot"
   | "published_artifact_proof";
 
+export type ProviderResolutionStatus =
+  | "resolved"
+  | "open"
+  | "ambiguous"
+  | "unsupported"
+  | "unavailable";
+
+export type ProviderResolutionCheck = {
+  provider: string | null;
+  status: ProviderResolutionStatus;
+  status_label: string;
+  checked_at: string;
+  source_market_id: string | null;
+  source_market_slug: string | null;
+  resolved_outcome: "YES" | "NO" | null;
+  resolved_at: string | null;
+  api_url: string | null;
+  message: string;
+};
+
 export type ResolutionReviewQueueItem = {
   source: ResolutionReviewQueueSource;
   source_label: string;
@@ -37,6 +57,7 @@ export type ResolutionReviewQueueItem = {
   days_until_close: number | null;
   age_days: number;
   action: string;
+  provider_resolution: ProviderResolutionCheck | null;
 };
 
 export type ResolutionReviewQueue = {
@@ -52,12 +73,18 @@ export type ResolutionReviewQueue = {
   item_count: number;
   evidence_item_count: number;
   duplicate_item_count: number;
+  provider_resolution_checked_at: string | null;
+  provider_resolution_supported_item_count: number;
+  provider_resolution_resolved_item_count: number;
+  provider_resolution_unavailable_item_count: number;
   current_snapshot_items: ResolutionReviewQueueItem[];
   published_artifact_items: ResolutionReviewQueueItem[];
   items: ResolutionReviewQueueItem[];
 };
 
 type UnknownRecord = Record<string, unknown>;
+
+type Fetcher = (input: string | URL, init?: RequestInit) => Promise<Response>;
 
 function isRecord(value: unknown): value is UnknownRecord {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -119,6 +146,7 @@ function currentSignalToQueueItem(
     tradability_status: signal.tradability_status,
     days_until_close: signal.days_until_close,
     age_days: signal.age_days,
+    provider_resolution: null,
     action:
       signal.close_status === "unknown_close"
         ? "Find the source market close time or mark the market untradable in review."
@@ -213,6 +241,7 @@ function publishedEvidenceToQueueItem(
         ? evidence.days_until_close
         : null,
     age_days: numberValue(evidence.age_days),
+    provider_resolution: null,
     action:
       closeStatus === "unknown_close"
         ? "Find the source market close time before trusting this open EV."
@@ -292,6 +321,314 @@ function dedupeQueueItems(
   return sortQueueItems(Array.from(byKey.values()));
 }
 
+function marketUrl(value: string | null): URL | null {
+  if (!value) return null;
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
+
+function manifoldSlugFromUrl(value: string | null): string | null {
+  const url = marketUrl(value);
+  if (!url || !url.hostname.endsWith("manifold.markets")) return null;
+  const segments = url.pathname.split("/").filter(Boolean);
+  return segments[segments.length - 1] ?? null;
+}
+
+function isoFromMillis(value: unknown): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
+function providerLabel(provider: string | null): string {
+  return provider ? provider.replaceAll("_", " ") : "unknown provider";
+}
+
+function providerResolutionAction(
+  item: ResolutionReviewQueueItem,
+  check: ProviderResolutionCheck | null,
+): string {
+  if (!check) return item.action;
+  if (check.status === "resolved" && check.resolved_outcome) {
+    return `Source market resolved ${check.resolved_outcome}; run the Eivra resolver and publish a fresh paper snapshot before trusting P&L.`;
+  }
+  if (check.status === "open") {
+    return "Source market is still open; keep this paper EV blocked until provider settlement.";
+  }
+  if (check.status === "ambiguous") {
+    return "Source market has a non-binary or ambiguous provider resolution; manual review is required before scoring.";
+  }
+  if (check.status === "unavailable") {
+    return "Provider resolution check failed; retry before trusting this open EV.";
+  }
+  return item.action;
+}
+
+function providerResolutionCheckForUnsupported(
+  item: ResolutionReviewQueueItem,
+  checkedAt: string,
+): ProviderResolutionCheck {
+  return {
+    provider: item.market_source,
+    status: "unsupported",
+    status_label: "Provider unsupported",
+    checked_at: checkedAt,
+    source_market_id: null,
+    source_market_slug: null,
+    resolved_outcome: null,
+    resolved_at: null,
+    api_url: null,
+    message: `Read-only provider checks are not implemented for ${providerLabel(
+      item.market_source,
+    )}.`,
+  };
+}
+
+async function fetchWithTimeout(
+  fetcher: Fetcher,
+  url: string,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetcher(url, {
+      cache: "no-store",
+      headers: { "user-agent": "eivra-paper-resolution-review/0.1" },
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchManifoldResolutionCheck(
+  item: ResolutionReviewQueueItem,
+  fetcher: Fetcher,
+  checkedAt: string,
+  timeoutMs: number,
+): Promise<ProviderResolutionCheck> {
+  const slug = manifoldSlugFromUrl(item.market_url);
+  if (!slug) {
+    return {
+      provider: item.market_source,
+      status: "unavailable",
+      status_label: "Source unavailable",
+      checked_at: checkedAt,
+      source_market_id: null,
+      source_market_slug: null,
+      resolved_outcome: null,
+      resolved_at: null,
+      api_url: null,
+      message: "Could not derive a Manifold market slug from the source URL.",
+    };
+  }
+
+  const apiUrl = `https://api.manifold.markets/v0/slug/${encodeURIComponent(
+    slug,
+  )}`;
+
+  try {
+    const response = await fetchWithTimeout(fetcher, apiUrl, timeoutMs);
+    if (!response.ok) {
+      return {
+        provider: item.market_source,
+        status: "unavailable",
+        status_label: "Source unavailable",
+        checked_at: checkedAt,
+        source_market_id: null,
+        source_market_slug: slug,
+        resolved_outcome: null,
+        resolved_at: null,
+        api_url: apiUrl,
+        message: `Manifold resolution check returned HTTP ${response.status}.`,
+      };
+    }
+
+    const market = (await response.json()) as UnknownRecord;
+    const sourceMarketId = stringValue(market.id);
+    const isResolved = market.isResolved === true;
+    if (!isResolved) {
+      return {
+        provider: item.market_source,
+        status: "open",
+        status_label: "Source open",
+        checked_at: checkedAt,
+        source_market_id: sourceMarketId,
+        source_market_slug: slug,
+        resolved_outcome: null,
+        resolved_at: null,
+        api_url: apiUrl,
+        message: "Manifold still reports this market as unresolved.",
+      };
+    }
+
+    const resolution = stringValue(market.resolution);
+    if (resolution !== "YES" && resolution !== "NO") {
+      return {
+        provider: item.market_source,
+        status: "ambiguous",
+        status_label: "Source ambiguous",
+        checked_at: checkedAt,
+        source_market_id: sourceMarketId,
+        source_market_slug: slug,
+        resolved_outcome: null,
+        resolved_at: isoFromMillis(market.resolutionTime),
+        api_url: apiUrl,
+        message: `Manifold resolved this market as ${resolution ?? "unknown"}, not a binary YES/NO outcome.`,
+      };
+    }
+
+    return {
+      provider: item.market_source,
+      status: "resolved",
+      status_label: `Source resolved ${resolution}`,
+      checked_at: checkedAt,
+      source_market_id: sourceMarketId,
+      source_market_slug: slug,
+      resolved_outcome: resolution,
+      resolved_at: isoFromMillis(market.resolutionTime),
+      api_url: apiUrl,
+      message: `Manifold reports this market resolved ${resolution}.`,
+    };
+  } catch (error) {
+    return {
+      provider: item.market_source,
+      status: "unavailable",
+      status_label: "Source unavailable",
+      checked_at: checkedAt,
+      source_market_id: null,
+      source_market_slug: slug,
+      resolved_outcome: null,
+      resolved_at: null,
+      api_url: apiUrl,
+      message:
+        error instanceof Error
+          ? `Manifold resolution check failed: ${error.message}`
+          : "Manifold resolution check failed.",
+    };
+  }
+}
+
+async function fetchProviderResolutionCheck(
+  item: ResolutionReviewQueueItem,
+  fetcher: Fetcher,
+  checkedAt: string,
+  timeoutMs: number,
+): Promise<ProviderResolutionCheck> {
+  if (item.market_source === "manifold") {
+    return fetchManifoldResolutionCheck(item, fetcher, checkedAt, timeoutMs);
+  }
+  return providerResolutionCheckForUnsupported(item, checkedAt);
+}
+
+function providerResolutionKey(item: ResolutionReviewQueueItem): string {
+  return `${item.market_source ?? "unknown"}:${item.market_url ?? item.market_id}`;
+}
+
+function applyProviderResolution(
+  item: ResolutionReviewQueueItem,
+  check: ProviderResolutionCheck | null,
+): ResolutionReviewQueueItem {
+  return {
+    ...item,
+    provider_resolution: check,
+    action: providerResolutionAction(item, check),
+  };
+}
+
+function providerResolvedItems(items: ResolutionReviewQueueItem[]): number {
+  return items.filter((item) => item.provider_resolution?.status === "resolved")
+    .length;
+}
+
+function providerSupportedItems(items: ResolutionReviewQueueItem[]): number {
+  return items.filter(
+    (item) =>
+      item.provider_resolution &&
+      item.provider_resolution.status !== "unsupported",
+  ).length;
+}
+
+function providerUnavailableItems(items: ResolutionReviewQueueItem[]): number {
+  return items.filter(
+    (item) => item.provider_resolution?.status === "unavailable",
+  ).length;
+}
+
+export async function enrichResolutionReviewQueueWithProviderResolution(
+  queue: ResolutionReviewQueue,
+  options: {
+    fetcher?: Fetcher;
+    timeoutMs?: number;
+    now?: Date;
+  } = {},
+): Promise<ResolutionReviewQueue> {
+  if (queue.items.length === 0) return queue;
+
+  const fetcher = options.fetcher ?? fetch;
+  const timeoutMs = options.timeoutMs ?? 5000;
+  const checkedAt = (options.now ?? new Date()).toISOString();
+  const checkPromisesByProviderKey = new Map<
+    string,
+    Promise<ProviderResolutionCheck>
+  >();
+  for (const item of queue.items) {
+    const key = providerResolutionKey(item);
+    if (checkPromisesByProviderKey.has(key)) continue;
+    checkPromisesByProviderKey.set(
+      key,
+      fetchProviderResolutionCheck(item, fetcher, checkedAt, timeoutMs),
+    );
+  }
+  const checksByProviderKey = new Map<string, ProviderResolutionCheck>();
+  await Promise.all(
+    Array.from(checkPromisesByProviderKey.entries()).map(
+      async ([key, promise]) => {
+        checksByProviderKey.set(key, await promise);
+      },
+    ),
+  );
+
+  const checkForItem = (item: ResolutionReviewQueueItem) =>
+    checksByProviderKey.get(providerResolutionKey(item)) ?? null;
+  const items = queue.items.map((item) =>
+    applyProviderResolution(item, checkForItem(item)),
+  );
+  const currentSnapshotItems = queue.current_snapshot_items.map((item) =>
+    applyProviderResolution(item, checkForItem(item)),
+  );
+  const publishedArtifactItems = queue.published_artifact_items.map((item) =>
+    applyProviderResolution(item, checkForItem(item)),
+  );
+  const resolvedItemCount = providerResolvedItems(items);
+  const message =
+    queue.status === "blocked" && resolvedItemCount > 0
+      ? `${queue.message} ${resolvedItemCount} queued item${
+          resolvedItemCount === 1 ? " is" : "s are"
+        } already resolved at the provider and needs Eivra resolver/snapshot refresh.`
+      : queue.message;
+
+  return {
+    ...queue,
+    message,
+    next_required_action:
+      queue.status === "blocked" && resolvedItemCount > 0
+        ? "Run or verify the source-market resolver, then publish a fresh paper snapshot before trusting resolved P&L."
+        : queue.next_required_action,
+    provider_resolution_checked_at: checkedAt,
+    provider_resolution_supported_item_count: providerSupportedItems(items),
+    provider_resolution_resolved_item_count: resolvedItemCount,
+    provider_resolution_unavailable_item_count: providerUnavailableItems(items),
+    current_snapshot_items: currentSnapshotItems,
+    published_artifact_items: publishedArtifactItems,
+    items,
+  };
+}
+
 export function buildResolutionReviewQueue(args: {
   resolutionWatch?: TradingResolutionWatch | null;
   publishedArtifactProof?: PublishedPaperTradingArtifactProof | null;
@@ -359,6 +696,10 @@ export function buildResolutionReviewQueue(args: {
     item_count: items.length,
     evidence_item_count: evidenceItemCount,
     duplicate_item_count: Math.max(0, evidenceItemCount - items.length),
+    provider_resolution_checked_at: null,
+    provider_resolution_supported_item_count: 0,
+    provider_resolution_resolved_item_count: 0,
+    provider_resolution_unavailable_item_count: 0,
     current_snapshot_items: sortQueueItems(currentSnapshotItems),
     published_artifact_items: sortQueueItems(publishedArtifactItems),
     items,

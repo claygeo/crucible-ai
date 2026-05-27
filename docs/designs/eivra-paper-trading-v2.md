@@ -255,8 +255,10 @@ The 30-day proof window now has a durable audit surface:
   every overdue or unknown-close paper market that blocks open EV from being
   trusted, including source-market links when available. Current/published
   copies of the same prediction are deduped in the operator queue while source
-  labels and run ids are preserved for audit; it never writes outcomes or
-  enables execution.
+  labels and run ids are preserved for audit. The queue also performs a
+  read-only provider-resolution check for supported markets, so stale Eivra rows
+  can show that the source has already resolved without writing outcomes or
+  enabling execution.
 - `/api/trading-strategy-registry` returns the paper-only strategy lab manifest:
   every canonical rule under observation, the selected URL-configured rule, proof
   gates, configurable controls, and execution-disabled invariants. Snapshot

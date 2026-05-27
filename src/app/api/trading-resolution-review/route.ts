@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { loadPublishedPaperTradingArtifactProof } from "@/lib/trading-artifacts";
-import { buildResolutionReviewQueue } from "@/lib/trading-resolution-review";
+import {
+  buildResolutionReviewQueue,
+  enrichResolutionReviewQueueWithProviderResolution,
+} from "@/lib/trading-resolution-review";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
 
 export const dynamic = "force-dynamic";
@@ -12,10 +15,12 @@ export async function GET(request: Request) {
     getTradingSnapshot(controls),
     loadPublishedPaperTradingArtifactProof(),
   ]);
-  const queue = buildResolutionReviewQueue({
-    resolutionWatch: snapshot.resolution_watch,
-    publishedArtifactProof,
-  });
+  const queue = await enrichResolutionReviewQueueWithProviderResolution(
+    buildResolutionReviewQueue({
+      resolutionWatch: snapshot.resolution_watch,
+      publishedArtifactProof,
+    }),
+  );
 
   return NextResponse.json(
     {
