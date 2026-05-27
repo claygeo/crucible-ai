@@ -23,6 +23,7 @@ export async function GET(request: Request) {
   const evidenceTimeline = buildPaperTradingAgentEdgeEvidenceTimeline({
     persistence: persisted,
     agentEdgeProof,
+    publishedArtifactProof,
     selectedAgentId: controls.agent_id,
     selectedMinEdge: controls.min_edge,
   });

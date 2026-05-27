@@ -398,6 +398,7 @@ export default async function TradingPage({
   const agentEdgeEvidenceTimeline = buildPaperTradingAgentEdgeEvidenceTimeline({
     persistence: persisted,
     agentEdgeProof,
+    publishedArtifactProof,
     selectedAgentId: snapshot.controls.agent_id,
     selectedMinEdge: snapshot.controls.min_edge,
   });

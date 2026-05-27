@@ -216,7 +216,10 @@ The 30-day proof window now has a durable audit surface:
   timeline from persisted paper snapshot rows. It exposes rule-day coverage,
   latest daily deltas, missing captures, resolved-ticket progress, and the same
   `missed_pnl_counts_as_proof: false` guard so the dashboard can audit how each
-  agent/edge rule is progressing across the 30-day window.
+  agent/edge rule is progressing across the 30-day window. When Supabase rows
+  are unavailable, it falls back to the latest published artifact-only
+  `agent_edge_evidence` timeline so the public dashboard still shows retained
+  daily rule evidence while capital review remains blocked.
 - `GET /api/trading-agent-edge-dossier` composes the selected canonical
   agent/edge rule into one paper-only review packet: durable proof gates, daily
   evidence, resolved ticket ledger, runway, and open-signal watchlist. It keeps
@@ -309,8 +312,9 @@ The 30-day proof window now has a durable audit surface:
   artifact proof rollup, proof readiness/runway, agent-edge proof matrix, and
   top strategy rollups with `paper_only: true` and
   `real_money_execution_allowed: false`. It also publishes
-  `agent_edge_attribution` and `liquidity_review`, while raw snapshot rows stay
-  in the GitHub artifact bundle.
+  `agent_edge_attribution`, `liquidity_review`, and the sanitized
+  `agent_edge_evidence` timeline, while raw snapshot rows stay in the GitHub
+  artifact bundle.
 - `persistence.capture_health` reports the daily recorder status, latest capture
   age, next expected capture, cron expression, and stale threshold.
 - `persistence.capture_calendar` reports the proof window day by day, including

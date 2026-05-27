@@ -968,6 +968,7 @@ async function buildArtifactProof(
       agent_edge_trade_ledger: agentEdgeTradeLedger,
       agent_edge_attribution: agentEdgeAttribution,
       liquidity_review: liquidityReview,
+      agent_edge_evidence: null,
       agent_edge_proof: null,
       agent_edge_proof_matrix: [],
       top_strategy_rollups: [],
@@ -1005,6 +1006,8 @@ async function buildArtifactProof(
     rows: agentEdgeProofMatrix,
     source: "published_artifact",
   });
+  const { buildPaperTradingAgentEdgeEvidenceTimeline } =
+    await import("../src/lib/trading-agent-edge-evidence");
   const proofSummary = buildPaperTradingProofSummary(strategyRollups);
   const proofReadiness = buildPaperTradingProofReadiness({
     persistenceStatus: "available",
@@ -1024,6 +1027,22 @@ async function buildArtifactProof(
     proofReadiness,
     proofRunway,
     workflowMode: workflowModePayload,
+  });
+  const agentEdgeEvidence = buildPaperTradingAgentEdgeEvidenceTimeline({
+    persistence: {
+      status: "available",
+      message: "Artifact proof rows are available.",
+      latest_captured_at: latestCapturedAt,
+      capture_health: captureHealth,
+      capture_calendar: captureCalendar,
+      proof_summary: proofSummary,
+      proof_readiness: proofReadiness,
+      proof_runway: proofRunway,
+      agent_edge_proof_matrix: agentEdgeProofMatrix,
+      snapshots: sortedRows,
+      strategy_rollups: strategyRollups,
+    },
+    agentEdgeProof,
   });
 
   return {
@@ -1049,6 +1068,7 @@ async function buildArtifactProof(
     agent_edge_trade_ledger: agentEdgeTradeLedger,
     agent_edge_attribution: agentEdgeAttribution,
     liquidity_review: liquidityReview,
+    agent_edge_evidence: agentEdgeEvidence,
     agent_edge_proof: agentEdgeProof,
     agent_edge_proof_matrix: agentEdgeProofMatrix,
     top_strategy_rollups: strategyRollups
@@ -1379,6 +1399,9 @@ async function buildReport(options: CliOptions, files: string[]) {
   const liquidityReview = isRecord(proof.liquidity_review)
     ? proof.liquidity_review
     : null;
+  const agentEdgeEvidence = isRecord(proof.agent_edge_evidence)
+    ? proof.agent_edge_evidence
+    : null;
   if (proof.status === "available" && !capitalReviewPacket) {
     failedChecks.push({
       path: null,
@@ -1425,6 +1448,14 @@ async function buildReport(options: CliOptions, files: string[]) {
       code: "liquidity_review",
       label: "Liquidity review",
       detail: "Available artifact proof must include liquidity_review.",
+    });
+  }
+  if (proof.status === "available" && !agentEdgeEvidence) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_evidence",
+      label: "Agent-edge daily evidence",
+      detail: "Available artifact proof must include agent_edge_evidence.",
     });
   }
   if (
@@ -1489,6 +1520,19 @@ async function buildReport(options: CliOptions, files: string[]) {
       label: "Liquidity stress proof lock",
       detail:
         "liquidity_review must keep stress_evidence_counts_as_proof=false and include stress_rules.",
+    });
+  }
+  if (
+    agentEdgeEvidence &&
+    (!hasPaperOnlyExecutionLock(agentEdgeEvidence) ||
+      !Array.isArray(agentEdgeEvidence.rules))
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_evidence_paper_only",
+      label: "Agent-edge evidence paper-only lock",
+      detail:
+        "agent_edge_evidence must keep paper_only=true, real_money_execution_allowed=false, and include rules.",
     });
   }
   if (

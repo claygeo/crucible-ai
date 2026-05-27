@@ -93,6 +93,7 @@ function main() {
   const agentEdgeTradeLedger = record(artifactProof.agent_edge_trade_ledger);
   const agentEdgeAttribution = record(artifactProof.agent_edge_attribution);
   const liquidityReview = record(artifactProof.liquidity_review);
+  const agentEdgeEvidence = record(artifactProof.agent_edge_evidence);
   if (
     artifactProof.status === "available" &&
     Object.keys(agentEdgeAttribution).length === 0
@@ -107,6 +108,14 @@ function main() {
   ) {
     throw new Error(
       "Refusing to publish available artifact proof without liquidity_review.",
+    );
+  }
+  if (
+    artifactProof.status === "available" &&
+    Object.keys(agentEdgeEvidence).length === 0
+  ) {
+    throw new Error(
+      "Refusing to publish available artifact proof without agent_edge_evidence.",
     );
   }
   if (
@@ -166,6 +175,16 @@ function main() {
       "Refusing to publish liquidity_review unless it stays paper-only and marks stress evidence as non-proof.",
     );
   }
+  if (
+    Object.keys(agentEdgeEvidence).length > 0 &&
+    (agentEdgeEvidence.paper_only !== true ||
+      agentEdgeEvidence.real_money_execution_allowed !== false ||
+      !Array.isArray(agentEdgeEvidence.rules))
+  ) {
+    throw new Error(
+      "Refusing to publish agent_edge_evidence unless it stays paper-only and includes rules.",
+    );
+  }
 
   const runId = stringEnv("GITHUB_RUN_ID");
   const artifactName = runId
@@ -216,6 +235,8 @@ function main() {
         : null,
     liquidity_review:
       Object.keys(liquidityReview).length > 0 ? liquidityReview : null,
+    agent_edge_evidence:
+      Object.keys(agentEdgeEvidence).length > 0 ? agentEdgeEvidence : null,
     artifact_audit: {
       verdict: artifactAudit.verdict ?? null,
       checked_at: artifactAudit.checked_at ?? null,
