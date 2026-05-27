@@ -1072,7 +1072,7 @@ export default async function TradingPage({
               </span>
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Proof days
@@ -1099,7 +1099,7 @@ export default async function TradingPage({
             </div>
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                Missed P&amp;L
+                Selected missed
               </div>
               <div
                 className={`heading text-2xl mt-1 ${pnlClass(
@@ -1109,6 +1109,17 @@ export default async function TradingPage({
                 {dollars(
                   labStatus.tradability.skipped_resolved_net_pnl_usd,
                   0
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Leaky rules
+              </div>
+              <div className="heading text-2xl text-warn mt-1">
+                {int(
+                  labStatus.tradability.canonical_agent_edge_leakage
+                    .rules_with_profitable_skipped_resolved
                 )}
               </div>
             </div>
@@ -3295,6 +3306,7 @@ export default async function TradingPage({
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Open</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Runway</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Skipped</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Missed</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">P&amp;L</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">ROI</th>
                       <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Open EV</th>
@@ -3371,6 +3383,23 @@ export default async function TradingPage({
                           </td>
                           <td className="py-3 px-3 mono text-right text-warn">
                             {int(rule.skipped_trades)}
+                            {rule.skipped_resolved_trades > 0 ? (
+                              <div className="mt-1 text-[10px] text-text-muted">
+                                {int(rule.skipped_resolved_trades)} resolved
+                              </div>
+                            ) : null}
+                          </td>
+                          <td
+                            className={`py-3 px-3 mono text-right ${pnlClass(
+                              rule.skipped_resolved_net_pnl_usd
+                            )}`}
+                          >
+                            {dollars(rule.skipped_resolved_net_pnl_usd, 0)}
+                            {rule.skipped_profitable_resolved_trades > 0 ? (
+                              <div className="mt-1 text-[10px] text-warn">
+                                capacity leak
+                              </div>
+                            ) : null}
                           </td>
                           <td
                             className={`py-3 px-3 mono text-right ${pnlClass(

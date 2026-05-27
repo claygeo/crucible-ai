@@ -118,6 +118,17 @@ export type PaperTradingLabStatus = {
       | "resolved_missed_loss"
       | "resolved_mixed";
     missed_pnl_counts_as_proof: false;
+    canonical_agent_edge_leakage: {
+      rule_count: number;
+      rules_with_skipped_resolved: number;
+      rules_with_profitable_skipped_resolved: number;
+      top_missed_strategy_id: string | null;
+      top_missed_strategy_label: string | null;
+      top_missed_agent_name: string | null;
+      top_missed_pnl_usd: number;
+      top_missed_resolved_trades: number;
+      missed_pnl_counts_as_proof: false;
+    };
   };
   operations: {
     registry_sync_status: PaperTradingStrategyRegistrySync["status"];
@@ -301,6 +312,15 @@ export function buildPaperTradingLabStatus(args: {
 }): PaperTradingLabStatus {
   const selectedStrategy = args.snapshot.selected_strategy;
   const exposureLedger = args.snapshot.selected_exposure_ledger;
+  const topMissedAgentEdgeRule =
+    args.snapshot.agent_edge_matrix
+      .filter((rule) => rule.skipped_resolved_trades > 0)
+      .slice()
+      .sort(
+        (a, b) =>
+          b.skipped_resolved_net_pnl_usd - a.skipped_resolved_net_pnl_usd ||
+          b.skipped_resolved_trades - a.skipped_resolved_trades,
+      )[0] ?? null;
   const leakageStatus = capacityLeakageStatus(
     exposureLedger.skipped_open_signals,
     exposureLedger.skipped_resolved_trades,
@@ -509,6 +529,26 @@ export function buildPaperTradingLabStatus(args: {
       ),
       capacity_leakage_status: leakageStatus,
       missed_pnl_counts_as_proof: false,
+      canonical_agent_edge_leakage: {
+        rule_count: args.snapshot.agent_edge_matrix.length,
+        rules_with_skipped_resolved: args.snapshot.agent_edge_matrix.filter(
+          (rule) => rule.skipped_resolved_trades > 0,
+        ).length,
+        rules_with_profitable_skipped_resolved:
+          args.snapshot.agent_edge_matrix.filter(
+            (rule) => rule.skipped_profitable_resolved_trades > 0,
+          ).length,
+        top_missed_strategy_id: topMissedAgentEdgeRule?.strategy_id ?? null,
+        top_missed_strategy_label:
+          topMissedAgentEdgeRule?.strategy_label ?? null,
+        top_missed_agent_name: topMissedAgentEdgeRule?.agent_name ?? null,
+        top_missed_pnl_usd: round2(
+          topMissedAgentEdgeRule?.skipped_resolved_net_pnl_usd ?? 0,
+        ),
+        top_missed_resolved_trades:
+          topMissedAgentEdgeRule?.skipped_resolved_trades ?? 0,
+        missed_pnl_counts_as_proof: false,
+      },
     },
     operations: {
       registry_sync_status: args.registrySync.status,
