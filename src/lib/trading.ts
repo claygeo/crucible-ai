@@ -547,6 +547,75 @@ export type AgentEdgeOpenSignalWatchlist = {
   rules: AgentEdgeOpenSignalWatchlistRule[];
 };
 
+export type AgentEdgeProofRunwayRule = {
+  strategy_id: string;
+  strategy_label: string;
+  agent_id: string;
+  agent_name: string;
+  min_edge: number;
+  stake_mode: StakeMode;
+  proof_status: ProofGateStatus;
+  proof_status_label: string;
+  status:
+    | "sample_complete"
+    | "sample_reachable"
+    | "collecting"
+    | "blocked"
+    | "starved";
+  status_label: string;
+  next_required_action: string;
+  resolved_trades: number;
+  required_resolved_trades: number;
+  resolved_trades_remaining: number;
+  open_signals: number;
+  tradable_open_signals: number;
+  review_required_signals: number;
+  closing_next_7d_signals: number;
+  pending_resolution_capacity: number;
+  sample_gap_after_open: number;
+  can_reach_required_sample_with_open: boolean;
+  next_close_at: string | null;
+  oldest_opened_at: string | null;
+  top_open_signals: PaperTradingWouldTradeSignal[];
+};
+
+export type AgentEdgeProofRunway = {
+  schema_version: "1";
+  generated_at: string;
+  status:
+    | "sample_complete"
+    | "sample_reachable"
+    | "collecting"
+    | "blocked"
+    | "starved"
+    | "unavailable";
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  execution_recommendation: "paper_watch_only";
+  required_resolved_trades: number;
+  rule_count: number;
+  sample_complete_rule_count: number;
+  sample_reachable_rule_count: number;
+  collecting_rule_count: number;
+  blocked_rule_count: number;
+  starved_rule_count: number;
+  total_resolved_trades: number;
+  total_resolved_trades_remaining: number;
+  total_open_signals: number;
+  total_tradable_open_signals: number;
+  total_review_required_signals: number;
+  total_closing_next_7d_signals: number;
+  total_pending_resolution_capacity: number;
+  total_sample_gap_after_open: number;
+  minimum_sample_gap_after_open: number | null;
+  best_rule_strategy_id: string | null;
+  next_close_at: string | null;
+  rules: AgentEdgeProofRunwayRule[];
+};
+
 export type AgentEdgeResolvedTradeLedgerEntry = {
   prediction_id: string;
   market_id: string;
@@ -710,6 +779,7 @@ export type TradingSnapshot = {
   scenario_summaries: ScenarioSummary[];
   agent_edge_matrix: AgentEdgeRuleSummary[];
   agent_edge_watchlist: AgentEdgeOpenSignalWatchlist;
+  agent_edge_runway: AgentEdgeProofRunway;
   agent_edge_trade_ledger: AgentEdgeResolvedTradeLedger;
   strategy_variants: StrategyVariantSummary[];
   strategy_daily_series: StrategyDailyEvidenceSeries[];
@@ -2350,6 +2420,274 @@ function buildAgentEdgeOpenSignalWatchlist(
   };
 }
 
+function agentEdgeRunwayRuleStatusLabel(
+  status: AgentEdgeProofRunwayRule["status"],
+): string {
+  if (status === "sample_complete") return "Sample complete";
+  if (status === "sample_reachable") return "Sample reachable";
+  if (status === "blocked") return "Needs review";
+  if (status === "starved") return "Starved";
+  return "Collecting";
+}
+
+function agentEdgeRunwayRuleAction(
+  status: AgentEdgeProofRunwayRule["status"],
+  resolvedTradesRemaining: number,
+  sampleGapAfterOpen: number,
+): string {
+  if (status === "sample_complete") {
+    return "Evaluate realized P&L, ROI, break-even edge, and drawdown before any capital review.";
+  }
+  if (status === "sample_reachable") {
+    return `Wait for ${resolvedTradesRemaining} open paper tickets to resolve into the proof ledger.`;
+  }
+  if (status === "blocked") {
+    return "Review overdue or unknown-close open paper markets before trusting this rule's runway.";
+  }
+  if (status === "starved") {
+    return `Collect ${resolvedTradesRemaining} new qualifying live paper tickets for this rule.`;
+  }
+  return `Collect ${sampleGapAfterOpen} more qualifying live paper tickets after current opens resolve.`;
+}
+
+function buildAgentEdgeProofRunway(
+  evaluations: StrategyEvaluation[],
+  generatedAt: string,
+): AgentEdgeProofRunway {
+  const now = new Date(generatedAt);
+  const requiredResolvedTrades =
+    PAPER_TRADING_PROOF_RULES.requiredResolvedTrades;
+  const rules = evaluations
+    .filter(({ summary }) => isAgentEdgeVariant(summary))
+    .map(({ summary, acceptedTrades }) => {
+      const agentId = summary.agent_ids[0] ?? "unknown";
+      const agent = AGENTS.find((item) => item.id === agentId);
+      const resolvedTrades = acceptedTrades.filter(
+        (trade) => !trade.is_backfill && trade.pnl_usd !== null,
+      );
+      const openSignals = acceptedTrades
+        .filter((trade) => !trade.is_backfill && trade.pnl_usd === null)
+        .map((trade) => buildWouldTradeSignal(trade, now))
+        .sort(wouldTradeSignalSort);
+      const tradableOpenSignals = openSignals.filter(
+        (signal) => signal.tradability_status === "tradable",
+      );
+      const reviewRequiredSignals = openSignals.filter(
+        (signal) => signal.tradability_status === "needs_review",
+      );
+      const closingNext7dSignals = openSignals.filter(
+        (signal) => signal.close_status === "closing_next_7d",
+      );
+      const resolvedTradesRemaining = Math.max(
+        0,
+        requiredResolvedTrades - resolvedTrades.length,
+      );
+      const pendingResolutionCapacity = tradableOpenSignals.length;
+      const sampleGapAfterOpen = Math.max(
+        0,
+        resolvedTradesRemaining - pendingResolutionCapacity,
+      );
+      const canReachRequiredSampleWithOpen =
+        resolvedTrades.length + pendingResolutionCapacity >=
+        requiredResolvedTrades;
+      const status: AgentEdgeProofRunwayRule["status"] =
+        resolvedTrades.length >= requiredResolvedTrades
+          ? "sample_complete"
+          : reviewRequiredSignals.length > 0
+            ? "blocked"
+            : canReachRequiredSampleWithOpen
+              ? "sample_reachable"
+              : openSignals.length > 0
+                ? "collecting"
+                : "starved";
+
+      return {
+        strategy_id: summary.id,
+        strategy_label: summary.label,
+        agent_id: agentId,
+        agent_name: openSignals[0]?.agent_name ?? agent?.name ?? agentId,
+        min_edge: summary.min_edge,
+        stake_mode: summary.stake_mode,
+        proof_status: summary.proof_gate.status,
+        proof_status_label: summary.proof_gate.status_label,
+        status,
+        status_label: agentEdgeRunwayRuleStatusLabel(status),
+        next_required_action: agentEdgeRunwayRuleAction(
+          status,
+          resolvedTradesRemaining,
+          sampleGapAfterOpen,
+        ),
+        resolved_trades: resolvedTrades.length,
+        required_resolved_trades: requiredResolvedTrades,
+        resolved_trades_remaining: resolvedTradesRemaining,
+        open_signals: openSignals.length,
+        tradable_open_signals: tradableOpenSignals.length,
+        review_required_signals: reviewRequiredSignals.length,
+        closing_next_7d_signals: closingNext7dSignals.length,
+        pending_resolution_capacity: pendingResolutionCapacity,
+        sample_gap_after_open: sampleGapAfterOpen,
+        can_reach_required_sample_with_open: canReachRequiredSampleWithOpen,
+        next_close_at: earliestNullableDate(
+          tradableOpenSignals.map((signal) => signal.market_closes_at),
+        ),
+        oldest_opened_at: earliestNullableDate(
+          openSignals.map((signal) => signal.created_at),
+        ),
+        top_open_signals: openSignals.slice(0, 6),
+      };
+    })
+    .sort((a, b) => {
+      const statusRank = new Map<AgentEdgeProofRunwayRule["status"], number>([
+        ["sample_complete", 0],
+        ["sample_reachable", 1],
+        ["collecting", 2],
+        ["blocked", 3],
+        ["starved", 4],
+      ]);
+      const rankDelta =
+        (statusRank.get(a.status) ?? 99) - (statusRank.get(b.status) ?? 99);
+      if (rankDelta !== 0) return rankDelta;
+      if (a.sample_gap_after_open !== b.sample_gap_after_open) {
+        return a.sample_gap_after_open - b.sample_gap_after_open;
+      }
+      if (b.pending_resolution_capacity !== a.pending_resolution_capacity) {
+        return b.pending_resolution_capacity - a.pending_resolution_capacity;
+      }
+      const aClose = Date.parse(a.next_close_at ?? "");
+      const bClose = Date.parse(b.next_close_at ?? "");
+      if (Number.isFinite(aClose) && Number.isFinite(bClose)) {
+        return aClose - bClose;
+      }
+      if (Number.isFinite(aClose)) return -1;
+      if (Number.isFinite(bClose)) return 1;
+      return `${a.agent_id}-${a.min_edge}`.localeCompare(
+        `${b.agent_id}-${b.min_edge}`,
+      );
+    });
+  const sampleCompleteRuleCount = rules.filter(
+    (rule) => rule.status === "sample_complete",
+  ).length;
+  const sampleReachableRuleCount = rules.filter(
+    (rule) => rule.status === "sample_reachable",
+  ).length;
+  const collectingRuleCount = rules.filter(
+    (rule) => rule.status === "collecting",
+  ).length;
+  const blockedRuleCount = rules.filter(
+    (rule) => rule.status === "blocked",
+  ).length;
+  const starvedRuleCount = rules.filter(
+    (rule) => rule.status === "starved",
+  ).length;
+  const status: AgentEdgeProofRunway["status"] =
+    rules.length === 0
+      ? "unavailable"
+      : blockedRuleCount > 0
+        ? "blocked"
+        : sampleCompleteRuleCount > 0
+          ? "sample_complete"
+          : sampleReachableRuleCount > 0
+            ? "sample_reachable"
+            : collectingRuleCount > 0
+              ? "collecting"
+              : "starved";
+  const minimumSampleGapAfterOpen =
+    rules.length > 0
+      ? Math.min(...rules.map((rule) => rule.sample_gap_after_open))
+      : null;
+  const bestRule = rules[0] ?? null;
+
+  return {
+    schema_version: "1",
+    generated_at: generatedAt,
+    status,
+    status_label:
+      status === "sample_complete"
+        ? "Sample complete"
+        : status === "sample_reachable"
+          ? "Sample reachable"
+          : status === "blocked"
+            ? "Needs review"
+            : status === "starved"
+              ? "Starved"
+              : status === "collecting"
+                ? "Collecting"
+                : "Unavailable",
+    message:
+      status === "sample_complete"
+        ? "At least one canonical agent-edge rule has enough resolved tickets for profitability review."
+        : status === "sample_reachable"
+          ? "At least one canonical agent-edge rule can reach the resolved-ticket sample if current tradable open tickets resolve."
+          : status === "blocked"
+            ? "At least one canonical agent-edge rule has open paper markets needing resolution review."
+            : status === "starved"
+              ? "Canonical agent-edge rules do not currently have open paper tickets feeding the proof sample."
+              : status === "collecting"
+                ? "Canonical agent-edge rules are collecting open paper tickets, but no rule can reach the proof sample from current opens yet."
+                : "No canonical agent-edge runway is available.",
+    next_required_action:
+      status === "sample_complete"
+        ? "Run the profitability guard before treating any rule as proven."
+        : status === "sample_reachable"
+          ? "Watch the reachable rules as their current open tickets resolve into the ledger."
+          : status === "blocked"
+            ? "Clear review-required open markets before trusting rule-level runway."
+            : status === "starved"
+              ? "Wait for new live forecasts to qualify under agent-edge thresholds."
+              : status === "collecting"
+                ? "Keep collecting daily captures until open-ticket capacity closes the sample gap."
+                : "Capture the canonical agent-edge strategy registry before auditing proof runway.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    execution_recommendation: "paper_watch_only",
+    required_resolved_trades: requiredResolvedTrades,
+    rule_count: rules.length,
+    sample_complete_rule_count: sampleCompleteRuleCount,
+    sample_reachable_rule_count: sampleReachableRuleCount,
+    collecting_rule_count: collectingRuleCount,
+    blocked_rule_count: blockedRuleCount,
+    starved_rule_count: starvedRuleCount,
+    total_resolved_trades: rules.reduce(
+      (sum, rule) => sum + rule.resolved_trades,
+      0,
+    ),
+    total_resolved_trades_remaining: rules.reduce(
+      (sum, rule) => sum + rule.resolved_trades_remaining,
+      0,
+    ),
+    total_open_signals: rules.reduce(
+      (sum, rule) => sum + rule.open_signals,
+      0,
+    ),
+    total_tradable_open_signals: rules.reduce(
+      (sum, rule) => sum + rule.tradable_open_signals,
+      0,
+    ),
+    total_review_required_signals: rules.reduce(
+      (sum, rule) => sum + rule.review_required_signals,
+      0,
+    ),
+    total_closing_next_7d_signals: rules.reduce(
+      (sum, rule) => sum + rule.closing_next_7d_signals,
+      0,
+    ),
+    total_pending_resolution_capacity: rules.reduce(
+      (sum, rule) => sum + rule.pending_resolution_capacity,
+      0,
+    ),
+    total_sample_gap_after_open: rules.reduce(
+      (sum, rule) => sum + rule.sample_gap_after_open,
+      0,
+    ),
+    minimum_sample_gap_after_open: minimumSampleGapAfterOpen,
+    best_rule_strategy_id: bestRule?.strategy_id ?? null,
+    next_close_at: earliestNullableDate(
+      rules.map((rule) => rule.next_close_at),
+    ),
+    rules,
+  };
+}
+
 function resolvedAtForLedger(
   trade: PaperTrade | null | undefined,
 ): string | null {
@@ -3005,6 +3343,10 @@ export async function getTradingSnapshot(
     scenario_summaries: scenarioSummaries,
     agent_edge_matrix: buildAgentEdgeMatrix(strategyVariants),
     agent_edge_watchlist: buildAgentEdgeOpenSignalWatchlist(
+      evaluatedStrategies,
+      generatedAt,
+    ),
+    agent_edge_runway: buildAgentEdgeProofRunway(
       evaluatedStrategies,
       generatedAt,
     ),

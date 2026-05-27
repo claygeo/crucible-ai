@@ -137,6 +137,14 @@ function proofRunwayStatusClass(status: string) {
   return "bg-warn/10 text-warn";
 }
 
+function agentEdgeRunwayStatusClass(status: string) {
+  if (status === "sample_complete") return "bg-positive/10 text-positive";
+  if (status === "sample_reachable") return "bg-accent/10 text-accent";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  if (status === "starved") return "bg-text-muted/10 text-text-muted";
+  return "bg-warn/10 text-warn";
+}
+
 function wouldTradeStatusClass(status: string) {
   if (status === "collecting") return "bg-accent/10 text-accent";
   if (status === "blocked") return "bg-rose-400/10 text-rose-400";
@@ -329,9 +337,16 @@ export default async function TradingPage({
   });
   const profitabilityGuard = agentEdgeProof.profitability_guard;
   const agentEdgeWatchlist = snapshot.agent_edge_watchlist;
+  const agentEdgeRunway = snapshot.agent_edge_runway;
   const agentEdgeTradeLedger = snapshot.agent_edge_trade_ledger;
   const agentEdgeLedgerByRule = new Map(
     agentEdgeTradeLedger.rules.map((rule) => [
+      `${rule.agent_id}-${rule.min_edge}`,
+      rule,
+    ]),
+  );
+  const agentEdgeRunwayByRule = new Map(
+    agentEdgeRunway.rules.map((rule) => [
       `${rule.agent_id}-${rule.min_edge}`,
       rule,
     ]),
@@ -369,6 +384,7 @@ export default async function TradingPage({
   const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
   const agentEdgeTradesJsonHref = `/api/trading-agent-edge-trades?${selectedQuery}`;
   const agentEdgeWatchlistJsonHref = `/api/trading-agent-edge-watchlist?${selectedQuery}`;
+  const agentEdgeRunwayJsonHref = `/api/trading-agent-edge-runway?${selectedQuery}`;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -1292,6 +1308,16 @@ export default async function TradingPage({
               agent edge watchlist {agentEdgeWatchlist.status_label.toLowerCase()} /{" "}
               {int(agentEdgeWatchlist.total_tradable_signals)} tradable /{" "}
               {int(agentEdgeWatchlist.total_review_required_signals)} review
+            </Link>
+            <Link
+              href={agentEdgeRunwayJsonHref}
+              className="text-accent hover:text-text-primary transition-colors"
+            >
+              agent edge runway {agentEdgeRunway.status_label.toLowerCase()} /{" "}
+              {int(agentEdgeRunway.sample_reachable_rule_count)} reachable / best gap{" "}
+              {agentEdgeRunway.minimum_sample_gap_after_open === null
+                ? "-"
+                : int(agentEdgeRunway.minimum_sample_gap_after_open)}
             </Link>
             <span className={registrySyncClass(registrySync.status)}>
               registry {registrySync.status_label.toLowerCase()}{" "}
@@ -2883,6 +2909,7 @@ export default async function TradingPage({
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Proof</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Resolved</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Open</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Runway</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Skipped</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">P&amp;L</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">ROI</th>
@@ -2893,6 +2920,9 @@ export default async function TradingPage({
                     {agentEdgeRows.map((rule) => {
                       const agent = AGENTS.find((item) => item.id === rule.agent_id);
                       const ledgerRule = agentEdgeLedgerByRule.get(
+                        `${rule.agent_id}-${rule.min_edge}`
+                      );
+                      const runwayRule = agentEdgeRunwayByRule.get(
                         `${rule.agent_id}-${rule.min_edge}`
                       );
                       const hueTxt = agent ? HUE_TO_TEXT[agent.hue] : "text-text-primary";
@@ -2935,6 +2965,25 @@ export default async function TradingPage({
                           </td>
                           <td className="py-3 px-3 mono text-right text-text-secondary">
                             {int(rule.open_signals)}
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            {runwayRule ? (
+                              <div className="flex flex-col items-end gap-1">
+                                <span
+                                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${agentEdgeRunwayStatusClass(
+                                    runwayRule.status
+                                  )}`}
+                                >
+                                  {runwayRule.status_label}
+                                </span>
+                                <span className="mono text-[10px] text-text-muted">
+                                  cap {int(runwayRule.pending_resolution_capacity)} / gap{" "}
+                                  {int(runwayRule.sample_gap_after_open)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="mono text-text-muted">-</span>
+                            )}
                           </td>
                           <td className="py-3 px-3 mono text-right text-warn">
                             {int(rule.skipped_trades)}

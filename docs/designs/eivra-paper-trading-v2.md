@@ -204,6 +204,11 @@ The 30-day proof window now has a durable audit surface:
   review-required open live paper tickets, exposure, open EV, close timing, and
   top signals before markets resolve into the trade ledger. Snapshot summaries
   and published artifact proof carry the same `agent_edge_watchlist`.
+- `GET /api/trading-agent-edge-runway` exposes the paper-only proof runway for
+  canonical rules. It joins resolved sample counts with current open-ticket
+  capacity, close timing, review blockers, and the remaining sample gap after
+  current opens resolve. Snapshot summaries and published artifact proof carry
+  the same `agent_edge_runway`.
 - `/api/trading.json` and `GET /api/trading-snapshots` expose
   `proof_evidence_sources`, a paper-only source map that separates Supabase
   persistence, GitHub artifact bundles, live resolution hygiene, and the capital
