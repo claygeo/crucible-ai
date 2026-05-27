@@ -11,6 +11,7 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
+import { buildResolutionCatchupPreview } from "@/lib/trading-resolution-catchup";
 import {
   buildResolutionReviewQueue,
   enrichResolutionReviewQueueWithProviderResolution,
@@ -130,6 +131,14 @@ function readinessStatusClass(status: string) {
 function resolutionQueueStatusClass(status: string) {
   if (status === "clear") return "bg-positive/10 text-positive";
   if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  return "bg-text-muted/10 text-text-muted";
+}
+
+function resolutionCatchupStatusClass(status: string) {
+  if (status === "clear") return "bg-positive/10 text-positive";
+  if (status === "resolver_lag") return "bg-warn/10 text-warn";
+  if (status === "error") return "bg-rose-400/10 text-rose-400";
+  if (status === "provider_pending") return "bg-accent/10 text-accent";
   return "bg-text-muted/10 text-text-muted";
 }
 
@@ -285,6 +294,8 @@ export default async function TradingPage({
     `/api/trading-would-trade-today?${selectedQuery}`;
   const marketExposureJsonHref =
     `/api/trading-market-exposure?${selectedQuery}`;
+  const resolutionCatchupJsonHref =
+    `/api/trading-resolution-catchup?${selectedQuery}`;
   const publishedProofHref = "/paper-trading/latest-artifact-proof.json";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
@@ -367,6 +378,9 @@ export default async function TradingPage({
         publishedArtifactProof,
       }),
     );
+  const resolutionCatchupPreview = await buildResolutionCatchupPreview({
+    controls: snapshot.controls,
+  });
   const latestArtifactRun = artifactWorkflow.latest_successful_artifact_run;
   const latestWorkflowRun = artifactWorkflow.latest_run;
   const publishedAudit = publishedArtifactProof.artifact_audit;
@@ -1752,6 +1766,137 @@ export default async function TradingPage({
                 </table>
               </div>
             )}
+          </div>
+          <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="heading text-sm text-text-primary">
+                  Resolver catch-up preview
+                </h3>
+                <p className="text-xs text-text-muted mt-1">
+                  {resolutionCatchupPreview.message}
+                </p>
+              </div>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${resolutionCatchupStatusClass(
+                  resolutionCatchupPreview.status
+                )}`}
+              >
+                {resolutionCatchupPreview.status_label}
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-5 gap-3">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Due
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(resolutionCatchupPreview.due_market_count)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Unscored
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(resolutionCatchupPreview.unscored_live_prediction_count)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Resolved
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(resolutionCatchupPreview.provider_resolved_market_count)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Eligible
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(resolutionCatchupPreview.eligible_trade_count)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  P&amp;L
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${pnlClass(
+                    resolutionCatchupPreview.projected_resolved_pnl_usd
+                  )}`}
+                >
+                  {dollars(
+                    resolutionCatchupPreview.projected_resolved_pnl_usd,
+                    2
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
+              <span>{resolutionCatchupPreview.next_required_action}</span>
+              <span>
+                wins {int(resolutionCatchupPreview.projected_win_count)} /
+                losses {int(resolutionCatchupPreview.projected_loss_count)}
+              </span>
+              <Link
+                href={resolutionCatchupJsonHref}
+                className="uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                catch-up json
+              </Link>
+            </div>
+            {resolutionCatchupPreview.top_projected_trades.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full" aria-label="Resolution catch-up preview">
+                  <thead>
+                    <tr className="border-b border-border-subtle text-text-muted">
+                      <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Market</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Agent</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Edge</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Stake</th>
+                      <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">P&amp;L</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-subtle/60">
+                    {resolutionCatchupPreview.top_projected_trades
+                      .slice(0, 5)
+                      .map((trade) => (
+                        <tr key={trade.prediction_id}>
+                          <td className="py-3 pr-3">
+                            <Link
+                              href={`/markets/${trade.market_id}`}
+                              className="text-sm text-text-primary hover:text-accent transition-colors line-clamp-2"
+                            >
+                              {trade.market_question}
+                            </Link>
+                            <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                              {trade.side} / resolved {trade.resolved_outcome}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {trade.agent_name}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {pct(trade.abs_edge, 1)}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {dollars(trade.stake_usd, 0)}
+                          </td>
+                          <td
+                            className={`py-3 pl-3 mono text-right ${pnlClass(
+                              trade.projected_pnl_usd
+                            )}`}
+                          >
+                            {dollars(trade.projected_pnl_usd, 2)}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
           </div>
           <div className="border-t border-border-subtle pt-4 flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">

@@ -8,6 +8,7 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
+import { buildResolutionCatchupPreview } from "@/lib/trading-resolution-catchup";
 import {
   buildResolutionReviewQueue,
   enrichResolutionReviewQueueWithProviderResolution,
@@ -87,11 +88,15 @@ export async function GET(request: Request) {
         publishedArtifactProof,
       }),
     );
+  const resolutionCatchupPreview = await buildResolutionCatchupPreview({
+    controls: snapshot.controls,
+  });
 
   return NextResponse.json(
     {
       ...snapshot,
       resolution_review_queue: resolutionReviewQueue,
+      resolution_catchup_preview: resolutionCatchupPreview,
       proof_evidence_sources: proofEvidenceSources,
       persisted_daily_snapshots: persisted.snapshots,
       persisted_strategy_rollups: persisted.strategy_rollups,
@@ -120,6 +125,7 @@ export async function GET(request: Request) {
         capital_review_packet: capitalReviewPacket,
         proof_evidence_sources: proofEvidenceSources,
         resolution_review_queue: resolutionReviewQueue,
+        resolution_catchup_preview: resolutionCatchupPreview,
         github_artifact_workflow: artifactWorkflow,
         published_artifact_proof: publishedArtifactProof,
         artifact_history: artifactHistory,

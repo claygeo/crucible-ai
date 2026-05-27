@@ -259,6 +259,11 @@ The 30-day proof window now has a durable audit surface:
   read-only provider-resolution check for supported markets, so stale Eivra rows
   can show that the source has already resolved without writing outcomes or
   enabling execution.
+- `/api/trading-resolution-catchup` returns the read-only resolver lag preview:
+  due live markets, unscored live predictions, provider-resolved market count,
+  and the projected paper-only P&L that would land after Eivra's resolver and a
+  fresh snapshot catch up. It is an operator evidence surface only; it does not
+  write market outcomes, scores, orders, or execution flags.
 - `/api/trading-strategy-registry` returns the paper-only strategy lab manifest:
   every canonical rule under observation, the selected URL-configured rule, proof
   gates, configurable controls, and execution-disabled invariants. Snapshot
