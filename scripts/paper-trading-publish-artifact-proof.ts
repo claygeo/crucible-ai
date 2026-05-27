@@ -88,6 +88,7 @@ function main() {
     );
   }
   const agentEdgeProof = record(artifactProof.agent_edge_proof);
+  const agentEdgeTradeLedger = record(artifactProof.agent_edge_trade_ledger);
   if (
     Object.keys(agentEdgeProof).length > 0 &&
     (agentEdgeProof.paper_only !== true ||
@@ -95,6 +96,15 @@ function main() {
   ) {
     throw new Error(
       "Refusing to publish agent_edge_proof unless it stays paper-only with execution disabled.",
+    );
+  }
+  if (
+    Object.keys(agentEdgeTradeLedger).length > 0 &&
+    (agentEdgeTradeLedger.paper_only !== true ||
+      agentEdgeTradeLedger.real_money_execution_allowed !== false)
+  ) {
+    throw new Error(
+      "Refusing to publish agent_edge_trade_ledger unless it stays paper-only with execution disabled.",
     );
   }
 
@@ -133,6 +143,10 @@ function main() {
     workflow_mode: workflowMode,
     agent_edge_proof:
       Object.keys(agentEdgeProof).length > 0 ? agentEdgeProof : null,
+    agent_edge_trade_ledger:
+      Object.keys(agentEdgeTradeLedger).length > 0
+        ? agentEdgeTradeLedger
+        : null,
     artifact_audit: {
       verdict: artifactAudit.verdict ?? null,
       checked_at: artifactAudit.checked_at ?? null,

@@ -499,6 +499,61 @@ export type AgentEdgeRuleSummary = {
   open_expected_pnl_usd: number;
 };
 
+export type AgentEdgeResolvedTradeLedgerEntry = {
+  prediction_id: string;
+  market_id: string;
+  market_question: string;
+  market_source: string;
+  market_url: string | null;
+  agent_id: string;
+  agent_name: string;
+  side: TradeSide;
+  probability: number;
+  market_price: number;
+  edge: number;
+  abs_edge: number;
+  stake_usd: number;
+  pnl_usd: number;
+  roi_on_stake: number;
+  won: boolean;
+  created_at: string;
+  resolved_at: string | null;
+};
+
+export type AgentEdgeResolvedTradeLedgerRule = {
+  strategy_id: string;
+  strategy_label: string;
+  agent_id: string;
+  agent_name: string;
+  min_edge: number;
+  resolved_trades: number;
+  wins: number;
+  losses: number;
+  stake_usd: number;
+  net_pnl_usd: number;
+  roi_on_stake: number;
+  latest_resolved_at: string | null;
+  recent_resolved_trades: AgentEdgeResolvedTradeLedgerEntry[];
+};
+
+export type AgentEdgeResolvedTradeLedger = {
+  schema_version: "1";
+  generated_at: string;
+  status: "available" | "collecting" | "unavailable";
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  rule_count: number;
+  resolved_rule_count: number;
+  profitable_rule_count: number;
+  total_resolved_trades: number;
+  total_net_pnl_usd: number;
+  latest_resolved_at: string | null;
+  rules: AgentEdgeResolvedTradeLedgerRule[];
+};
+
 export type DailyEvidenceSnapshot = {
   date: string;
   sample: TradingSample;
@@ -591,6 +646,7 @@ export type TradingSnapshot = {
   live_agent_summaries: AgentTradingSummary[];
   scenario_summaries: ScenarioSummary[];
   agent_edge_matrix: AgentEdgeRuleSummary[];
+  agent_edge_trade_ledger: AgentEdgeResolvedTradeLedger;
   strategy_variants: StrategyVariantSummary[];
   strategy_daily_series: StrategyDailyEvidenceSeries[];
   daily_snapshots: DailyEvidenceSnapshot[];
@@ -2049,6 +2105,143 @@ function buildAgentEdgeMatrix(
     );
 }
 
+function resolvedAtForLedger(
+  trade: PaperTrade | null | undefined,
+): string | null {
+  if (!trade) return null;
+  return trade.resolved_at ?? trade.created_at ?? null;
+}
+
+function buildAgentEdgeTradeEntry(
+  trade: PaperTrade,
+): AgentEdgeResolvedTradeLedgerEntry {
+  const pnlUsd = trade.pnl_usd ?? 0;
+  return {
+    prediction_id: trade.prediction_id,
+    market_id: trade.market_id,
+    market_question: trade.market_question,
+    market_source: trade.market_source,
+    market_url: trade.market_url,
+    agent_id: trade.agent_id,
+    agent_name: trade.agent_name,
+    side: trade.side,
+    probability: trade.probability,
+    market_price: trade.market_price,
+    edge: trade.edge,
+    abs_edge: trade.abs_edge,
+    stake_usd: trade.stake_usd,
+    pnl_usd: pnlUsd,
+    roi_on_stake: trade.stake_usd > 0 ? round4(pnlUsd / trade.stake_usd) : 0,
+    won: trade.won === true,
+    created_at: trade.created_at,
+    resolved_at: trade.resolved_at,
+  };
+}
+
+function buildAgentEdgeTradeLedger(
+  evaluations: StrategyEvaluation[],
+  generatedAt: string,
+): AgentEdgeResolvedTradeLedger {
+  const rules = evaluations
+    .filter(({ summary }) => isAgentEdgeVariant(summary))
+    .map(({ summary, acceptedTrades }) => {
+      const agentId = summary.agent_ids[0] ?? "unknown";
+      const agent = AGENTS.find((item) => item.id === agentId);
+      const resolvedTrades = acceptedTrades
+        .filter((trade) => trade.pnl_usd !== null)
+        .sort(
+          (a, b) =>
+            (Date.parse(resolvedAtForLedger(b) ?? "") || 0) -
+            (Date.parse(resolvedAtForLedger(a) ?? "") || 0),
+        );
+      const stakeUsd = resolvedTrades.reduce(
+        (sum, trade) => sum + trade.stake_usd,
+        0,
+      );
+      const netPnlUsd = resolvedTrades.reduce(
+        (sum, trade) => sum + (trade.pnl_usd ?? 0),
+        0,
+      );
+
+      return {
+        strategy_id: summary.id,
+        strategy_label: summary.label,
+        agent_id: agentId,
+        agent_name: resolvedTrades[0]?.agent_name ?? agent?.name ?? agentId,
+        min_edge: summary.min_edge,
+        resolved_trades: resolvedTrades.length,
+        wins: resolvedTrades.filter((trade) => trade.won).length,
+        losses: resolvedTrades.filter((trade) => trade.won === false).length,
+        stake_usd: round2(stakeUsd),
+        net_pnl_usd: round2(netPnlUsd),
+        roi_on_stake: stakeUsd > 0 ? round4(netPnlUsd / stakeUsd) : 0,
+        latest_resolved_at: resolvedAtForLedger(resolvedTrades[0] ?? null),
+        recent_resolved_trades: resolvedTrades
+          .slice(0, 12)
+          .map(buildAgentEdgeTradeEntry),
+      };
+    })
+    .sort((a, b) => {
+      if (b.resolved_trades !== a.resolved_trades) {
+        return b.resolved_trades - a.resolved_trades;
+      }
+      if (b.net_pnl_usd !== a.net_pnl_usd) return b.net_pnl_usd - a.net_pnl_usd;
+      return `${a.agent_id}-${a.min_edge}`.localeCompare(
+        `${b.agent_id}-${b.min_edge}`,
+      );
+    });
+  const totalResolvedTrades = rules.reduce(
+    (sum, rule) => sum + rule.resolved_trades,
+    0,
+  );
+  const totalNetPnlUsd = rules.reduce((sum, rule) => sum + rule.net_pnl_usd, 0);
+  const latestResolvedAt =
+    rules
+      .map((rule) => rule.latest_resolved_at)
+      .filter((value): value is string => Boolean(value))
+      .sort((a, b) => Date.parse(b) - Date.parse(a))[0] ?? null;
+  const status: AgentEdgeResolvedTradeLedger["status"] =
+    rules.length === 0
+      ? "unavailable"
+      : totalResolvedTrades > 0
+        ? "available"
+        : "collecting";
+
+  return {
+    schema_version: "1",
+    generated_at: generatedAt,
+    status,
+    status_label:
+      status === "available"
+        ? "Available"
+        : status === "collecting"
+          ? "Collecting"
+          : "Unavailable",
+    message:
+      status === "available"
+        ? "Resolved agent-edge paper tickets are available for audit."
+        : status === "collecting"
+          ? "Canonical agent-edge rules have not resolved paper tickets yet."
+          : "No canonical agent-edge rule ledger is available.",
+    next_required_action:
+      status === "available"
+        ? "Inspect resolved tickets before trusting any profitable-rule summary."
+        : status === "collecting"
+          ? "Wait for live paper markets to resolve before judging realized profitability."
+          : "Capture the canonical agent-edge strategy registry before auditing resolved tickets.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    rule_count: rules.length,
+    resolved_rule_count: rules.filter((rule) => rule.resolved_trades > 0)
+      .length,
+    profitable_rule_count: rules.filter((rule) => rule.net_pnl_usd > 0).length,
+    total_resolved_trades: totalResolvedTrades,
+    total_net_pnl_usd: round2(totalNetPnlUsd),
+    latest_resolved_at: latestResolvedAt,
+    rules,
+  };
+}
+
 function dayKey(date: string): string {
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return "unknown";
@@ -2490,6 +2683,10 @@ export async function getTradingSnapshot(
     live_agent_summaries: liveAgentSummaries,
     scenario_summaries: scenarioSummaries,
     agent_edge_matrix: buildAgentEdgeMatrix(strategyVariants),
+    agent_edge_trade_ledger: buildAgentEdgeTradeLedger(
+      evaluatedStrategies,
+      generatedAt,
+    ),
     strategy_variants: strategyVariants,
     strategy_daily_series: strategyDailySeries,
     daily_snapshots: buildDailySnapshots(allTrades, "all"),

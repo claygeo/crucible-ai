@@ -327,6 +327,7 @@ export default async function TradingPage({
     persistedRows: persisted.agent_edge_proof_matrix,
     publishedArtifactProof,
   });
+  const agentEdgeTradeLedger = snapshot.agent_edge_trade_ledger;
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -358,6 +359,7 @@ export default async function TradingPage({
   const writeReadinessJsonHref = "/api/trading-write-readiness";
   const evidenceSlaJsonHref = `/api/trading-evidence-sla?${selectedQuery}`;
   const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
+  const agentEdgeTradesJsonHref = `/api/trading-agent-edge-trades?${selectedQuery}`;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -1088,6 +1090,12 @@ export default async function TradingPage({
                 agent proof
               </Link>
               <Link
+                href={agentEdgeTradesJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                trade ledger
+              </Link>
+              <Link
                 href={publishedProofHref}
                 className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
               >
@@ -1253,6 +1261,14 @@ export default async function TradingPage({
               profitable {int(agentEdgeProof.profitable_rule_count)} / unresolved{" "}
               {int(agentEdgeProof.unresolved_rule_count)}
             </span>
+            <Link
+              href={agentEdgeTradesJsonHref}
+              className="text-accent hover:text-text-primary transition-colors"
+            >
+              resolved ticket ledger {agentEdgeTradeLedger.status_label.toLowerCase()} /{" "}
+              {int(agentEdgeTradeLedger.total_resolved_trades)} trades /{" "}
+              {dollars(agentEdgeTradeLedger.total_net_pnl_usd, 0)}
+            </Link>
             <span className={registrySyncClass(registrySync.status)}>
               registry {registrySync.status_label.toLowerCase()}{" "}
               {int(registrySync.persisted_latest_live_strategy_count)}/

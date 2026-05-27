@@ -97,6 +97,7 @@ type SnapshotSummaryContext = {
   strategy_registry: Record<string, unknown> | null;
   would_trade_today: Record<string, unknown> | null;
   market_exposure_digest: Record<string, unknown> | null;
+  agent_edge_trade_ledger: Record<string, unknown> | null;
   status: "available" | "missing" | "error";
   message: string;
 };
@@ -316,6 +317,7 @@ function readSnapshotSummary(
           strategy_registry: null,
           would_trade_today: null,
           market_exposure_digest: null,
+          agent_edge_trade_ledger: null,
           status: "missing",
           message: "Snapshot summary file was not found.",
         }
@@ -334,6 +336,7 @@ function readSnapshotSummary(
         strategy_registry: null,
         would_trade_today: null,
         market_exposure_digest: null,
+        agent_edge_trade_ledger: null,
         status: "error",
         message: "Snapshot summary JSON is not an object.",
       };
@@ -350,6 +353,9 @@ function readSnapshotSummary(
     const marketExposureDigest = isRecord(parsed.market_exposure_digest)
       ? parsed.market_exposure_digest
       : null;
+    const agentEdgeTradeLedger = isRecord(parsed.agent_edge_trade_ledger)
+      ? parsed.agent_edge_trade_ledger
+      : null;
     return {
       path,
       source: optionalString(parsed.source),
@@ -359,6 +365,7 @@ function readSnapshotSummary(
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
+      agent_edge_trade_ledger: agentEdgeTradeLedger,
       status: resolutionWatch ? "available" : "error",
       message: resolutionWatch
         ? "Snapshot summary resolution context loaded."
@@ -374,6 +381,7 @@ function readSnapshotSummary(
       strategy_registry: null,
       would_trade_today: null,
       market_exposure_digest: null,
+      agent_edge_trade_ledger: null,
       status: "error",
       message: error instanceof Error ? error.message : String(error),
     };
@@ -880,6 +888,7 @@ async function buildArtifactProof(
   strategyRegistry: Record<string, unknown> | null,
   wouldTradeToday: Record<string, unknown> | null,
   marketExposureDigest: Record<string, unknown> | null,
+  agentEdgeTradeLedger: Record<string, unknown> | null,
   workflowMode: WorkflowModeContext | null,
 ) {
   const workflowModePayload =
@@ -912,6 +921,7 @@ async function buildArtifactProof(
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
+      agent_edge_trade_ledger: agentEdgeTradeLedger,
       agent_edge_proof: null,
       agent_edge_proof_matrix: [],
       top_strategy_rollups: [],
@@ -988,6 +998,7 @@ async function buildArtifactProof(
     strategy_registry: strategyRegistry,
     would_trade_today: wouldTradeToday,
     market_exposure_digest: marketExposureDigest,
+    agent_edge_trade_ledger: agentEdgeTradeLedger,
     agent_edge_proof: agentEdgeProof,
     agent_edge_proof_matrix: agentEdgeProofMatrix,
     top_strategy_rollups: strategyRollups
@@ -1174,6 +1185,26 @@ async function buildReport(options: CliOptions, files: string[]) {
         });
       }
     }
+    const agentEdgeTradeLedger = latestSnapshotSummary.agent_edge_trade_ledger;
+    if (!agentEdgeTradeLedger) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "agent_edge_trade_ledger",
+        label: "Agent-edge resolved-trade ledger",
+        detail: "Snapshot summary is missing agent_edge_trade_ledger.",
+      });
+    } else if (
+      agentEdgeTradeLedger.paper_only !== true ||
+      agentEdgeTradeLedger.real_money_execution_allowed !== false
+    ) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "agent_edge_trade_ledger_paper_only",
+        label: "Agent-edge ledger paper-only lock",
+        detail:
+          "agent_edge_trade_ledger must keep paper_only=true and real_money_execution_allowed=false.",
+      });
+    }
   }
   const proof = await buildArtifactProof(
     artifactProofRows,
@@ -1182,6 +1213,7 @@ async function buildReport(options: CliOptions, files: string[]) {
     latestSnapshotSummary?.strategy_registry ?? null,
     latestSnapshotSummary?.would_trade_today ?? null,
     latestSnapshotSummary?.market_exposure_digest ?? null,
+    latestSnapshotSummary?.agent_edge_trade_ledger ?? null,
     workflowMode,
   );
   const capitalReviewPacket = isRecord(proof.capital_review_packet)
