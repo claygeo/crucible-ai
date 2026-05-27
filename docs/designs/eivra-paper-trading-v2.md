@@ -168,6 +168,11 @@ The 30-day proof window now has a durable audit surface:
   `persisted_agent_edge_proof_matrix` / `agent_edge_proof_matrix`, a durable
   projection of the canonical Sage, Hawk, Magpie, Echo, Mirror, and Crowd
   5pp/10pp live rules.
+- `GET /api/trading-agent-edge-proof` turns that canonical matrix into a
+  ranked paper-only leaderboard. It reads persisted Supabase proof rows when
+  available and falls back to the latest published artifact proof while
+  Supabase writes are disabled, so artifact-only mode can still answer which
+  agent/edge rules have resolved profit versus unresolved open EV.
 - `/api/trading.json` and `GET /api/trading-snapshots` expose
   `proof_evidence_sources`, a paper-only source map that separates Supabase
   persistence, GitHub artifact bundles, live resolution hygiene, and the capital

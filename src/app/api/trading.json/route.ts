@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
+import { buildPaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
 import {
   buildPaperTradingEvidenceSla,
   buildPaperTradingWriteReadiness,
@@ -62,6 +63,10 @@ export async function GET(request: Request) {
     registrySync,
     resolutionWatch: snapshot.resolution_watch,
   });
+  const agentEdgeProof = buildPaperTradingAgentEdgeProof({
+    persistedRows: persisted.agent_edge_proof_matrix,
+    publishedArtifactProof,
+  });
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -90,6 +95,7 @@ export async function GET(request: Request) {
       published_artifact_proof: publishedArtifactProof,
       paper_write_readiness: writeReadiness,
       paper_evidence_sla: evidenceSla,
+      paper_agent_edge_proof: agentEdgeProof,
       persistence: {
         status: persisted.status,
         message: persisted.message,
@@ -107,6 +113,7 @@ export async function GET(request: Request) {
         published_artifact_proof: publishedArtifactProof,
         write_readiness: writeReadiness,
         evidence_sla: evidenceSla,
+        agent_edge_proof: agentEdgeProof,
         agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       },
       persisted_registry_sync: registrySync,

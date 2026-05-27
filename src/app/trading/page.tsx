@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
+import { buildPaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
 import {
   buildPaperTradingEvidenceSla,
   buildPaperTradingWriteReadiness,
@@ -312,6 +313,10 @@ export default async function TradingPage({
     registrySync,
     resolutionWatch,
   });
+  const agentEdgeProof = buildPaperTradingAgentEdgeProof({
+    persistedRows: persisted.agent_edge_proof_matrix,
+    publishedArtifactProof,
+  });
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -342,6 +347,7 @@ export default async function TradingPage({
   const capitalReviewJsonHref = `/api/trading-capital-review?${selectedQuery}`;
   const writeReadinessJsonHref = "/api/trading-write-readiness";
   const evidenceSlaJsonHref = `/api/trading-evidence-sla?${selectedQuery}`;
+  const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -1066,6 +1072,12 @@ export default async function TradingPage({
                 evidence sla
               </Link>
               <Link
+                href={agentEdgeProofJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                agent proof
+              </Link>
+              <Link
                 href={publishedProofHref}
                 className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
               >
@@ -1220,6 +1232,17 @@ export default async function TradingPage({
                 {evidenceSla.next_required_action}
               </span>
             ) : null}
+            <Link
+              href={agentEdgeProofJsonHref}
+              className="text-accent hover:text-text-primary transition-colors"
+            >
+              agent edge proof {agentEdgeProof.source_label.toLowerCase()} /{" "}
+              {int(agentEdgeProof.rule_count)} rules
+            </Link>
+            <span>
+              profitable {int(agentEdgeProof.profitable_rule_count)} / unresolved{" "}
+              {int(agentEdgeProof.unresolved_rule_count)}
+            </span>
             <span className={registrySyncClass(registrySync.status)}>
               registry {registrySync.status_label.toLowerCase()}{" "}
               {int(registrySync.persisted_latest_live_strategy_count)}/
