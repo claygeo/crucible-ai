@@ -97,6 +97,9 @@ type SnapshotSummaryContext = {
   strategy_registry: Record<string, unknown> | null;
   would_trade_today: Record<string, unknown> | null;
   market_exposure_digest: Record<string, unknown> | null;
+  selected_bankroll_risk: Record<string, unknown> | null;
+  selected_open_outcome_scenarios: Record<string, unknown> | null;
+  agent_edge_matrix: Array<Record<string, unknown>> | null;
   agent_edge_watchlist: Record<string, unknown> | null;
   agent_edge_runway: Record<string, unknown> | null;
   agent_edge_trade_ledger: Record<string, unknown> | null;
@@ -236,6 +239,27 @@ function hasPaperOnlyExecutionLock(value: Record<string, unknown>): boolean {
   );
 }
 
+function agentEdgeOutcomeInvariantFailures(
+  rows: Array<Record<string, unknown>>,
+): string[] {
+  return rows
+    .filter((row) => {
+      const scenarios = isRecord(row.open_outcome_scenarios)
+        ? row.open_outcome_scenarios
+        : null;
+      return (
+        row.pending_pnl_counts_as_proof !== false ||
+        !isFiniteNumber(row.worst_case_total_pnl_usd) ||
+        !isFiniteNumber(row.model_expected_total_pnl_usd) ||
+        !isFiniteNumber(row.best_case_total_pnl_usd) ||
+        !scenarios ||
+        !hasPaperOnlyExecutionLock(scenarios) ||
+        !Array.isArray(scenarios.scenarios)
+      );
+    })
+    .map((row) => String(row.strategy_id ?? "unknown"));
+}
+
 function optionalBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
 }
@@ -327,6 +351,9 @@ function readSnapshotSummary(
           strategy_registry: null,
           would_trade_today: null,
           market_exposure_digest: null,
+          selected_bankroll_risk: null,
+          selected_open_outcome_scenarios: null,
+          agent_edge_matrix: null,
           agent_edge_watchlist: null,
           agent_edge_runway: null,
           agent_edge_trade_ledger: null,
@@ -350,6 +377,9 @@ function readSnapshotSummary(
         strategy_registry: null,
         would_trade_today: null,
         market_exposure_digest: null,
+        selected_bankroll_risk: null,
+        selected_open_outcome_scenarios: null,
+        agent_edge_matrix: null,
         agent_edge_watchlist: null,
         agent_edge_runway: null,
         agent_edge_trade_ledger: null,
@@ -370,6 +400,17 @@ function readSnapshotSummary(
       : null;
     const marketExposureDigest = isRecord(parsed.market_exposure_digest)
       ? parsed.market_exposure_digest
+      : null;
+    const selectedBankrollRisk = isRecord(parsed.selected_bankroll_risk)
+      ? parsed.selected_bankroll_risk
+      : null;
+    const selectedOpenOutcomeScenarios = isRecord(
+      parsed.selected_open_outcome_scenarios,
+    )
+      ? parsed.selected_open_outcome_scenarios
+      : null;
+    const agentEdgeMatrix = Array.isArray(parsed.agent_edge_matrix)
+      ? parsed.agent_edge_matrix.filter(isRecord)
       : null;
     const agentEdgeWatchlist = isRecord(parsed.agent_edge_watchlist)
       ? parsed.agent_edge_watchlist
@@ -395,6 +436,9 @@ function readSnapshotSummary(
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
+      selected_bankroll_risk: selectedBankrollRisk,
+      selected_open_outcome_scenarios: selectedOpenOutcomeScenarios,
+      agent_edge_matrix: agentEdgeMatrix,
       agent_edge_watchlist: agentEdgeWatchlist,
       agent_edge_runway: agentEdgeRunway,
       agent_edge_trade_ledger: agentEdgeTradeLedger,
@@ -415,6 +459,9 @@ function readSnapshotSummary(
       strategy_registry: null,
       would_trade_today: null,
       market_exposure_digest: null,
+      selected_bankroll_risk: null,
+      selected_open_outcome_scenarios: null,
+      agent_edge_matrix: null,
       agent_edge_watchlist: null,
       agent_edge_runway: null,
       agent_edge_trade_ledger: null,
@@ -926,6 +973,9 @@ async function buildArtifactProof(
   strategyRegistry: Record<string, unknown> | null,
   wouldTradeToday: Record<string, unknown> | null,
   marketExposureDigest: Record<string, unknown> | null,
+  selectedBankrollRisk: Record<string, unknown> | null,
+  selectedOpenOutcomeScenarios: Record<string, unknown> | null,
+  agentEdgeMatrix: Array<Record<string, unknown>> | null,
   agentEdgeWatchlist: Record<string, unknown> | null,
   agentEdgeRunway: Record<string, unknown> | null,
   agentEdgeTradeLedger: Record<string, unknown> | null,
@@ -963,6 +1013,9 @@ async function buildArtifactProof(
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
+      selected_bankroll_risk: selectedBankrollRisk,
+      selected_open_outcome_scenarios: selectedOpenOutcomeScenarios,
+      agent_edge_matrix: agentEdgeMatrix ?? [],
       agent_edge_watchlist: agentEdgeWatchlist,
       agent_edge_runway: agentEdgeRunway,
       agent_edge_trade_ledger: agentEdgeTradeLedger,
@@ -1063,6 +1116,9 @@ async function buildArtifactProof(
     strategy_registry: strategyRegistry,
     would_trade_today: wouldTradeToday,
     market_exposure_digest: marketExposureDigest,
+    selected_bankroll_risk: selectedBankrollRisk,
+    selected_open_outcome_scenarios: selectedOpenOutcomeScenarios,
+    agent_edge_matrix: agentEdgeMatrix ?? [],
     agent_edge_watchlist: agentEdgeWatchlist,
     agent_edge_runway: agentEdgeRunway,
     agent_edge_trade_ledger: agentEdgeTradeLedger,
@@ -1255,6 +1311,66 @@ async function buildReport(options: CliOptions, files: string[]) {
         });
       }
     }
+    const selectedBankrollRisk = latestSnapshotSummary.selected_bankroll_risk;
+    if (!selectedBankrollRisk) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "selected_bankroll_risk",
+        label: "Selected bankroll risk",
+        detail: "Snapshot summary is missing selected_bankroll_risk.",
+      });
+    } else if (!hasPaperOnlyExecutionLock(selectedBankrollRisk)) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "selected_bankroll_risk_paper_only",
+        label: "Selected bankroll risk paper-only lock",
+        detail:
+          "selected_bankroll_risk must keep paper_only=true and real_money_execution_allowed=false.",
+      });
+    }
+    const selectedOpenOutcomeScenarios =
+      latestSnapshotSummary.selected_open_outcome_scenarios;
+    if (!selectedOpenOutcomeScenarios) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "selected_open_outcome_scenarios",
+        label: "Selected open outcome scenarios",
+        detail: "Snapshot summary is missing selected_open_outcome_scenarios.",
+      });
+    } else if (
+      !hasPaperOnlyExecutionLock(selectedOpenOutcomeScenarios) ||
+      !Array.isArray(selectedOpenOutcomeScenarios.scenarios)
+    ) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "selected_open_outcome_scenarios_paper_only",
+        label: "Selected open outcome paper-only lock",
+        detail:
+          "selected_open_outcome_scenarios must stay paper-only and include scenarios.",
+      });
+    }
+    const agentEdgeMatrix = latestSnapshotSummary.agent_edge_matrix;
+    if (!agentEdgeMatrix || agentEdgeMatrix.length === 0) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "agent_edge_matrix",
+        label: "Agent-edge current matrix",
+        detail: "Snapshot summary is missing agent_edge_matrix.",
+      });
+    } else {
+      const invariantFailures =
+        agentEdgeOutcomeInvariantFailures(agentEdgeMatrix);
+      if (invariantFailures.length > 0) {
+        failedChecks.push({
+          path: latestSnapshotSummary.path,
+          code: "agent_edge_outcome_proof_lock",
+          label: "Agent-edge outcome proof lock",
+          detail: `Rows must include finite outcome totals, nested paper-only scenarios, and pending_pnl_counts_as_proof=false. Failed: ${invariantFailures.join(
+            ", ",
+          )}.`,
+        });
+      }
+    }
     const agentEdgeTradeLedger = latestSnapshotSummary.agent_edge_trade_ledger;
     const agentEdgeWatchlist = latestSnapshotSummary.agent_edge_watchlist;
     const agentEdgeRunway = latestSnapshotSummary.agent_edge_runway;
@@ -1374,6 +1490,9 @@ async function buildReport(options: CliOptions, files: string[]) {
     latestSnapshotSummary?.strategy_registry ?? null,
     latestSnapshotSummary?.would_trade_today ?? null,
     latestSnapshotSummary?.market_exposure_digest ?? null,
+    latestSnapshotSummary?.selected_bankroll_risk ?? null,
+    latestSnapshotSummary?.selected_open_outcome_scenarios ?? null,
+    latestSnapshotSummary?.agent_edge_matrix ?? null,
     latestSnapshotSummary?.agent_edge_watchlist ?? null,
     latestSnapshotSummary?.agent_edge_runway ?? null,
     latestSnapshotSummary?.agent_edge_trade_ledger ?? null,
@@ -1386,6 +1505,17 @@ async function buildReport(options: CliOptions, files: string[]) {
     : null;
   const agentEdgeProof = isRecord(proof.agent_edge_proof)
     ? proof.agent_edge_proof
+    : null;
+  const selectedBankrollRisk = isRecord(proof.selected_bankroll_risk)
+    ? proof.selected_bankroll_risk
+    : null;
+  const selectedOpenOutcomeScenarios = isRecord(
+    proof.selected_open_outcome_scenarios,
+  )
+    ? proof.selected_open_outcome_scenarios
+    : null;
+  const agentEdgeMatrix = Array.isArray(proof.agent_edge_matrix)
+    ? proof.agent_edge_matrix.filter(isRecord)
     : null;
   const agentEdgeWatchlist = isRecord(proof.agent_edge_watchlist)
     ? proof.agent_edge_watchlist
@@ -1416,6 +1546,34 @@ async function buildReport(options: CliOptions, files: string[]) {
       code: "agent_edge_proof",
       label: "Agent-edge proof leaderboard",
       detail: "Available artifact proof must include agent_edge_proof.",
+    });
+  }
+  if (proof.status === "available" && !selectedBankrollRisk) {
+    failedChecks.push({
+      path: null,
+      code: "selected_bankroll_risk",
+      label: "Selected bankroll risk",
+      detail: "Available artifact proof must include selected_bankroll_risk.",
+    });
+  }
+  if (proof.status === "available" && !selectedOpenOutcomeScenarios) {
+    failedChecks.push({
+      path: null,
+      code: "selected_open_outcome_scenarios",
+      label: "Selected open outcome scenarios",
+      detail:
+        "Available artifact proof must include selected_open_outcome_scenarios.",
+    });
+  }
+  if (
+    proof.status === "available" &&
+    (!agentEdgeMatrix || agentEdgeMatrix.length === 0)
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_matrix",
+      label: "Agent-edge current matrix",
+      detail: "Available artifact proof must include agent_edge_matrix.",
     });
   }
   if (proof.status === "available" && !agentEdgeWatchlist) {
@@ -1547,6 +1705,45 @@ async function buildReport(options: CliOptions, files: string[]) {
       detail:
         "agent_edge_proof must keep paper_only=true and real_money_execution_allowed=false.",
     });
+  }
+  if (
+    selectedBankrollRisk &&
+    !hasPaperOnlyExecutionLock(selectedBankrollRisk)
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "selected_bankroll_risk_paper_only",
+      label: "Selected bankroll risk paper-only lock",
+      detail:
+        "selected_bankroll_risk must keep paper_only=true and real_money_execution_allowed=false.",
+    });
+  }
+  if (
+    selectedOpenOutcomeScenarios &&
+    (!hasPaperOnlyExecutionLock(selectedOpenOutcomeScenarios) ||
+      !Array.isArray(selectedOpenOutcomeScenarios.scenarios))
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "selected_open_outcome_scenarios_paper_only",
+      label: "Selected open outcome paper-only lock",
+      detail:
+        "selected_open_outcome_scenarios must stay paper-only and include scenarios.",
+    });
+  }
+  if (agentEdgeMatrix) {
+    const invariantFailures =
+      agentEdgeOutcomeInvariantFailures(agentEdgeMatrix);
+    if (invariantFailures.length > 0) {
+      failedChecks.push({
+        path: null,
+        code: "agent_edge_outcome_proof_lock",
+        label: "Agent-edge outcome proof lock",
+        detail: `Rows must include finite outcome totals, nested paper-only scenarios, and pending_pnl_counts_as_proof=false. Failed: ${invariantFailures.join(
+          ", ",
+        )}.`,
+      });
+    }
   }
   if (
     capitalReviewPacket &&

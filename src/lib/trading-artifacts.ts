@@ -91,6 +91,9 @@ export type PublishedPaperTradingArtifactProof = {
   strategy_registry: Record<string, unknown> | null;
   would_trade_today: Record<string, unknown> | null;
   market_exposure_digest: Record<string, unknown> | null;
+  selected_bankroll_risk: Record<string, unknown> | null;
+  selected_open_outcome_scenarios: Record<string, unknown> | null;
+  agent_edge_matrix: unknown[];
   agent_edge_watchlist: Record<string, unknown> | null;
   agent_edge_runway: Record<string, unknown> | null;
   agent_edge_trade_ledger: Record<string, unknown> | null;
@@ -981,6 +984,9 @@ function unavailablePublishedProof(
     strategy_registry: null,
     would_trade_today: null,
     market_exposure_digest: null,
+    selected_bankroll_risk: null,
+    selected_open_outcome_scenarios: null,
+    agent_edge_matrix: [],
     agent_edge_watchlist: null,
     agent_edge_runway: null,
     agent_edge_trade_ledger: null,
@@ -1021,6 +1027,15 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
     const wouldTradeToday = objectOrNull(artifactProof?.would_trade_today);
     const marketExposureDigest = objectOrNull(
       artifactProof?.market_exposure_digest,
+    );
+    const selectedBankrollRisk =
+      objectOrNull(artifactProof?.selected_bankroll_risk) ??
+      objectOrNull(proof.selected_bankroll_risk);
+    const selectedOpenOutcomeScenarios =
+      objectOrNull(artifactProof?.selected_open_outcome_scenarios) ??
+      objectOrNull(proof.selected_open_outcome_scenarios);
+    const agentEdgeMatrix = arrayOrEmpty(
+      artifactProof?.agent_edge_matrix ?? proof.agent_edge_matrix,
     );
     const agentEdgeTradeLedger =
       objectOrNull(artifactProof?.agent_edge_trade_ledger) ??
@@ -1105,6 +1120,9 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
+      selected_bankroll_risk: selectedBankrollRisk,
+      selected_open_outcome_scenarios: selectedOpenOutcomeScenarios,
+      agent_edge_matrix: agentEdgeMatrix,
       agent_edge_watchlist: agentEdgeWatchlist,
       agent_edge_runway: agentEdgeRunway,
       agent_edge_trade_ledger: agentEdgeTradeLedger,

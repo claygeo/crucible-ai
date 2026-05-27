@@ -207,6 +207,12 @@ The 30-day proof window now has a durable audit surface:
   same artifact bundle, artifact proof readiness also imports its live
   resolution-hygiene context so review-required open markets block the
   artifact-only capital gate.
+  The snapshot summary now also archives `selected_bankroll_risk`,
+  `selected_open_outcome_scenarios`, and the current `agent_edge_matrix`.
+  Artifact audits verify those pending-outcome fields stay paper-only and that
+  every canonical rule marks `pending_pnl_counts_as_proof: false`, so retained
+  daily bundles preserve open-ticket scenario context without letting pending
+  EV become realized proof.
 - The scheduled workflow also downloads retained successful
   `paper-trading-proof-<run_id>` bundles before publishing the latest public
   proof JSON. Artifact-only mode therefore rolls up the current capture plus
