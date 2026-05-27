@@ -4,10 +4,8 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
-import { buildResolutionReviewQueue } from "@/lib/trading-resolution-review";
 import {
   buildPaperTradingCapitalReviewPacket,
-  buildPaperTradingProofEvidenceSources,
   buildPaperTradingProofReadiness,
   buildPaperTradingProofRunway,
   buildPaperTradingStrategyRegistrySync,
@@ -49,52 +47,18 @@ export async function GET(request: Request) {
     proofReadiness,
     proofRunway,
   });
-  const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
-    persistence: persisted,
-    proofReadiness,
-    proofRunway,
-    resolutionWatch: snapshot.resolution_watch,
-  });
-  const resolutionReviewQueue = buildResolutionReviewQueue({
-    resolutionWatch: snapshot.resolution_watch,
-    publishedArtifactProof,
-  });
 
   return NextResponse.json(
     {
-      ...snapshot,
-      resolution_review_queue: resolutionReviewQueue,
-      proof_evidence_sources: proofEvidenceSources,
-      persisted_daily_snapshots: persisted.snapshots,
-      persisted_strategy_rollups: persisted.strategy_rollups,
-      persisted_proof_summary: persisted.proof_summary,
-      persisted_proof_readiness: proofReadiness,
-      persisted_proof_runway: proofRunway,
-      persisted_capital_review_packet: capitalReviewPacket,
-      persisted_capture_calendar: persisted.capture_calendar,
-      persisted_agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
+      ...capitalReviewPacket,
+      controls,
+      registry_sync: registrySync,
+      current_resolution_watch: snapshot.resolution_watch,
+      current_would_trade_today: snapshot.would_trade_today,
       github_artifact_workflow: artifactWorkflow,
       published_artifact_proof: publishedArtifactProof,
-      persistence: {
-        status: persisted.status,
-        message: persisted.message,
-        latest_captured_at: persisted.latest_captured_at,
-        capture_health: persisted.capture_health,
-        capture_calendar: persisted.capture_calendar,
-        registry_sync: registrySync,
-        proof_summary: persisted.proof_summary,
-        proof_readiness: proofReadiness,
-        proof_runway: proofRunway,
-        capital_review_packet: capitalReviewPacket,
-        proof_evidence_sources: proofEvidenceSources,
-        resolution_review_queue: resolutionReviewQueue,
-        github_artifact_workflow: artifactWorkflow,
-        published_artifact_proof: publishedArtifactProof,
-        agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
-      },
-      persisted_registry_sync: registrySync,
       description:
-        "Eivra paper-trading v2. Converts agent probability edges versus market prices into bounded paper tickets. Query params configure analytics only; no real money, no order execution, and no leverage.",
+        "Read-only Eivra paper capital-review packet. It summarizes whether the 30-day proof lab is reviewable and never enables real-money execution.",
     },
     {
       headers: {
