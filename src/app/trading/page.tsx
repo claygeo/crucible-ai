@@ -1181,7 +1181,7 @@ export default async function TradingPage({
               {labStatus.message} {labStatus.next_required_action}
             </p>
             <div className="grid sm:grid-cols-2 gap-2">
-              {labStatus.checks.slice(0, 8).map((item) => (
+              {labStatus.checks.slice(0, 9).map((item) => (
                 <div
                   key={item.id}
                   className="border-b border-border-subtle/60 pb-2 min-w-0"
