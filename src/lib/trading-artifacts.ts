@@ -541,6 +541,10 @@ export function buildPaperTradingEvidenceSla(args: {
   const artifactLiveRowCount = nullableNumber(artifactAudit?.live_row_count);
   const hasArtifactProof = args.publishedArtifactProof.status === "available";
   const hasPersistedRows = args.persistence.snapshots.length > 0;
+  const persistedCaptureFresh =
+    args.persistence.status === "available" &&
+    hasPersistedRows &&
+    args.persistence.capture_health.status === "fresh";
   const dataSourceStatus = evidenceSlaDataSource({
     hasPersistedRows,
     hasArtifactProof,
@@ -585,11 +589,18 @@ export function buildPaperTradingEvidenceSla(args: {
     violations.push({
       id: "write_mode",
       severity:
-        args.writeReadiness.status === "artifact_only" ? "warning" : "blocking",
+        persistedCaptureFresh && hasArtifactProof
+          ? "info"
+          : args.writeReadiness.status === "artifact_only"
+            ? "warning"
+            : "blocking",
       label: "Snapshot write mode",
       current: args.writeReadiness.status_label,
       target: "persisting Supabase rows",
-      detail: args.writeReadiness.next_required_action,
+      detail:
+        persistedCaptureFresh && hasArtifactProof
+          ? "Primary Supabase proof rows are fresh; the GitHub workflow is acting as a public artifact fallback for audit."
+          : args.writeReadiness.next_required_action,
     });
   }
 

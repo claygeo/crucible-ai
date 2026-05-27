@@ -267,7 +267,9 @@ The 30-day proof window now has a durable audit surface:
   `on_track`, `collecting`, `degraded`, `blocked`, or `unavailable`. It joins
   Supabase rows, the latest public artifact proof, write mode, registry sync,
   and current resolution hygiene into a read-only operator SLA with explicit
-  violations and next action.
+  violations and next action. When fresh Supabase proof rows are present, a
+  read-only GitHub artifact workflow is treated as public fallback context, not
+  as the primary reason to degrade the lab.
 - `GET /api/trading-lab-status` is the operator-level read-only rollup for the
   whole 30-day lab. It composes the evidence SLA, write mode, registry sync,
   resolver catch-up, agent-edge profitability guard, selected strategy
@@ -379,7 +381,9 @@ The 30-day proof window now has a durable audit surface:
   inside `artifact_proof` / `capital_review_packet`. If GitHub Actions ran in
   read-only artifact mode because Supabase snapshot writes were disabled, the
   packet keeps `decision: do_not_allocate_capital` and records the mode reason
-  as a capital-review blocker.
+  as a capital-review blocker. If primary Supabase proof rows are fresh, that
+  artifact-only mode remains visible but does not override the 30-day evidence
+  collection status.
 - `persistence.proof_runway` and the top-level `persisted_proof_runway` turn the
   same evidence into an operator timeline: earliest possible capital-review
   date, remaining capture days, remaining resolved live trades, open resolution
