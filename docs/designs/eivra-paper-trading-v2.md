@@ -108,8 +108,8 @@ The 30-day proof window now has a durable audit surface:
 - `persistence.capture_health` reports the daily recorder status, latest capture
   age, next expected capture, cron expression, and stale threshold.
 - `persistence.capture_calendar` reports the proof window day by day, including
-  complete, partial, and missing capture days plus the number of live strategy
-  rows recorded for each expected snapshot date.
+  complete, partial, and missing capture days plus the number of unique live
+  strategy rules recorded for each expected snapshot date.
 
 The database table is public-read, service-role-write, and RLS-enabled. Snapshot
 rows are analytics evidence only; they do not create wallets, orders, leverage,

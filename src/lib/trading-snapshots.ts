@@ -140,9 +140,12 @@ export type PaperTradingCaptureCalendarDay = {
   status_label: string;
   captured_rows: number;
   live_strategy_rows: number;
+  live_strategy_count: number;
   control_rows: number;
+  control_strategy_count: number;
   custom_rows: number;
   expected_live_strategy_rows: number;
+  expected_live_strategy_count: number;
   strategy_ids: string[];
   live_strategy_ids: string[];
   latest_captured_at: string | null;
@@ -158,6 +161,7 @@ export type PaperTradingCaptureCalendar = {
   coverage_ratio: number;
   current_streak_days: number;
   expected_live_strategy_rows: number;
+  expected_live_strategy_count: number;
   first_expected_snapshot_date: string | null;
   last_expected_snapshot_date: string | null;
   days_remaining_to_30: number;
@@ -595,6 +599,7 @@ function emptyCaptureCalendar(
     coverage_ratio: 0,
     current_streak_days: 0,
     expected_live_strategy_rows: 0,
+    expected_live_strategy_count: 0,
     first_expected_snapshot_date: null,
     last_expected_snapshot_date: null,
     days_remaining_to_30: REQUIRED_PROOF_DAYS,
@@ -606,6 +611,12 @@ function latestCapturedAtForRows(
   rows: PaperTradingSnapshotRow[]
 ): string | null {
   return latestRowForDay(rows)?.captured_at ?? null;
+}
+
+function uniqueStrategyRuleCount(rows: PaperTradingSnapshotRow[]): number {
+  return new Set(
+    rows.map((row) => strategyRuleFingerprint(row.strategy_summary))
+  ).size;
 }
 
 export function buildPaperTradingCaptureCalendar(
@@ -648,10 +659,12 @@ export function buildPaperTradingCaptureCalendar(
     return emptyCaptureCalendar("No captures");
   }
 
-  const expectedLiveStrategyRows = Math.max(
+  const expectedLiveStrategyCount = Math.max(
     0,
     ...expectedDates.map((date) =>
-      (byDate.get(date) ?? []).filter((row) => row.sample === "live_only").length
+      uniqueStrategyRuleCount(
+        (byDate.get(date) ?? []).filter((row) => row.sample === "live_only")
+      )
     )
   );
 
@@ -660,11 +673,13 @@ export function buildPaperTradingCaptureCalendar(
     const liveRows = rows.filter((row) => row.sample === "live_only");
     const controlRows = rows.filter((row) => row.sample !== "live_only");
     const capturedRows = rows.length;
+    const liveStrategyCount = uniqueStrategyRuleCount(liveRows);
+    const controlStrategyCount = uniqueStrategyRuleCount(controlRows);
     const status: PaperTradingCaptureCalendarDay["status"] =
       capturedRows === 0
         ? "missing"
-        : expectedLiveStrategyRows === 0 ||
-            liveRows.length < expectedLiveStrategyRows
+        : expectedLiveStrategyCount === 0 ||
+            liveStrategyCount < expectedLiveStrategyCount
           ? "partial"
           : "complete";
 
@@ -678,10 +693,13 @@ export function buildPaperTradingCaptureCalendar(
             ? "Partial"
             : "Missing",
       captured_rows: capturedRows,
-      live_strategy_rows: liveRows.length,
+      live_strategy_rows: liveStrategyCount,
+      live_strategy_count: liveStrategyCount,
       control_rows: controlRows.length,
+      control_strategy_count: controlStrategyCount,
       custom_rows: rows.filter((row) => row.is_custom).length,
-      expected_live_strategy_rows: expectedLiveStrategyRows,
+      expected_live_strategy_rows: expectedLiveStrategyCount,
+      expected_live_strategy_count: expectedLiveStrategyCount,
       strategy_ids: Array.from(new Set(rows.map((row) => row.strategy_id))).sort(),
       live_strategy_ids: Array.from(
         new Set(liveRows.map((row) => row.strategy_id))
@@ -721,7 +739,8 @@ export function buildPaperTradingCaptureCalendar(
     coverage_ratio:
       expectedDates.length > 0 ? round2(completeDays / expectedDates.length) : 0,
     current_streak_days: currentStreakDays,
-    expected_live_strategy_rows: expectedLiveStrategyRows,
+    expected_live_strategy_rows: expectedLiveStrategyCount,
+    expected_live_strategy_count: expectedLiveStrategyCount,
     first_expected_snapshot_date: expectedDates[0] ?? null,
     last_expected_snapshot_date: expectedDates[expectedDates.length - 1] ?? null,
     days_remaining_to_30: Math.max(0, REQUIRED_PROOF_DAYS - completeDays),
