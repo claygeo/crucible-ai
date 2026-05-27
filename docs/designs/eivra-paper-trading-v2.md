@@ -127,6 +127,10 @@ The 30-day proof window now has a durable audit surface:
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.
+- `/api/trading.json` and `GET /api/trading-snapshots` also expose
+  `persisted_agent_edge_proof_matrix` / `agent_edge_proof_matrix`, a durable
+  projection of the canonical Sage, Hawk, Magpie, Echo, Mirror, and Crowd
+  5pp/10pp live rules.
 - `persistence.capture_health` reports the daily recorder status, latest capture
   age, next expected capture, cron expression, and stale threshold.
 - `persistence.capture_calendar` reports the proof window day by day, including
@@ -190,6 +194,11 @@ The dashboard and public JSON feed load a 1000-row persisted history window. Tha
 is intentionally larger than 30 days because the daily writer stores multiple
 strategy rows per capture, same-day manual probes can add duplicate rows, and
 the proof-window delta needs the baseline row before the 30-day window.
+
+The dashboard renders the persisted agent-edge proof matrix separately from the
+current in-memory matrix. The persisted table is the one to watch for the
+30-day capital decision because it is built from stored rollups, capture
+coverage, resolved trades, rolling-window P&L, drawdown, and blockers.
 
 Capture health is `fresh` while the latest persisted row is less than 36 hours
 old. It becomes `stale` after that window, which makes a missed daily snapshot

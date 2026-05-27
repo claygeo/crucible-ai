@@ -26,6 +26,7 @@ export async function GET(request: Request) {
       persisted_strategy_rollups: persisted.strategy_rollups,
       persisted_proof_summary: persisted.proof_summary,
       persisted_capture_calendar: persisted.capture_calendar,
+      persisted_agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       persistence: {
         status: persisted.status,
         message: persisted.message,
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
         capture_calendar: persisted.capture_calendar,
         registry_sync: registrySync,
         proof_summary: persisted.proof_summary,
+        agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       },
       persisted_registry_sync: registrySync,
       description:

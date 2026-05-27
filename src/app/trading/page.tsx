@@ -163,6 +163,7 @@ export default async function TradingPage({
   const selectedOpenSignals = snapshot.selected_open_signals;
   const latestPersistedSnapshots = persisted.snapshots.slice(0, 8);
   const persistedRollups = persisted.strategy_rollups.slice(0, 8);
+  const persistedAgentEdgeProofRows = persisted.agent_edge_proof_matrix;
   const captureHealth = persisted.capture_health;
   const captureCalendar = persisted.capture_calendar;
   const captureCalendarDays = captureCalendar.days.slice().reverse().slice(0, 30);
@@ -816,6 +817,116 @@ export default async function TradingPage({
             </div>
           ) : (
             <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="heading text-sm text-text-primary">
+                    Persisted agent edge proof
+                  </h3>
+                  <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                    canonical stored rollups
+                  </span>
+                </div>
+                {persistedAgentEdgeProofRows.length === 0 ? (
+                  <div className="text-sm text-text-muted mono py-4">
+                    [no persisted canonical agent-edge proof yet]
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full" aria-label="Persisted agent edge proof matrix">
+                      <thead>
+                        <tr className="border-b border-border-subtle text-text-muted">
+                          <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Agent</th>
+                          <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Edge</th>
+                          <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Proof</th>
+                          <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Days</th>
+                          <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Resolved</th>
+                          <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Window P&amp;L</th>
+                          <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">ROI</th>
+                          <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Open risk</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border-subtle/60">
+                        {persistedAgentEdgeProofRows.map((row) => {
+                          const agent = AGENTS.find((item) => item.id === row.agent_id);
+                          const hueTxt = agent ? HUE_TO_TEXT[agent.hue] : "text-text-primary";
+                          const hueBg = agent ? HUE_TO_BG[agent.hue] : "bg-accent";
+
+                          return (
+                            <tr key={`${row.agent_id}-${row.min_edge}`}>
+                              <td className="py-3 pr-3">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`w-2 h-2 rounded-full ${hueBg}`}
+                                    aria-hidden="true"
+                                  />
+                                  <span className={`text-sm ${hueTxt}`}>
+                                    {row.agent_name}
+                                  </span>
+                                </div>
+                                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                                  latest {row.latest_snapshot_date ?? "-"}
+                                </div>
+                              </td>
+                              <td className="py-3 px-3 mono text-right text-text-secondary">
+                                {edgePoints(row.min_edge)}
+                              </td>
+                              <td className="py-3 px-3 text-right">
+                                <span
+                                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofStatusClass(row.proof_status)}`}
+                                >
+                                  {row.proof_status_label}
+                                </span>
+                                {row.blockers[0] ? (
+                                  <div className="mt-1 mono text-[10px] text-text-muted normal-case tracking-normal">
+                                    {row.blockers[0]}
+                                  </div>
+                                ) : null}
+                              </td>
+                              <td className="py-3 px-3 mono text-right text-text-secondary">
+                                {int(row.captured_days)}/
+                                {int(row.required_captured_days)}
+                                {row.missing_capture_days > 0 ? (
+                                  <div className="mt-1 text-[10px] text-rose-400">
+                                    {int(row.missing_capture_days)} missed
+                                  </div>
+                                ) : null}
+                              </td>
+                              <td className="py-3 px-3 mono text-right text-text-secondary">
+                                {int(row.resolved_trades)}/
+                                {int(row.required_resolved_trades)}
+                              </td>
+                              <td
+                                className={`py-3 px-3 mono text-right ${pnlClass(
+                                  row.window_pnl_usd
+                                )}`}
+                              >
+                                {dollars(row.window_pnl_usd, 0)}
+                              </td>
+                              <td
+                                className={`py-3 px-3 mono text-right ${pnlClass(
+                                  row.window_roi_on_stake
+                                )}`}
+                              >
+                                {pct(row.window_roi_on_stake, 1)}
+                              </td>
+                              <td className="py-3 pl-3 mono text-right text-text-secondary">
+                                {dollars(row.open_exposure_usd, 0)}
+                                <div
+                                  className={`mt-1 text-[10px] ${pnlClass(
+                                    row.open_expected_pnl_usd
+                                  )}`}
+                                >
+                                  EV {dollars(row.open_expected_pnl_usd, 0)}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full" aria-label="Persisted strategy proof progress">
                   <thead>

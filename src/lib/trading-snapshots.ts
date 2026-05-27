@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
-import { PAPER_TRADING_PROOF_RULES } from "@/lib/trading";
+import { AGENTS } from "@/lib/agents";
+import { AGENT_EDGE_GATES, PAPER_TRADING_PROOF_RULES } from "@/lib/trading";
 import type {
   StrategyDailyEvidenceSeries,
   StrategyVariantSummary,
@@ -57,6 +58,7 @@ export type PaperTradingPersistenceRead = {
   capture_health: PaperTradingCaptureHealth;
   capture_calendar: PaperTradingCaptureCalendar;
   proof_summary: PaperTradingProofSummary;
+  agent_edge_proof_matrix: PaperTradingAgentEdgeProofRow[];
   snapshots: PaperTradingSnapshotRow[];
   strategy_rollups: PaperTradingStrategyProofRollup[];
 };
@@ -181,6 +183,29 @@ export type PaperTradingStrategyRegistrySync = {
   missing_live_strategy_ids: string[];
   missing_live_strategy_labels: string[];
   extra_persisted_strategy_ids: string[];
+};
+
+export type PaperTradingAgentEdgeProofRow = {
+  strategy_id: string;
+  strategy_label: string;
+  agent_id: string;
+  agent_name: string;
+  min_edge: number;
+  proof_status: DurableProofStatus;
+  proof_status_label: string;
+  captured_days: number;
+  required_captured_days: number;
+  missing_capture_days: number;
+  resolved_trades: number;
+  required_resolved_trades: number;
+  window_pnl_usd: number;
+  window_roi_on_stake: number;
+  max_drawdown_usd: number;
+  open_exposure_usd: number;
+  open_expected_pnl_usd: number;
+  latest_snapshot_date: string | null;
+  latest_captured_at: string | null;
+  blockers: string[];
 };
 
 export type PaperTradingStrategyProofRollup = {
@@ -1296,6 +1321,69 @@ export function buildPaperTradingStrategyRollups(
     .sort(compareStrategyRollups);
 }
 
+const AGENT_EDGE_GATE_SET = new Set<number>(AGENT_EDGE_GATES);
+
+function isPersistedAgentEdgeRollup(
+  rollup: PaperTradingStrategyProofRollup
+): boolean {
+  const summary = rollup.latest_snapshot.strategy_summary;
+  return (
+    rollup.sample === "live_only" &&
+    !rollup.is_custom &&
+    Array.isArray(summary.agent_ids) &&
+    summary.agent_ids.length === 1 &&
+    (summary.category ?? null) === null &&
+    (summary.side ?? null) === null &&
+    AGENT_EDGE_GATE_SET.has(summary.min_edge)
+  );
+}
+
+export function buildPaperTradingAgentEdgeProofMatrix(
+  rollups: PaperTradingStrategyProofRollup[]
+): PaperTradingAgentEdgeProofRow[] {
+  const agentRank = new Map(AGENTS.map((agent, index) => [agent.id, index]));
+
+  return rollups
+    .filter(isPersistedAgentEdgeRollup)
+    .map((rollup) => {
+      const summary = rollup.latest_snapshot.strategy_summary;
+      const agentId = summary.agent_ids[0];
+      const agent = AGENTS.find((item) => item.id === agentId);
+      const gate = rollup.durable_proof_gate;
+      const proofWindow = rollup.proof_window;
+
+      return {
+        strategy_id: rollup.strategy_id,
+        strategy_label: rollup.strategy_label,
+        agent_id: agentId,
+        agent_name: agent?.name ?? agentId,
+        min_edge: summary.min_edge,
+        proof_status: gate.status,
+        proof_status_label: gate.status_label,
+        captured_days: gate.captured_days,
+        required_captured_days: gate.required_captured_days,
+        missing_capture_days: gate.missing_capture_days,
+        resolved_trades: gate.resolved_trades,
+        required_resolved_trades: gate.required_resolved_trades,
+        window_pnl_usd: gate.resolved_net_pnl_usd,
+        window_roi_on_stake: gate.resolved_roi_on_stake,
+        max_drawdown_usd: gate.max_drawdown_usd,
+        open_exposure_usd: round2(proofWindow.latest_open_exposure_usd),
+        open_expected_pnl_usd: round2(proofWindow.latest_open_expected_pnl_usd),
+        latest_snapshot_date: rollup.latest_snapshot_date,
+        latest_captured_at: rollup.latest_captured_at,
+        blockers: gate.blockers,
+      };
+    })
+    .sort((a, b) => {
+      const agentDelta =
+        (agentRank.get(a.agent_id) ?? Number.MAX_SAFE_INTEGER) -
+        (agentRank.get(b.agent_id) ?? Number.MAX_SAFE_INTEGER);
+      if (agentDelta !== 0) return agentDelta;
+      return a.min_edge - b.min_edge;
+    });
+}
+
 export async function loadPaperTradingSnapshotHistory(
   limit = DEFAULT_HISTORY_LIMIT
 ): Promise<PaperTradingPersistenceRead> {
@@ -1314,6 +1402,7 @@ export async function loadPaperTradingSnapshotHistory(
         "unavailable",
         "Unconfigured"
       ),
+      agent_edge_proof_matrix: [],
       snapshots: [],
       strategy_rollups: [],
     };
@@ -1342,6 +1431,7 @@ export async function loadPaperTradingSnapshotHistory(
         "unavailable",
         isMissingTableError(error) ? "Table missing" : "Error"
       ),
+      agent_edge_proof_matrix: [],
       snapshots: [],
       strategy_rollups: [],
     };
@@ -1356,6 +1446,8 @@ export async function loadPaperTradingSnapshotHistory(
     captureHealth
   );
   const strategyRollups = buildPaperTradingStrategyRollups(snapshots, captureHealth);
+  const agentEdgeProofMatrix =
+    buildPaperTradingAgentEdgeProofMatrix(strategyRollups);
   return {
     status: "available",
     message: "Persisted paper-trading snapshots loaded.",
@@ -1363,6 +1455,7 @@ export async function loadPaperTradingSnapshotHistory(
     capture_health: captureHealth,
     capture_calendar: captureCalendar,
     proof_summary: buildPaperTradingProofSummary(strategyRollups),
+    agent_edge_proof_matrix: agentEdgeProofMatrix,
     snapshots,
     strategy_rollups: strategyRollups,
   };
