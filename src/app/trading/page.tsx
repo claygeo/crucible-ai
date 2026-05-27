@@ -327,6 +327,7 @@ export default async function TradingPage({
     persistedRows: persisted.agent_edge_proof_matrix,
     publishedArtifactProof,
   });
+  const profitabilityGuard = agentEdgeProof.profitability_guard;
   const agentEdgeTradeLedger = snapshot.agent_edge_trade_ledger;
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
@@ -1258,8 +1259,14 @@ export default async function TradingPage({
               {int(agentEdgeProof.rule_count)} rules
             </Link>
             <span>
-              profitable {int(agentEdgeProof.profitable_rule_count)} / unresolved{" "}
-              {int(agentEdgeProof.unresolved_rule_count)}
+              profitable proven {int(agentEdgeProof.profitable_rule_count)} / positive{" "}
+              unproven {int(agentEdgeProof.positive_unproven_rule_count)} /{" "}
+              unresolved {int(agentEdgeProof.unresolved_rule_count)}
+            </span>
+            <span className={proofSummaryClass(profitabilityGuard.status)}>
+              proof guard {profitabilityGuard.status_label.toLowerCase()} / sample{" "}
+              {int(profitabilityGuard.rules_with_minimum_sample)}/
+              {int(agentEdgeProof.rule_count)}
             </span>
             <Link
               href={agentEdgeTradesJsonHref}

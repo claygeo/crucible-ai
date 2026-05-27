@@ -185,7 +185,10 @@ The 30-day proof window now has a durable audit surface:
   ranked paper-only leaderboard. It reads persisted Supabase proof rows when
   available and falls back to the latest published artifact proof while
   Supabase writes are disabled, so artifact-only mode can still answer which
-  agent/edge rules have resolved profit versus unresolved open EV.
+  agent/edge rules have resolved profit versus unresolved open EV. The
+  leaderboard includes a profitability guard that keeps positive-but-thin rows
+  separate from proven profitable rows until the full 30-day, 30-resolved-ticket,
+  positive P&L/ROI, and drawdown gates pass.
   Scheduled artifact audits publish the same `agent_edge_proof` packet into
   `artifact_proof`, so daily evidence bundles remain self-contained.
 - `GET /api/trading-agent-edge-trades` exposes the paper-only resolved-ticket

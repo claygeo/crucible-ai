@@ -214,6 +214,9 @@ under-covered proof rows before the files are counted as evidence. When the
 artifact checks pass, the same command also emits `artifact_proof`: a read-only
 strategy rollup, agent-edge matrix, readiness, and runway report built from the
 downloaded rows with the same proof logic used by persisted Supabase snapshots.
+Agent-edge proof separates positive-but-thin rows from proven profitable rows:
+`profitable` only appears after the full live-day, resolved-ticket, positive
+P&L/ROI, and drawdown gates pass.
 When `paper-snapshot-result.json` is present beside the rows, the artifact proof
 also carries live resolution-hygiene context.
 
