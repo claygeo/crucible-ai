@@ -143,11 +143,12 @@ The 30-day proof window now has a durable audit surface:
   fallback recorder. It runs the same local snapshot builder daily at 05:22 UTC,
   refuses demo-sourced writes by default, runs the soft proof audit after each
   capture attempt, and stores the workflow-mode, snapshot summary, full snapshot
-  rows, and audit JSON outputs as 30-day GitHub Actions artifacts. If the
-  service-role repository secret is missing, scheduled runs degrade to read-only
-  live artifact capture instead of failing before evidence is collected.
-  Persisted writes still require `SUPABASE_SERVICE_ROLE_KEY`; manual dry runs
-  remain safe and do not insert rows.
+  rows, soft audit, and artifact-proof rollup JSON outputs as 30-day GitHub
+  Actions artifacts. If the service-role repository secret is missing, scheduled
+  runs degrade to read-only live artifact capture instead of failing before
+  evidence is collected. Persisted writes still require
+  `SUPABASE_SERVICE_ROLE_KEY`; manual dry runs remain safe and do not insert
+  rows.
 - `npm run paper:artifact-audit -- <downloaded-artifacts> --json` audits
   downloaded GitHub artifact directories offline. It scans for
   `paper-snapshot-rows.json`, verifies live source, schema version, row-count
