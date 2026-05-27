@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "paper:audit": "tsx scripts/paper-trading-proof-audit.ts",
+    "paper:audit:soft": "tsx scripts/paper-trading-proof-audit.ts --soft",
     "paper:snapshot": "tsx scripts/paper-trading-snapshot.ts",
     "paper:snapshot:write": "tsx scripts/paper-trading-snapshot.ts --write",
     "typecheck": "tsc --noEmit",

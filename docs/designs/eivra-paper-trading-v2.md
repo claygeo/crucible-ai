@@ -127,6 +127,11 @@ The 30-day proof window now has a durable audit surface:
   dry-run recovery path. `npm run paper:snapshot:write` inserts them directly
   with `SUPABASE_SERVICE_ROLE_KEY`; it refuses to write demo-sourced rows unless
   `--allow-demo-write` is passed explicitly.
+- `npm run paper:audit` is the non-mutating capital-review gate. It reads the
+  current live snapshot plus persisted proof log, verifies every paper-only,
+  capture, resolution, P&L, ROI, drawdown, and readiness invariant, and exits
+  nonzero until all gates pass. Use `npm run paper:audit:soft` when a report is
+  needed without failing the shell.
 - A Netlify scheduled function runs the writer once per day on published deploys.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
