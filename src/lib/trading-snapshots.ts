@@ -11,7 +11,7 @@ import type {
 } from "@/lib/trading";
 
 const SNAPSHOT_TABLE = "paper_trading_snapshots";
-const DEFAULT_HISTORY_LIMIT = 360;
+const DEFAULT_HISTORY_LIMIT = 500;
 const REQUIRED_PROOF_DAYS = PAPER_TRADING_PROOF_RULES.requiredLiveDays;
 const SNAPSHOT_CRON_UTC_HOUR = 5;
 const SNAPSHOT_CRON_UTC_MINUTE = 12;
@@ -105,6 +105,19 @@ export type DurableProofGate = {
   blockers: string[];
 };
 
+export type PaperTradingProofWindow = {
+  start_snapshot_date: string | null;
+  end_snapshot_date: string | null;
+  baseline_snapshot_date: string | null;
+  resolved_trades: number;
+  resolved_stake_usd: number;
+  resolved_net_pnl_usd: number;
+  resolved_roi_on_stake: number;
+  max_drawdown_usd: number;
+  latest_open_exposure_usd: number;
+  latest_open_expected_pnl_usd: number;
+};
+
 export type PaperTradingCaptureCoverage = {
   status: "complete" | "missing";
   status_label: string;
@@ -140,6 +153,7 @@ export type PaperTradingStrategyProofRollup = {
   latest_resolved_roi_on_stake: number;
   latest_open_exposure_usd: number;
   latest_open_expected_pnl_usd: number;
+  proof_window: PaperTradingProofWindow;
   capture_coverage: PaperTradingCaptureCoverage;
   durable_proof_gate: DurableProofGate;
   latest_snapshot: PaperTradingSnapshotRow;
@@ -478,6 +492,97 @@ function buildCaptureCoverage(
   };
 }
 
+function strategySummaryValue(
+  row: PaperTradingSnapshotRow | null,
+  key: keyof StrategyVariantSummary
+): number {
+  if (!row) return 0;
+  const summary = row.strategy_summary as Partial<StrategyVariantSummary> | null | undefined;
+  const value = summary?.[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function rowResolvedTrades(row: PaperTradingSnapshotRow | null): number {
+  if (!row) return 0;
+  return Number.isFinite(row.resolved_trades) ? row.resolved_trades : 0;
+}
+
+function rowResolvedPnl(row: PaperTradingSnapshotRow | null): number {
+  if (!row) return 0;
+  return Number.isFinite(row.resolved_net_pnl_usd)
+    ? row.resolved_net_pnl_usd
+    : strategySummaryValue(row, "net_pnl_usd");
+}
+
+function rowResolvedStake(row: PaperTradingSnapshotRow | null): number {
+  return strategySummaryValue(row, "stake_usd");
+}
+
+function rowOpenExposure(row: PaperTradingSnapshotRow | null): number {
+  if (!row) return 0;
+  return Number.isFinite(row.open_exposure_usd)
+    ? row.open_exposure_usd
+    : strategySummaryValue(row, "open_exposure_usd");
+}
+
+function rowOpenExpectedPnl(row: PaperTradingSnapshotRow | null): number {
+  if (!row) return 0;
+  return Number.isFinite(row.open_expected_pnl_usd)
+    ? row.open_expected_pnl_usd
+    : strategySummaryValue(row, "open_expected_pnl_usd");
+}
+
+function buildProofWindow(
+  latestRowsByDay: PaperTradingSnapshotRow[],
+  captureCoverage: PaperTradingCaptureCoverage
+): PaperTradingProofWindow {
+  const windowStart = captureCoverage.first_expected_snapshot_date;
+  const windowEnd = captureCoverage.last_expected_snapshot_date;
+  const latestRows = latestRowsByDay
+    .slice()
+    .sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+  const baseline =
+    windowStart === null
+      ? null
+      : latestRows
+          .slice()
+          .reverse()
+          .find((row) => row.snapshot_date < windowStart) ?? null;
+  const rowsInWindow = latestRows.filter((row) => {
+    if (!windowStart || !windowEnd) return false;
+    return row.snapshot_date >= windowStart && row.snapshot_date <= windowEnd;
+  });
+  const latest = rowsInWindow[rowsInWindow.length - 1] ?? latestRows[latestRows.length - 1] ?? null;
+  const baselineTrades = rowResolvedTrades(baseline);
+  const baselinePnl = rowResolvedPnl(baseline);
+  const baselineStake = rowResolvedStake(baseline);
+  const resolvedTrades = Math.max(0, rowResolvedTrades(latest) - baselineTrades);
+  const resolvedStakeUsd = Math.max(0, rowResolvedStake(latest) - baselineStake);
+  const resolvedNetPnlUsd = rowResolvedPnl(latest) - baselinePnl;
+
+  let peakPnl = 0;
+  let maxDrawdownUsd = 0;
+  for (const row of rowsInWindow) {
+    const windowPnl = rowResolvedPnl(row) - baselinePnl;
+    peakPnl = Math.max(peakPnl, windowPnl);
+    maxDrawdownUsd = Math.max(maxDrawdownUsd, peakPnl - windowPnl);
+  }
+
+  return {
+    start_snapshot_date: windowStart,
+    end_snapshot_date: windowEnd,
+    baseline_snapshot_date: baseline?.snapshot_date ?? null,
+    resolved_trades: resolvedTrades,
+    resolved_stake_usd: round2(resolvedStakeUsd),
+    resolved_net_pnl_usd: round2(resolvedNetPnlUsd),
+    resolved_roi_on_stake:
+      resolvedStakeUsd > 0 ? Math.round((resolvedNetPnlUsd / resolvedStakeUsd) * 10000) / 10000 : 0,
+    max_drawdown_usd: round2(maxDrawdownUsd),
+    latest_open_exposure_usd: round2(rowOpenExposure(latest)),
+    latest_open_expected_pnl_usd: round2(rowOpenExpectedPnl(latest)),
+  };
+}
+
 function durableProofLabel(status: DurableProofStatus): string {
   if (status === "candidate") return "Candidate";
   if (status === "not_qualified") return "Not qualified";
@@ -489,17 +594,10 @@ function durableProofLabel(status: DurableProofStatus): string {
 function buildDurableProofGate(
   latest: PaperTradingSnapshotRow,
   captureCoverage: PaperTradingCaptureCoverage,
+  proofWindow: PaperTradingProofWindow,
   captureHealth: PaperTradingCaptureHealth
 ): DurableProofGate {
   const blockers: string[] = [];
-  const strategySummary =
-    latest.strategy_summary as Partial<StrategyVariantSummary> | null | undefined;
-  const proofGate =
-    latest.proof_gate as Partial<
-      StrategyVariantSummary["proof_gate"]
-    > | null | undefined;
-  const maxDrawdownUsd =
-    strategySummary?.max_drawdown_usd ?? proofGate?.max_drawdown_usd ?? 0;
 
   if (latest.sample !== "live_only") {
     blockers.push("Not live-only evidence.");
@@ -509,13 +607,13 @@ function buildDurableProofGate(
       captured_days: captureCoverage.captured_days,
       required_captured_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
       missing_capture_days: captureCoverage.missing_days,
-      resolved_trades: latest.resolved_trades,
+      resolved_trades: proofWindow.resolved_trades,
       required_resolved_trades: PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
-      resolved_net_pnl_usd: round2(latest.resolved_net_pnl_usd),
+      resolved_net_pnl_usd: proofWindow.resolved_net_pnl_usd,
       min_resolved_net_pnl_usd: PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd,
-      resolved_roi_on_stake: round2(latest.resolved_roi_on_stake),
+      resolved_roi_on_stake: proofWindow.resolved_roi_on_stake,
       min_roi_on_stake: PAPER_TRADING_PROOF_RULES.minRoiOnStake,
-      max_drawdown_usd: round2(maxDrawdownUsd),
+      max_drawdown_usd: proofWindow.max_drawdown_usd,
       max_allowed_drawdown_usd: PAPER_TRADING_PROOF_RULES.maxDrawdownUsd,
       capture_health_status: captureHealth.status,
       blockers,
@@ -540,28 +638,28 @@ function buildDurableProofGate(
     );
   }
 
-  if (latest.resolved_trades < PAPER_TRADING_PROOF_RULES.requiredResolvedTrades) {
+  if (proofWindow.resolved_trades < PAPER_TRADING_PROOF_RULES.requiredResolvedTrades) {
     blockers.push(
-      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - latest.resolved_trades} more resolved live trades needed.`
+      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - proofWindow.resolved_trades} more resolved live trades needed.`
     );
   }
 
   const enoughEvidence =
     captureCoverage.captured_days >= PAPER_TRADING_PROOF_RULES.requiredLiveDays &&
     captureCoverage.missing_days === 0 &&
-    latest.resolved_trades >= PAPER_TRADING_PROOF_RULES.requiredResolvedTrades;
+    proofWindow.resolved_trades >= PAPER_TRADING_PROOF_RULES.requiredResolvedTrades;
 
   if (enoughEvidence) {
     if (
-      latest.resolved_net_pnl_usd <
+      proofWindow.resolved_net_pnl_usd <
       PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd
     ) {
       blockers.push("Resolved paper P&L is not positive.");
     }
-    if (latest.resolved_roi_on_stake <= PAPER_TRADING_PROOF_RULES.minRoiOnStake) {
+    if (proofWindow.resolved_roi_on_stake <= PAPER_TRADING_PROOF_RULES.minRoiOnStake) {
       blockers.push("Resolved ROI is not positive.");
     }
-    if (maxDrawdownUsd > PAPER_TRADING_PROOF_RULES.maxDrawdownUsd) {
+    if (proofWindow.max_drawdown_usd > PAPER_TRADING_PROOF_RULES.maxDrawdownUsd) {
       blockers.push("Drawdown exceeds proof limit.");
     }
   }
@@ -581,13 +679,13 @@ function buildDurableProofGate(
     captured_days: captureCoverage.captured_days,
     required_captured_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
     missing_capture_days: captureCoverage.missing_days,
-    resolved_trades: latest.resolved_trades,
+    resolved_trades: proofWindow.resolved_trades,
     required_resolved_trades: PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
-    resolved_net_pnl_usd: round2(latest.resolved_net_pnl_usd),
+    resolved_net_pnl_usd: proofWindow.resolved_net_pnl_usd,
     min_resolved_net_pnl_usd: PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd,
-    resolved_roi_on_stake: round2(latest.resolved_roi_on_stake),
+    resolved_roi_on_stake: proofWindow.resolved_roi_on_stake,
     min_roi_on_stake: PAPER_TRADING_PROOF_RULES.minRoiOnStake,
-    max_drawdown_usd: round2(maxDrawdownUsd),
+    max_drawdown_usd: proofWindow.max_drawdown_usd,
     max_allowed_drawdown_usd: PAPER_TRADING_PROOF_RULES.maxDrawdownUsd,
     capture_health_status: captureHealth.status,
     blockers,
@@ -625,6 +723,7 @@ export function buildPaperTradingStrategyRollups(
         latestRowsByDay,
         captureHealth
       );
+      const proofWindow = buildProofWindow(latestRowsByDay, captureCoverage);
 
       return {
         strategy_id: strategyId,
@@ -650,10 +749,12 @@ export function buildPaperTradingStrategyRollups(
         latest_resolved_roi_on_stake: latest.resolved_roi_on_stake,
         latest_open_exposure_usd: latest.open_exposure_usd,
         latest_open_expected_pnl_usd: latest.open_expected_pnl_usd,
+        proof_window: proofWindow,
         capture_coverage: captureCoverage,
         durable_proof_gate: buildDurableProofGate(
           latest,
           captureCoverage,
+          proofWindow,
           captureHealth
         ),
         latest_snapshot: latest,
