@@ -132,6 +132,12 @@ before the proof window into the latest captured row. The durable gate uses this
 window's resolved trades, resolved P&L, ROI, and drawdown instead of all-time
 cumulative totals, so old wins cannot make a strategy pass a fresh 30-day test.
 
+The persisted feed also exposes `proof_summary`, a live-first status surface
+that counts live candidates, collecting strategies, stale/not-qualified
+strategies, and control rows. The summary's best-live strategy is ranked by the
+same rolling-window proof metrics as the durable gate, so backfill controls stay
+auditable without leading the live proof table.
+
 The dashboard and public JSON feed load a 500-row persisted history window. That
 is intentionally larger than 30 days because the daily writer stores multiple
 strategy rows per capture, same-day manual probes can add duplicate rows, and

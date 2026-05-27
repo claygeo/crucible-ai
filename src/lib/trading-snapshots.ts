@@ -55,6 +55,7 @@ export type PaperTradingPersistenceRead = {
   message: string;
   latest_captured_at: string | null;
   capture_health: PaperTradingCaptureHealth;
+  proof_summary: PaperTradingProofSummary;
   snapshots: PaperTradingSnapshotRow[];
   strategy_rollups: PaperTradingStrategyProofRollup[];
 };
@@ -157,6 +158,26 @@ export type PaperTradingStrategyProofRollup = {
   capture_coverage: PaperTradingCaptureCoverage;
   durable_proof_gate: DurableProofGate;
   latest_snapshot: PaperTradingSnapshotRow;
+};
+
+export type PaperTradingProofSummary = {
+  status: DurableProofStatus | "unavailable";
+  status_label: string;
+  live_strategy_count: number;
+  candidate_count: number;
+  collecting_count: number;
+  not_qualified_count: number;
+  stale_count: number;
+  control_count: number;
+  best_live_strategy_id: string | null;
+  best_live_strategy_label: string | null;
+  best_live_status: DurableProofStatus | null;
+  best_live_window_pnl_usd: number;
+  best_live_window_roi_on_stake: number;
+  best_live_resolved_trades: number;
+  best_live_captured_days: number;
+  best_live_missing_capture_days: number;
+  best_live_blockers: string[];
 };
 
 function getSupabaseEnv(): { url: string; key: string } | null {
@@ -591,6 +612,136 @@ function durableProofLabel(status: DurableProofStatus): string {
   return "Collecting";
 }
 
+function proofStatusRank(status: DurableProofStatus): number {
+  if (status === "candidate") return 0;
+  if (status === "collecting") return 1;
+  if (status === "not_qualified") return 2;
+  if (status === "stale") return 3;
+  return 4;
+}
+
+function compareStrategyRollups(
+  a: PaperTradingStrategyProofRollup,
+  b: PaperTradingStrategyProofRollup
+): number {
+  const aLive = a.sample === "live_only";
+  const bLive = b.sample === "live_only";
+  if (aLive !== bLive) return aLive ? -1 : 1;
+
+  const statusDelta =
+    proofStatusRank(a.durable_proof_gate.status) -
+    proofStatusRank(b.durable_proof_gate.status);
+  if (statusDelta !== 0) return statusDelta;
+
+  if (b.capture_coverage.captured_days !== a.capture_coverage.captured_days) {
+    return b.capture_coverage.captured_days - a.capture_coverage.captured_days;
+  }
+  if (a.capture_coverage.missing_days !== b.capture_coverage.missing_days) {
+    return a.capture_coverage.missing_days - b.capture_coverage.missing_days;
+  }
+  if (b.proof_window.resolved_net_pnl_usd !== a.proof_window.resolved_net_pnl_usd) {
+    return b.proof_window.resolved_net_pnl_usd - a.proof_window.resolved_net_pnl_usd;
+  }
+  if (b.proof_window.resolved_roi_on_stake !== a.proof_window.resolved_roi_on_stake) {
+    return b.proof_window.resolved_roi_on_stake - a.proof_window.resolved_roi_on_stake;
+  }
+  return a.strategy_label.localeCompare(b.strategy_label);
+}
+
+function emptyPaperTradingProofSummary(
+  status: PaperTradingProofSummary["status"],
+  statusLabel: string
+): PaperTradingProofSummary {
+  return {
+    status,
+    status_label: statusLabel,
+    live_strategy_count: 0,
+    candidate_count: 0,
+    collecting_count: 0,
+    not_qualified_count: 0,
+    stale_count: 0,
+    control_count: 0,
+    best_live_strategy_id: null,
+    best_live_strategy_label: null,
+    best_live_status: null,
+    best_live_window_pnl_usd: 0,
+    best_live_window_roi_on_stake: 0,
+    best_live_resolved_trades: 0,
+    best_live_captured_days: 0,
+    best_live_missing_capture_days: 0,
+    best_live_blockers: [],
+  };
+}
+
+export function buildPaperTradingProofSummary(
+  rollups: PaperTradingStrategyProofRollup[]
+): PaperTradingProofSummary {
+  if (rollups.length === 0) {
+    return emptyPaperTradingProofSummary("unavailable", "No proof log");
+  }
+
+  const liveRollups = rollups.filter((rollup) => rollup.sample === "live_only");
+  const candidates = liveRollups.filter(
+    (rollup) => rollup.durable_proof_gate.status === "candidate"
+  );
+  const collecting = liveRollups.filter(
+    (rollup) => rollup.durable_proof_gate.status === "collecting"
+  );
+  const notQualified = liveRollups.filter(
+    (rollup) => rollup.durable_proof_gate.status === "not_qualified"
+  );
+  const stale = liveRollups.filter(
+    (rollup) => rollup.durable_proof_gate.status === "stale"
+  );
+  const controlCount = rollups.filter(
+    (rollup) => rollup.durable_proof_gate.status === "control_only"
+  ).length;
+
+  if (liveRollups.length === 0) {
+    return {
+      ...emptyPaperTradingProofSummary("unavailable", "No live strategies"),
+      control_count: controlCount,
+    };
+  }
+
+  const bestLive = liveRollups.slice().sort(compareStrategyRollups)[0];
+  const status: PaperTradingProofSummary["status"] =
+    candidates.length > 0
+      ? "candidate"
+      : stale.length > 0
+        ? "stale"
+        : collecting.length > 0
+          ? "collecting"
+          : "not_qualified";
+
+  return {
+    status,
+    status_label:
+      status === "candidate"
+        ? "Candidate found"
+        : status === "stale"
+          ? "Stale"
+          : status === "not_qualified"
+            ? "No candidate"
+            : "Collecting",
+    live_strategy_count: liveRollups.length,
+    candidate_count: candidates.length,
+    collecting_count: collecting.length,
+    not_qualified_count: notQualified.length,
+    stale_count: stale.length,
+    control_count: controlCount,
+    best_live_strategy_id: bestLive.strategy_id,
+    best_live_strategy_label: bestLive.strategy_label,
+    best_live_status: bestLive.durable_proof_gate.status,
+    best_live_window_pnl_usd: bestLive.proof_window.resolved_net_pnl_usd,
+    best_live_window_roi_on_stake: bestLive.proof_window.resolved_roi_on_stake,
+    best_live_resolved_trades: bestLive.proof_window.resolved_trades,
+    best_live_captured_days: bestLive.capture_coverage.captured_days,
+    best_live_missing_capture_days: bestLive.capture_coverage.missing_days,
+    best_live_blockers: bestLive.durable_proof_gate.blockers,
+  };
+}
+
 function buildDurableProofGate(
   latest: PaperTradingSnapshotRow,
   captureCoverage: PaperTradingCaptureCoverage,
@@ -760,12 +911,7 @@ export function buildPaperTradingStrategyRollups(
         latest_snapshot: latest,
       };
     })
-    .sort((a, b) => {
-      if (b.captured_days !== a.captured_days) {
-        return b.captured_days - a.captured_days;
-      }
-      return b.latest_resolved_net_pnl_usd - a.latest_resolved_net_pnl_usd;
-    });
+    .sort(compareStrategyRollups);
 }
 
 export async function loadPaperTradingSnapshotHistory(
@@ -780,6 +926,10 @@ export async function loadPaperTradingSnapshotHistory(
       capture_health: unavailableCaptureHealth(
         "Unconfigured",
         "Supabase env is not configured for persisted paper-trading snapshots."
+      ),
+      proof_summary: emptyPaperTradingProofSummary(
+        "unavailable",
+        "Unconfigured"
       ),
       snapshots: [],
       strategy_rollups: [],
@@ -802,6 +952,10 @@ export async function loadPaperTradingSnapshotHistory(
         isMissingTableError(error) ? "Table missing" : "Error",
         error.message
       ),
+      proof_summary: emptyPaperTradingProofSummary(
+        "unavailable",
+        isMissingTableError(error) ? "Table missing" : "Error"
+      ),
       snapshots: [],
       strategy_rollups: [],
     };
@@ -811,13 +965,15 @@ export async function loadPaperTradingSnapshotHistory(
   const captureHealth = buildPaperTradingCaptureHealth(
     snapshots[0]?.captured_at ?? null
   );
+  const strategyRollups = buildPaperTradingStrategyRollups(snapshots, captureHealth);
   return {
     status: "available",
     message: "Persisted paper-trading snapshots loaded.",
     latest_captured_at: snapshots[0]?.captured_at ?? null,
     capture_health: captureHealth,
+    proof_summary: buildPaperTradingProofSummary(strategyRollups),
     snapshots,
-    strategy_rollups: buildPaperTradingStrategyRollups(snapshots, captureHealth),
+    strategy_rollups: strategyRollups,
   };
 }
 
