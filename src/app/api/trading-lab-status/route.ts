@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
 import { buildPaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
 import {
   buildPaperTradingArtifactHistory,
@@ -10,13 +9,9 @@ import {
 } from "@/lib/trading-artifacts";
 import { buildPaperTradingLabStatus } from "@/lib/trading-lab-status";
 import { buildResolutionCatchupPreview } from "@/lib/trading-resolution-catchup";
-import {
-  buildResolutionReviewQueue,
-  enrichResolutionReviewQueueWithProviderResolution,
-} from "@/lib/trading-resolution-review";
+import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
 import {
   buildPaperTradingCapitalReviewPacket,
-  buildPaperTradingProofEvidenceSources,
   buildPaperTradingProofReadiness,
   buildPaperTradingProofRunway,
   buildPaperTradingStrategyRegistrySync,
@@ -76,19 +71,6 @@ export async function GET(request: Request) {
     persistedRows: persisted.agent_edge_proof_matrix,
     publishedArtifactProof,
   });
-  const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
-    persistence: persisted,
-    proofReadiness,
-    proofRunway,
-    resolutionWatch: snapshot.resolution_watch,
-  });
-  const resolutionReviewQueue =
-    await enrichResolutionReviewQueueWithProviderResolution(
-      buildResolutionReviewQueue({
-        resolutionWatch: snapshot.resolution_watch,
-        publishedArtifactProof,
-      }),
-    );
   const resolutionCatchupPreview = await buildResolutionCatchupPreview({
     controls: snapshot.controls,
   });
@@ -107,53 +89,13 @@ export async function GET(request: Request) {
 
   return NextResponse.json(
     {
-      ...snapshot,
-      paper_lab_status: labStatus,
-      resolution_review_queue: resolutionReviewQueue,
-      resolution_catchup_preview: resolutionCatchupPreview,
-      proof_evidence_sources: proofEvidenceSources,
-      persisted_daily_snapshots: persisted.snapshots,
-      persisted_strategy_rollups: persisted.strategy_rollups,
-      persisted_proof_summary: persisted.proof_summary,
-      persisted_proof_readiness: proofReadiness,
-      persisted_proof_runway: proofRunway,
-      persisted_capital_review_packet: capitalReviewPacket,
-      persisted_capture_calendar: persisted.capture_calendar,
-      persisted_agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
-      github_artifact_workflow: artifactWorkflow,
-      published_artifact_proof: publishedArtifactProof,
-      paper_artifact_history: artifactHistory,
-      paper_write_readiness: writeReadiness,
-      paper_evidence_sla: evidenceSla,
-      paper_agent_edge_proof: agentEdgeProof,
-      persistence: {
-        status: persisted.status,
-        message: persisted.message,
-        latest_captured_at: persisted.latest_captured_at,
-        capture_health: persisted.capture_health,
-        capture_calendar: persisted.capture_calendar,
-        registry_sync: registrySync,
-        proof_summary: persisted.proof_summary,
-        proof_readiness: proofReadiness,
-        proof_runway: proofRunway,
-        capital_review_packet: capitalReviewPacket,
-        proof_evidence_sources: proofEvidenceSources,
-        resolution_review_queue: resolutionReviewQueue,
-        resolution_catchup_preview: resolutionCatchupPreview,
-        github_artifact_workflow: artifactWorkflow,
-        published_artifact_proof: publishedArtifactProof,
-        artifact_history: artifactHistory,
-        write_readiness: writeReadiness,
-        evidence_sla: evidenceSla,
-        lab_status: labStatus,
-        agent_edge_proof: agentEdgeProof,
-        agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
-      },
-      persisted_registry_sync: registrySync,
+      ...labStatus,
+      controls,
       description:
-        "Eivra paper-trading v2. Converts agent probability edges versus market prices into bounded paper tickets. Query params configure analytics only; no real money, no order execution, and no leverage.",
+        "Read-only Eivra 30-day paper lab status. It composes evidence SLA, resolver catch-up, agent-edge profitability, exposure-cap leakage, and capital-review gates without enabling execution.",
     },
     {
+      status: labStatus.status === "unavailable" ? 503 : 200,
       headers: {
         "cache-control": "no-store, max-age=0",
         "access-control-allow-origin": "*",

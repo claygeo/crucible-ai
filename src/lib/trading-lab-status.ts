@@ -1,0 +1,533 @@
+import type { PaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
+import type {
+  PaperTradingArtifactHistory,
+  PaperTradingEvidenceSla,
+  PaperTradingWriteReadiness,
+} from "@/lib/trading-artifacts";
+import type { ResolutionCatchupPreview } from "@/lib/trading-resolution-catchup";
+import { PAPER_TRADING_PROOF_RULES, type TradingSnapshot } from "@/lib/trading";
+import type {
+  PaperTradingCapitalReviewPacket,
+  PaperTradingProofReadiness,
+  PaperTradingProofRunway,
+  PaperTradingStrategyRegistrySync,
+} from "@/lib/trading-snapshots";
+
+export type PaperTradingLabStatusStatus =
+  | "reviewable"
+  | "collecting"
+  | "degraded"
+  | "blocked"
+  | "unavailable";
+
+export type PaperTradingLabCheckStatus =
+  | "pass"
+  | "collecting"
+  | "warning"
+  | "blocked"
+  | "unavailable";
+
+export type PaperTradingLabCheck = {
+  id:
+    | "paper_only_lock"
+    | "evidence_sla"
+    | "capture_window"
+    | "write_mode"
+    | "resolution_catchup"
+    | "registry_sync"
+    | "agent_edge_profitability"
+    | "selected_tradability"
+    | "capital_review";
+  label: string;
+  status: PaperTradingLabCheckStatus;
+  status_label: string;
+  current: string;
+  target: string;
+  detail: string;
+};
+
+export type PaperTradingLabStatus = {
+  schema_version: "1";
+  generated_at: string;
+  status: PaperTradingLabStatusStatus;
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  execution_recommendation:
+    | "keep_paper_trading"
+    | "operator_review_only"
+    | "repair_evidence";
+  paper_only: true;
+  real_money_execution_allowed: false;
+  capital_review_allowed: boolean;
+  selected_strategy: {
+    strategy_id: string;
+    strategy_label: string;
+    sample: string;
+    min_edge: number;
+    stake_mode: string;
+  };
+  proof_window: {
+    required_days: number;
+    complete_days: number;
+    partial_days: number;
+    missing_days: number;
+    days_remaining_to_30: number;
+    coverage_ratio: number;
+    latest_snapshot_date: string | null;
+    latest_captured_at: string | null;
+    data_source_status: PaperTradingEvidenceSla["data_source_status"];
+    evidence_sla_status: PaperTradingEvidenceSla["status"];
+    proof_runway_status: PaperTradingProofRunway["status"];
+    artifact_history_status: PaperTradingArtifactHistory["status"];
+    write_mode_status: PaperTradingWriteReadiness["status"];
+  };
+  profitability: {
+    source: PaperTradingAgentEdgeProof["source"];
+    source_label: string;
+    rule_count: number;
+    resolved_rule_count: number;
+    positive_unproven_rule_count: number;
+    proven_profitable_rule_count: number;
+    rules_with_minimum_sample: number;
+    best_resolved_strategy_id: string | null;
+    best_resolved_strategy_label: string | null;
+    best_resolved_agent_name: string | null;
+    best_resolved_net_pnl_usd: number;
+    best_resolved_roi_on_stake: number;
+    best_resolved_trades: number;
+    guard_status: PaperTradingAgentEdgeProof["profitability_guard"]["status"];
+    guard_status_label: string;
+  };
+  tradability: {
+    selected_accepted_resolved_trades: number;
+    selected_accepted_open_signals: number;
+    selected_accepted_resolved_pnl_usd: number;
+    selected_open_exposure_usd: number;
+    selected_peak_open_exposure_usd: number;
+    selected_max_open_exposure_usd: number;
+    skipped_open_signals: number;
+    skipped_resolved_trades: number;
+    skipped_profitable_resolved_trades: number;
+    skipped_loss_resolved_trades: number;
+    skipped_resolved_net_pnl_usd: number;
+    capacity_leakage_status:
+      | "none"
+      | "open_only"
+      | "resolved_missed_profit"
+      | "resolved_missed_loss"
+      | "resolved_mixed";
+    missed_pnl_counts_as_proof: false;
+  };
+  operations: {
+    registry_sync_status: PaperTradingStrategyRegistrySync["status"];
+    resolution_catchup_status: ResolutionCatchupPreview["status"];
+    provider_resolved_market_count: number;
+    projected_catchup_pnl_usd: number;
+    open_live_signals: number;
+    review_required_live_signals: number;
+    capital_review_status: PaperTradingCapitalReviewPacket["status"];
+    capital_review_decision: PaperTradingCapitalReviewPacket["decision"];
+    earliest_capital_review_date: string | null;
+  };
+  checks: PaperTradingLabCheck[];
+  blockers: string[];
+  warnings: string[];
+};
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function statusLabel(status: PaperTradingLabStatusStatus): string {
+  if (status === "reviewable") return "Reviewable";
+  if (status === "degraded") return "Degraded";
+  if (status === "blocked") return "Blocked";
+  if (status === "unavailable") return "Unavailable";
+  return "Collecting";
+}
+
+function checkStatusLabel(status: PaperTradingLabCheckStatus): string {
+  if (status === "pass") return "Pass";
+  if (status === "warning") return "Warning";
+  if (status === "blocked") return "Blocked";
+  if (status === "unavailable") return "Unavailable";
+  return "Collecting";
+}
+
+function check(
+  item: Omit<PaperTradingLabCheck, "status_label">,
+): PaperTradingLabCheck {
+  return {
+    ...item,
+    status_label: checkStatusLabel(item.status),
+  };
+}
+
+function labStatusMessage(status: PaperTradingLabStatusStatus): string {
+  if (status === "reviewable") {
+    return "The paper lab has reviewable evidence for operator inspection; execution remains disabled.";
+  }
+  if (status === "degraded") {
+    return "The paper lab is collecting usable evidence, but at least one warning needs attention before proof claims are trusted.";
+  }
+  if (status === "blocked") {
+    return "The paper lab has a blocker that must be repaired before the proof window is trusted.";
+  }
+  if (status === "unavailable") {
+    return "The paper lab does not have enough usable evidence sources to report proof status.";
+  }
+  return "The paper lab is collecting live-only evidence toward the 30-day proof window.";
+}
+
+function capacityLeakageStatus(
+  skippedOpenSignals: number,
+  skippedResolvedTrades: number,
+  skippedProfitableResolvedTrades: number,
+  skippedLossResolvedTrades: number,
+): PaperTradingLabStatus["tradability"]["capacity_leakage_status"] {
+  if (skippedResolvedTrades === 0) {
+    return skippedOpenSignals > 0 ? "open_only" : "none";
+  }
+  if (skippedProfitableResolvedTrades > 0 && skippedLossResolvedTrades > 0) {
+    return "resolved_mixed";
+  }
+  if (skippedProfitableResolvedTrades > 0) return "resolved_missed_profit";
+  if (skippedLossResolvedTrades > 0) return "resolved_missed_loss";
+  return "resolved_mixed";
+}
+
+function resolutionCheckStatus(
+  status: ResolutionCatchupPreview["status"],
+): PaperTradingLabCheckStatus {
+  if (status === "clear") return "pass";
+  if (status === "provider_pending") return "collecting";
+  if (status === "resolver_lag") return "warning";
+  if (status === "error") return "blocked";
+  return "warning";
+}
+
+function registryCheckStatus(
+  status: PaperTradingStrategyRegistrySync["status"],
+): PaperTradingLabCheckStatus {
+  if (status === "synced") return "pass";
+  if (status === "pending_capture") return "collecting";
+  return "unavailable";
+}
+
+function evidenceCheckStatus(
+  status: PaperTradingEvidenceSla["status"],
+): PaperTradingLabCheckStatus {
+  if (status === "on_track") return "pass";
+  if (status === "collecting") return "collecting";
+  if (status === "degraded") return "warning";
+  if (status === "blocked") return "blocked";
+  return "unavailable";
+}
+
+function writeModeCheckStatus(
+  status: PaperTradingWriteReadiness["status"],
+): PaperTradingLabCheckStatus {
+  if (status === "persisting") return "pass";
+  if (status === "artifact_only") return "warning";
+  return "warning";
+}
+
+function capitalCheckStatus(
+  status: PaperTradingCapitalReviewPacket["status"],
+): PaperTradingLabCheckStatus {
+  if (status === "reviewable_paper_candidate") return "pass";
+  if (status === "unavailable") return "warning";
+  return "collecting";
+}
+
+function nextAction(
+  status: PaperTradingLabStatusStatus,
+  checks: PaperTradingLabCheck[],
+  evidenceSla: PaperTradingEvidenceSla,
+  capitalReviewPacket: PaperTradingCapitalReviewPacket,
+): string {
+  const blocker = checks.find(
+    (item) => item.status === "blocked" || item.status === "unavailable",
+  );
+  if (blocker) return blocker.detail;
+
+  const warning = checks.find((item) => item.status === "warning");
+  if (warning) return warning.detail;
+
+  if (status === "reviewable") {
+    return capitalReviewPacket.decision_summary;
+  }
+  return evidenceSla.next_required_action;
+}
+
+function labStatusFromChecks(args: {
+  checks: PaperTradingLabCheck[];
+  evidenceSla: PaperTradingEvidenceSla;
+  capitalReviewPacket: PaperTradingCapitalReviewPacket;
+  agentEdgeProof: PaperTradingAgentEdgeProof;
+}): PaperTradingLabStatusStatus {
+  if (args.checks.some((item) => item.status === "unavailable")) {
+    return "unavailable";
+  }
+  if (args.checks.some((item) => item.status === "blocked")) {
+    return "blocked";
+  }
+  if (args.checks.some((item) => item.status === "warning")) {
+    return "degraded";
+  }
+  if (
+    args.capitalReviewPacket.status === "reviewable_paper_candidate" &&
+    args.evidenceSla.status === "on_track" &&
+    args.agentEdgeProof.profitability_guard.status === "reviewable"
+  ) {
+    return "reviewable";
+  }
+  return "collecting";
+}
+
+export function buildPaperTradingLabStatus(args: {
+  snapshot: TradingSnapshot;
+  registrySync: PaperTradingStrategyRegistrySync;
+  proofReadiness: PaperTradingProofReadiness;
+  proofRunway: PaperTradingProofRunway;
+  capitalReviewPacket: PaperTradingCapitalReviewPacket;
+  writeReadiness: PaperTradingWriteReadiness;
+  artifactHistory: PaperTradingArtifactHistory;
+  evidenceSla: PaperTradingEvidenceSla;
+  agentEdgeProof: PaperTradingAgentEdgeProof;
+  resolutionCatchupPreview: ResolutionCatchupPreview;
+  generatedAt?: string;
+}): PaperTradingLabStatus {
+  const selectedStrategy = args.snapshot.selected_strategy;
+  const exposureLedger = args.snapshot.selected_exposure_ledger;
+  const leakageStatus = capacityLeakageStatus(
+    exposureLedger.skipped_open_signals,
+    exposureLedger.skipped_resolved_trades,
+    exposureLedger.skipped_profitable_resolved_trades,
+    exposureLedger.skipped_loss_resolved_trades,
+  );
+  const bestResolvedRule = args.agentEdgeProof.best_resolved_rule;
+
+  const checks = [
+    check({
+      id: "paper_only_lock",
+      label: "Paper-only lock",
+      status:
+        args.proofReadiness.real_money_execution_allowed === false &&
+        args.capitalReviewPacket.real_money_execution_allowed === false &&
+        args.agentEdgeProof.real_money_execution_allowed === false
+          ? "pass"
+          : "blocked",
+      current: "execution disabled",
+      target: "no wallet, order, leverage, or live execution path",
+      detail:
+        "Every composed proof source must keep real_money_execution_allowed false.",
+    }),
+    check({
+      id: "evidence_sla",
+      label: "Evidence SLA",
+      status: evidenceCheckStatus(args.evidenceSla.status),
+      current: args.evidenceSla.status_label,
+      target: "on track or still collecting without violations",
+      detail: args.evidenceSla.next_required_action,
+    }),
+    check({
+      id: "capture_window",
+      label: "30-day capture window",
+      status:
+        args.evidenceSla.complete_days >=
+        PAPER_TRADING_PROOF_RULES.requiredLiveDays
+          ? "pass"
+          : "collecting",
+      current: `${args.evidenceSla.complete_days}/${PAPER_TRADING_PROOF_RULES.requiredLiveDays} complete days`,
+      target: `${PAPER_TRADING_PROOF_RULES.requiredLiveDays} complete live proof days`,
+      detail: `Collect ${args.evidenceSla.days_remaining_to_30} more complete daily proof captures.`,
+    }),
+    check({
+      id: "write_mode",
+      label: "Write mode",
+      status: writeModeCheckStatus(args.writeReadiness.status),
+      current: args.writeReadiness.status_label,
+      target: "persisting Supabase rows plus public artifact fallback",
+      detail: args.writeReadiness.next_required_action,
+    }),
+    check({
+      id: "resolution_catchup",
+      label: "Resolution catch-up",
+      status: resolutionCheckStatus(args.resolutionCatchupPreview.status),
+      current: args.resolutionCatchupPreview.status_label,
+      target: "no provider-resolved unscored live markets",
+      detail: args.resolutionCatchupPreview.next_required_action,
+    }),
+    check({
+      id: "registry_sync",
+      label: "Strategy registry",
+      status: registryCheckStatus(args.registrySync.status),
+      current: args.registrySync.status_label,
+      target: "latest daily proof captured the current live strategy registry",
+      detail: args.registrySync.message,
+    }),
+    check({
+      id: "agent_edge_profitability",
+      label: "Agent-edge profitability",
+      status:
+        args.agentEdgeProof.profitability_guard.status === "reviewable"
+          ? "pass"
+          : args.agentEdgeProof.profitability_guard.status === "unavailable"
+            ? "unavailable"
+            : "collecting",
+      current: args.agentEdgeProof.profitability_guard.status_label,
+      target: "at least one rule clears sample, P&L, ROI, and drawdown gates",
+      detail: args.agentEdgeProof.profitability_guard.next_required_action,
+    }),
+    check({
+      id: "selected_tradability",
+      label: "Selected strategy tradability",
+      status:
+        leakageStatus === "resolved_missed_profit" ||
+        leakageStatus === "resolved_mixed"
+          ? "warning"
+          : "pass",
+      current:
+        exposureLedger.skipped_resolved_trades > 0
+          ? `${exposureLedger.skipped_resolved_trades} skipped resolved / $${exposureLedger.skipped_resolved_net_pnl_usd.toFixed(2)} missed`
+          : `${exposureLedger.skipped_open_signals} skipped open`,
+      target: "profitable rules count only accepted, exposure-capped trades",
+      detail:
+        exposureLedger.skipped_resolved_trades > 0
+          ? "Skipped resolved P&L is capacity leakage, not proof P&L."
+          : "No skipped resolved ticket is inflating proof P&L.",
+    }),
+    check({
+      id: "capital_review",
+      label: "Capital review",
+      status: capitalCheckStatus(args.capitalReviewPacket.status),
+      current: args.capitalReviewPacket.status_label,
+      target: "operator review only after the full paper proof gate",
+      detail: args.capitalReviewPacket.next_required_action,
+    }),
+  ];
+
+  const status = labStatusFromChecks({
+    checks,
+    evidenceSla: args.evidenceSla,
+    capitalReviewPacket: args.capitalReviewPacket,
+    agentEdgeProof: args.agentEdgeProof,
+  });
+  const blockers = checks
+    .filter(
+      (item) => item.status === "blocked" || item.status === "unavailable",
+    )
+    .map((item) => `${item.label}: ${item.detail}`);
+  const warnings = checks
+    .filter((item) => item.status === "warning")
+    .map((item) => `${item.label}: ${item.detail}`);
+
+  return {
+    schema_version: "1",
+    generated_at: args.generatedAt ?? new Date().toISOString(),
+    status,
+    status_label: statusLabel(status),
+    message: labStatusMessage(status),
+    next_required_action: nextAction(
+      status,
+      checks,
+      args.evidenceSla,
+      args.capitalReviewPacket,
+    ),
+    execution_recommendation:
+      status === "reviewable"
+        ? "operator_review_only"
+        : status === "blocked" || status === "unavailable"
+          ? "repair_evidence"
+          : "keep_paper_trading",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    capital_review_allowed: args.capitalReviewPacket.capital_review_allowed,
+    selected_strategy: {
+      strategy_id: selectedStrategy.id,
+      strategy_label: selectedStrategy.label,
+      sample: selectedStrategy.sample,
+      min_edge: selectedStrategy.min_edge,
+      stake_mode: selectedStrategy.stake_mode,
+    },
+    proof_window: {
+      required_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+      complete_days: args.evidenceSla.complete_days,
+      partial_days: args.evidenceSla.partial_days,
+      missing_days: args.evidenceSla.missing_days,
+      days_remaining_to_30: args.evidenceSla.days_remaining_to_30,
+      coverage_ratio: args.evidenceSla.coverage_ratio,
+      latest_snapshot_date: args.evidenceSla.latest_snapshot_date,
+      latest_captured_at: args.evidenceSla.latest_captured_at,
+      data_source_status: args.evidenceSla.data_source_status,
+      evidence_sla_status: args.evidenceSla.status,
+      proof_runway_status: args.proofRunway.status,
+      artifact_history_status: args.artifactHistory.status,
+      write_mode_status: args.writeReadiness.status,
+    },
+    profitability: {
+      source: args.agentEdgeProof.source,
+      source_label: args.agentEdgeProof.source_label,
+      rule_count: args.agentEdgeProof.rule_count,
+      resolved_rule_count: args.agentEdgeProof.rows.filter(
+        (row) => row.resolved_trades > 0,
+      ).length,
+      positive_unproven_rule_count:
+        args.agentEdgeProof.positive_unproven_rule_count,
+      proven_profitable_rule_count:
+        args.agentEdgeProof.profitability_guard.rules_with_profitability_proven,
+      rules_with_minimum_sample:
+        args.agentEdgeProof.profitability_guard.rules_with_minimum_sample,
+      best_resolved_strategy_id: bestResolvedRule?.strategy_id ?? null,
+      best_resolved_strategy_label: bestResolvedRule?.strategy_label ?? null,
+      best_resolved_agent_name: bestResolvedRule?.agent_name ?? null,
+      best_resolved_net_pnl_usd: round2(bestResolvedRule?.window_pnl_usd ?? 0),
+      best_resolved_roi_on_stake: bestResolvedRule?.window_roi_on_stake ?? 0,
+      best_resolved_trades: bestResolvedRule?.resolved_trades ?? 0,
+      guard_status: args.agentEdgeProof.profitability_guard.status,
+      guard_status_label: args.agentEdgeProof.profitability_guard.status_label,
+    },
+    tradability: {
+      selected_accepted_resolved_trades:
+        exposureLedger.accepted_resolved_trades,
+      selected_accepted_open_signals: exposureLedger.accepted_open_signals,
+      selected_accepted_resolved_pnl_usd: round2(
+        exposureLedger.accepted_resolved_net_pnl_usd,
+      ),
+      selected_open_exposure_usd: exposureLedger.current_open_exposure_usd,
+      selected_peak_open_exposure_usd: exposureLedger.peak_open_exposure_usd,
+      selected_max_open_exposure_usd: exposureLedger.max_open_exposure_usd,
+      skipped_open_signals: exposureLedger.skipped_open_signals,
+      skipped_resolved_trades: exposureLedger.skipped_resolved_trades,
+      skipped_profitable_resolved_trades:
+        exposureLedger.skipped_profitable_resolved_trades,
+      skipped_loss_resolved_trades: exposureLedger.skipped_loss_resolved_trades,
+      skipped_resolved_net_pnl_usd: round2(
+        exposureLedger.skipped_resolved_net_pnl_usd,
+      ),
+      capacity_leakage_status: leakageStatus,
+      missed_pnl_counts_as_proof: false,
+    },
+    operations: {
+      registry_sync_status: args.registrySync.status,
+      resolution_catchup_status: args.resolutionCatchupPreview.status,
+      provider_resolved_market_count:
+        args.resolutionCatchupPreview.provider_resolved_market_count,
+      projected_catchup_pnl_usd: round2(
+        args.resolutionCatchupPreview.projected_resolved_pnl_usd,
+      ),
+      open_live_signals: args.snapshot.resolution_watch.open_live_signals,
+      review_required_live_signals:
+        args.snapshot.resolution_watch.review_required_live_signals,
+      capital_review_status: args.capitalReviewPacket.status,
+      capital_review_decision: args.capitalReviewPacket.decision,
+      earliest_capital_review_date:
+        args.capitalReviewPacket.earliest_capital_review_date,
+    },
+    checks,
+    blockers,
+    warnings,
+  };
+}
