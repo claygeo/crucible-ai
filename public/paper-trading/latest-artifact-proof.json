@@ -1,19 +1,19 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-05-27T14:08:41.272Z",
+  "generated_at": "2026-05-27T14:14:48.902Z",
   "source": "github_actions_artifact_audit",
   "paper_only": true,
   "real_money_execution_allowed": false,
   "repository": "claygeo/eivra",
   "workflow_path": ".github/workflows/paper-trading-snapshot.yml",
   "workflow_run": {
-    "id": "26516360625",
-    "url": "https://github.com/claygeo/eivra/actions/runs/26516360625",
+    "id": "26516715144",
+    "url": "https://github.com/claygeo/eivra/actions/runs/26516715144",
     "event": "workflow_dispatch",
     "ref": "main",
-    "head_sha": "9cf11948146919bc601fd683a996733be8c46374",
-    "artifact_name": "paper-trading-proof-26516360625",
-    "download_command": "gh run download 26516360625 --repo claygeo/eivra --dir ./paper-artifacts"
+    "head_sha": "54ebfe62f90f37ce94bb3b738070d59b6811c72e",
+    "artifact_name": "paper-trading-proof-26516715144",
+    "download_command": "gh run download 26516715144 --repo claygeo/eivra --dir ./paper-artifacts"
   },
   "artifact_contract": {
     "repository": "claygeo/eivra",
@@ -36,13 +36,13 @@
   },
   "workflow_mode": {
     "requested_dry_run": false,
-    "effective_dry_run": true,
-    "write_enabled": false,
-    "mode_reason": "missing SUPABASE_SERVICE_ROLE_KEY; read-only artifacts only"
+    "effective_dry_run": false,
+    "write_enabled": true,
+    "mode_reason": "service role secret configured; persisting snapshot rows"
   },
   "agent_edge_proof": {
     "schema_version": "1",
-    "generated_at": "2026-05-27T14:08:40.367Z",
+    "generated_at": "2026-05-27T14:14:47.919Z",
     "status": "collecting",
     "status_label": "Collecting",
     "message": "Canonical agent-edge rules are being captured, but no live paper trades have resolved in the proof window yet.",
@@ -82,7 +82,7 @@
       ]
     },
     "latest_snapshot_date": "2026-05-27",
-    "latest_captured_at": "2026-05-27T14:08:08.044Z",
+    "latest_captured_at": "2026-05-27T14:14:13.538Z",
     "best_resolved_rule": null,
     "best_open_ev_rule": {
       "strategy_id": "sage-live-edge-10",
@@ -108,7 +108,7 @@
       "open_exposure_usd": 500,
       "open_expected_pnl_usd": 654.71,
       "latest_snapshot_date": "2026-05-27",
-      "latest_captured_at": "2026-05-27T14:08:08.044Z",
+      "latest_captured_at": "2026-05-27T14:14:13.538Z",
       "proof_quality": {
         "evidence_grade": "none",
         "evidence_grade_label": "No sample",
@@ -199,7 +199,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -289,7 +289,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 551.42,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -379,7 +379,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 223.7,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -469,7 +469,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 215.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -559,7 +559,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 164.21,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -649,7 +649,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 161.2,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -739,7 +739,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 125.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -829,7 +829,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 109.88,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -919,7 +919,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1009,7 +1009,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1099,7 +1099,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1189,7 +1189,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1259,7 +1259,7 @@
   },
   "agent_edge_watchlist": {
     "schema_version": "1",
-    "generated_at": "2026-05-27T14:08:08.044Z",
+    "generated_at": "2026-05-27T14:14:13.538Z",
     "status": "watching",
     "status_label": "Watching",
     "message": "Canonical agent-edge live signals are being tracked for paper-only tradability.",
@@ -1323,7 +1323,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -1347,7 +1347,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.17,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1371,7 +1371,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -1395,7 +1395,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 218.41,
-            "age_days": 6.53
+            "age_days": 6.54
           },
           {
             "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -1465,7 +1465,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1489,7 +1489,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -1513,7 +1513,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 218.41,
-            "age_days": 6.53
+            "age_days": 6.54
           },
           {
             "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -1560,8 +1560,8 @@
             "created_at": "2026-05-21T01:18:21.232109+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 76.52,
-            "age_days": 6.53
+            "days_until_close": 76.51,
+            "age_days": 6.54
           }
         ]
       },
@@ -1607,7 +1607,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -1655,7 +1655,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 24.41,
-            "age_days": 2.07
+            "age_days": 2.08
           }
         ]
       },
@@ -1701,7 +1701,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -1749,7 +1749,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 24.41,
-            "age_days": 2.07
+            "age_days": 2.08
           }
         ]
       },
@@ -1795,7 +1795,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -1819,7 +1819,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 24.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "c84bdaf4-95c1-4ae9-9519-f46bf41ebf15",
@@ -1842,8 +1842,8 @@
             "created_at": "2026-05-21T01:19:06.712543+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 76.52,
-            "age_days": 6.53
+            "days_until_close": 76.51,
+            "age_days": 6.54
           },
           {
             "prediction_id": "3b2ed46c-2617-467d-9fe8-b6966e916d21",
@@ -1937,7 +1937,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "f696fbff-17ca-4605-b246-1ae3a6a5c59d",
@@ -1961,7 +1961,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 218.41,
-            "age_days": 6.53
+            "age_days": 6.54
           },
           {
             "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -2079,7 +2079,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "f94651f5-5991-4107-8745-d832f9a274ae",
@@ -2103,7 +2103,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 21.45,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "66c5f32e-1350-4579-bdd3-26786202b70a",
@@ -2126,8 +2126,8 @@
             "created_at": "2026-05-21T01:18:38.533236+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 76.52,
-            "age_days": 6.53
+            "days_until_close": 76.51,
+            "age_days": 6.54
           },
           {
             "prediction_id": "c702a100-4957-4a9f-a482-1870b6f79fce",
@@ -2221,7 +2221,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -2293,7 +2293,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "51535f43-ebf3-4b4d-8412-0d0e6531b44d",
@@ -2316,8 +2316,8 @@
             "created_at": "2026-05-21T01:18:30.485099+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 76.52,
-            "age_days": 6.53
+            "days_until_close": 76.51,
+            "age_days": 6.54
           }
         ]
       },
@@ -2409,7 +2409,7 @@
   },
   "agent_edge_runway": {
     "schema_version": "1",
-    "generated_at": "2026-05-27T14:08:08.044Z",
+    "generated_at": "2026-05-27T14:14:13.538Z",
     "status": "collecting",
     "status_label": "Collecting",
     "message": "Canonical agent-edge rules are collecting open paper tickets, but no rule can reach the proof sample from current opens yet.",
@@ -2483,7 +2483,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "f696fbff-17ca-4605-b246-1ae3a6a5c59d",
@@ -2507,7 +2507,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 218.41,
-            "age_days": 6.53
+            "age_days": 6.54
           },
           {
             "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -2630,7 +2630,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -2654,7 +2654,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.17,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -2678,7 +2678,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -2702,7 +2702,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 218.41,
-            "age_days": 6.53
+            "age_days": 6.54
           },
           {
             "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -2777,7 +2777,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -2801,7 +2801,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -2825,7 +2825,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 218.41,
-            "age_days": 6.53
+            "age_days": 6.54
           },
           {
             "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -2872,8 +2872,8 @@
             "created_at": "2026-05-21T01:18:21.232109+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 76.52,
-            "age_days": 6.53
+            "days_until_close": 76.51,
+            "age_days": 6.54
           }
         ]
       },
@@ -2924,7 +2924,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -2996,7 +2996,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "51535f43-ebf3-4b4d-8412-0d0e6531b44d",
@@ -3019,8 +3019,8 @@
             "created_at": "2026-05-21T01:18:30.485099+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 76.52,
-            "age_days": 6.53
+            "days_until_close": 76.51,
+            "age_days": 6.54
           }
         ]
       },
@@ -3071,7 +3071,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "f94651f5-5991-4107-8745-d832f9a274ae",
@@ -3095,7 +3095,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 21.45,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "66c5f32e-1350-4579-bdd3-26786202b70a",
@@ -3118,8 +3118,8 @@
             "created_at": "2026-05-21T01:18:38.533236+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 76.52,
-            "age_days": 6.53
+            "days_until_close": 76.51,
+            "age_days": 6.54
           },
           {
             "prediction_id": "c702a100-4957-4a9f-a482-1870b6f79fce",
@@ -3218,7 +3218,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -3242,7 +3242,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 24.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "c84bdaf4-95c1-4ae9-9519-f46bf41ebf15",
@@ -3265,8 +3265,8 @@
             "created_at": "2026-05-21T01:19:06.712543+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 76.52,
-            "age_days": 6.53
+            "days_until_close": 76.51,
+            "age_days": 6.54
           },
           {
             "prediction_id": "3b2ed46c-2617-467d-9fe8-b6966e916d21",
@@ -3365,7 +3365,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -3413,7 +3413,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 24.41,
-            "age_days": 2.07
+            "age_days": 2.08
           }
         ]
       },
@@ -3464,7 +3464,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 2.07
+            "age_days": 2.08
           },
           {
             "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -3512,7 +3512,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 24.41,
-            "age_days": 2.07
+            "age_days": 2.08
           }
         ]
       },
@@ -3624,7 +3624,7 @@
   },
   "agent_edge_trade_ledger": {
     "schema_version": "1",
-    "generated_at": "2026-05-27T14:08:08.044Z",
+    "generated_at": "2026-05-27T14:14:13.538Z",
     "status": "collecting",
     "status_label": "Collecting",
     "message": "Canonical agent-edge rules have not resolved paper tickets yet.",
@@ -3980,10 +3980,10 @@
   },
   "artifact_audit": {
     "verdict": "pass",
-    "checked_at": "2026-05-27T14:08:40.369Z",
+    "checked_at": "2026-05-27T14:14:47.920Z",
     "exit_code": 0,
     "artifact_count": 1,
-    "discovered_artifact_count": 21,
+    "discovered_artifact_count": 22,
     "selected_artifact_paths": [
       "/home/runner/work/eivra/eivra/paper-snapshot-rows.json"
     ],
@@ -4004,140 +4004,147 @@
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26498526536/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T07:56:37.014Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26498986114/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:06:29.751Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26499296182/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:13:12.093Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26499440155/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:16:14.940Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26499695094/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:21:51.079Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26500821320/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:45:36.076Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26501344942/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:56:22.838Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26502259113/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:15:01.113Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26502881869/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:28:12.452Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26503397669/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:39:00.200Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26503633424/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:44:01.610Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26503931612/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:50:18.647Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26504250559/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:57:07.916Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26504533944/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T10:03:02.020Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26506080109/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T10:37:09.417Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26506750796/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T10:52:09.980Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26507536525/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T11:09:36.928Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26508197745/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T11:24:15.628Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26514551511/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T13:36:27.894Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26515522090/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T13:53:44.630Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T14:08:08.044Z"
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
+      },
+      {
+        "snapshot_date": "2026-05-27",
+        "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26516360625/paper-snapshot-rows.json",
+        "ignored_generated_at": "2026-05-27T14:08:08.044Z",
+        "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
+        "selected_generated_at": "2026-05-27T14:14:13.538Z"
       }
     ],
     "sources": [
@@ -4151,7 +4158,7 @@
       {
         "path": "/home/runner/work/eivra/eivra/paper-snapshot-result.json",
         "source": "live",
-        "generated_at": "2026-05-27T14:08:08.044Z",
+        "generated_at": "2026-05-27T14:14:13.538Z",
         "snapshot_date": "2026-05-27",
         "resolution_watch": {
           "status": "overdue_resolution",
@@ -4302,7 +4309,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 3.07,
-              "age_days": 1.57
+              "age_days": 1.58
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -4321,7 +4328,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.17,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -4340,7 +4347,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.17,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -4397,13 +4404,13 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             }
           ]
         },
         "strategy_registry": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T14:08:08.044Z",
+          "generated_at": "2026-05-27T14:14:13.538Z",
           "paper_only": true,
           "real_money_execution_allowed": false,
           "config": {
@@ -4812,7 +4819,7 @@
         },
         "would_trade_today": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T14:08:08.044Z",
+          "generated_at": "2026-05-27T14:14:13.538Z",
           "status": "blocked",
           "status_label": "Blocked",
           "message": "1 global live paper market need resolution review before any would-trade watchlist is trusted.",
@@ -4861,7 +4868,7 @@
                 "close_status": "closing_next_7d",
                 "tradability_status": "tradable",
                 "days_until_close": 4.41,
-                "age_days": 6.55
+                "age_days": 6.56
               },
               {
                 "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -4885,7 +4892,7 @@
                 "close_status": "future",
                 "tradability_status": "tradable",
                 "days_until_close": 34.41,
-                "age_days": 6.55
+                "age_days": 6.56
               },
               {
                 "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -4909,7 +4916,7 @@
                 "close_status": "future",
                 "tradability_status": "tradable",
                 "days_until_close": 34.41,
-                "age_days": 6.55
+                "age_days": 6.56
               },
               {
                 "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -4933,7 +4940,7 @@
                 "close_status": "future",
                 "tradability_status": "tradable",
                 "days_until_close": 218.41,
-                "age_days": 6.53
+                "age_days": 6.54
               },
               {
                 "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -5038,7 +5045,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -5062,7 +5069,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.17,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5086,7 +5093,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5110,7 +5117,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -5180,7 +5187,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5204,7 +5211,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -5228,7 +5235,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5252,7 +5259,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -5322,7 +5329,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5346,7 +5353,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -5370,7 +5377,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5394,7 +5401,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -5464,7 +5471,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5488,7 +5495,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5512,7 +5519,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -5559,8 +5566,8 @@
                   "created_at": "2026-05-21T01:18:21.232109+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 }
               ],
               "paper_only": true,
@@ -5606,7 +5613,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -5702,7 +5709,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 }
               ],
               "paper_only": true,
@@ -5748,7 +5755,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -5772,7 +5779,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5796,7 +5803,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -5820,7 +5827,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "2beccc28-c763-4f47-836e-18aac6183b89",
@@ -5844,7 +5851,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 }
               ],
               "paper_only": true,
@@ -5890,7 +5897,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -5938,7 +5945,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 }
               ],
               "paper_only": true,
@@ -5984,7 +5991,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -6032,7 +6039,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 }
               ],
               "paper_only": true,
@@ -6042,7 +6049,7 @@
         },
         "market_exposure_digest": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T14:08:08.044Z",
+          "generated_at": "2026-05-27T14:14:13.538Z",
           "status": "observing",
           "status_label": "Observing",
           "message": "Open live paper exposure is grouped by market so repeated agent bets are visible before review.",
@@ -6924,7 +6931,7 @@
         },
         "agent_edge_watchlist": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T14:08:08.044Z",
+          "generated_at": "2026-05-27T14:14:13.538Z",
           "status": "watching",
           "status_label": "Watching",
           "message": "Canonical agent-edge live signals are being tracked for paper-only tradability.",
@@ -6988,7 +6995,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -7012,7 +7019,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.17,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -7036,7 +7043,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -7060,7 +7067,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -7130,7 +7137,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -7154,7 +7161,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -7178,7 +7185,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -7225,8 +7232,8 @@
                   "created_at": "2026-05-21T01:18:21.232109+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 }
               ]
             },
@@ -7272,7 +7279,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -7320,7 +7327,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 }
               ]
             },
@@ -7366,7 +7373,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -7414,7 +7421,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 }
               ]
             },
@@ -7460,7 +7467,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -7484,7 +7491,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "c84bdaf4-95c1-4ae9-9519-f46bf41ebf15",
@@ -7507,8 +7514,8 @@
                   "created_at": "2026-05-21T01:19:06.712543+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "3b2ed46c-2617-467d-9fe8-b6966e916d21",
@@ -7602,7 +7609,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "f696fbff-17ca-4605-b246-1ae3a6a5c59d",
@@ -7626,7 +7633,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -7744,7 +7751,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "f94651f5-5991-4107-8745-d832f9a274ae",
@@ -7768,7 +7775,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 21.45,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "66c5f32e-1350-4579-bdd3-26786202b70a",
@@ -7791,8 +7798,8 @@
                   "created_at": "2026-05-21T01:18:38.533236+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "c702a100-4957-4a9f-a482-1870b6f79fce",
@@ -7886,7 +7893,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -7958,7 +7965,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "51535f43-ebf3-4b4d-8412-0d0e6531b44d",
@@ -7981,8 +7988,8 @@
                   "created_at": "2026-05-21T01:18:30.485099+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 }
               ]
             },
@@ -8074,7 +8081,7 @@
         },
         "agent_edge_runway": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T14:08:08.044Z",
+          "generated_at": "2026-05-27T14:14:13.538Z",
           "status": "collecting",
           "status_label": "Collecting",
           "message": "Canonical agent-edge rules are collecting open paper tickets, but no rule can reach the proof sample from current opens yet.",
@@ -8148,7 +8155,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "f696fbff-17ca-4605-b246-1ae3a6a5c59d",
@@ -8172,7 +8179,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -8295,7 +8302,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -8319,7 +8326,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.17,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -8343,7 +8350,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -8367,7 +8374,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -8442,7 +8449,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -8466,7 +8473,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -8490,7 +8497,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 218.41,
-                  "age_days": 6.53
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -8537,8 +8544,8 @@
                   "created_at": "2026-05-21T01:18:21.232109+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 }
               ]
             },
@@ -8589,7 +8596,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 34.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -8661,7 +8668,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "51535f43-ebf3-4b4d-8412-0d0e6531b44d",
@@ -8684,8 +8691,8 @@
                   "created_at": "2026-05-21T01:18:30.485099+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 }
               ]
             },
@@ -8736,7 +8743,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "f94651f5-5991-4107-8745-d832f9a274ae",
@@ -8760,7 +8767,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 21.45,
-                  "age_days": 6.55
+                  "age_days": 6.56
                 },
                 {
                   "prediction_id": "66c5f32e-1350-4579-bdd3-26786202b70a",
@@ -8783,8 +8790,8 @@
                   "created_at": "2026-05-21T01:18:38.533236+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "c702a100-4957-4a9f-a482-1870b6f79fce",
@@ -8883,7 +8890,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -8907,7 +8914,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "c84bdaf4-95c1-4ae9-9519-f46bf41ebf15",
@@ -8930,8 +8937,8 @@
                   "created_at": "2026-05-21T01:19:06.712543+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.52,
-                  "age_days": 6.53
+                  "days_until_close": 76.51,
+                  "age_days": 6.54
                 },
                 {
                   "prediction_id": "3b2ed46c-2617-467d-9fe8-b6966e916d21",
@@ -9030,7 +9037,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -9078,7 +9085,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 }
               ]
             },
@@ -9129,7 +9136,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 },
                 {
                   "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -9177,7 +9184,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 24.41,
-                  "age_days": 2.07
+                  "age_days": 2.08
                 }
               ]
             },
@@ -9289,7 +9296,7 @@
         },
         "agent_edge_trade_ledger": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T14:08:08.044Z",
+          "generated_at": "2026-05-27T14:14:13.538Z",
           "status": "collecting",
           "status_label": "Collecting",
           "message": "Canonical agent-edge rules have not resolved paper tickets yet.",
@@ -9655,11 +9662,11 @@
     "real_money_execution_allowed": false,
     "workflow_mode": {
       "requested_dry_run": false,
-      "effective_dry_run": true,
-      "write_enabled": false,
-      "mode_reason": "missing SUPABASE_SERVICE_ROLE_KEY; read-only artifacts only"
+      "effective_dry_run": false,
+      "write_enabled": true,
+      "mode_reason": "service role secret configured; persisting snapshot rows"
     },
-    "latest_captured_at": "2026-05-27T14:08:08.044Z",
+    "latest_captured_at": "2026-05-27T14:14:13.538Z",
     "proof_summary": {
       "status": "collecting",
       "status_label": "Collecting",
@@ -9899,7 +9906,7 @@
     },
     "capital_review_packet": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T14:08:40.368Z",
+      "generated_at": "2026-05-27T14:14:47.920Z",
       "status": "not_reviewable",
       "status_label": "Not reviewable",
       "decision": "do_not_allocate_capital",
@@ -9911,14 +9918,13 @@
       "capital_review_allowed": false,
       "workflow_mode": {
         "requested_dry_run": false,
-        "effective_dry_run": true,
-        "write_enabled": false,
-        "mode_reason": "missing SUPABASE_SERVICE_ROLE_KEY; read-only artifacts only"
+        "effective_dry_run": false,
+        "write_enabled": true,
+        "mode_reason": "service role secret configured; persisting snapshot rows"
       },
       "earliest_capital_review_at": "2026-06-25T05:22:00.000Z",
       "earliest_capital_review_date": "2026-06-25",
       "blockers": [
-        "Supabase snapshot writes are disabled: missing SUPABASE_SERVICE_ROLE_KEY; read-only artifacts only.",
         "29 more persisted capture days needed.",
         "30 more resolved live trades needed.",
         "Resolution hygiene: Overdue or unknown-close open markets must be checked before treating open EV as credible.",
@@ -10131,7 +10137,7 @@
       "cron": "22 5 * * *",
       "scheduled_time_utc": "05:22",
       "stale_after_hours": 36,
-      "latest_captured_at": "2026-05-27T14:08:08.044Z",
+      "latest_captured_at": "2026-05-27T14:14:13.538Z",
       "previous_expected_capture_at": "2026-05-27T05:22:00.000Z",
       "next_expected_capture_at": "2026-05-28T05:22:00.000Z",
       "status": "fresh",
@@ -10201,7 +10207,7 @@
             "sage-live-edge-10",
             "sports-live-edge-10"
           ],
-          "latest_captured_at": "2026-05-27T14:08:08.044Z"
+          "latest_captured_at": "2026-05-27T14:14:13.538Z"
         }
       ]
     },
@@ -10354,7 +10360,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 3.07,
-          "age_days": 1.57
+          "age_days": 1.58
         },
         {
           "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -10373,7 +10379,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.17,
-          "age_days": 2.07
+          "age_days": 2.08
         },
         {
           "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -10392,7 +10398,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.17,
-          "age_days": 2.07
+          "age_days": 2.08
         },
         {
           "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -10449,13 +10455,13 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.41,
-          "age_days": 6.55
+          "age_days": 6.56
         }
       ]
     },
     "strategy_registry": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T14:08:08.044Z",
+      "generated_at": "2026-05-27T14:14:13.538Z",
       "paper_only": true,
       "real_money_execution_allowed": false,
       "config": {
@@ -10864,7 +10870,7 @@
     },
     "would_trade_today": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T14:08:08.044Z",
+      "generated_at": "2026-05-27T14:14:13.538Z",
       "status": "blocked",
       "status_label": "Blocked",
       "message": "1 global live paper market need resolution review before any would-trade watchlist is trusted.",
@@ -10913,7 +10919,7 @@
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
             "days_until_close": 4.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -10937,7 +10943,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -10961,7 +10967,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 34.41,
-            "age_days": 6.55
+            "age_days": 6.56
           },
           {
             "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -10985,7 +10991,7 @@
             "close_status": "future",
             "tradability_status": "tradable",
             "days_until_close": 218.41,
-            "age_days": 6.53
+            "age_days": 6.54
           },
           {
             "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -11090,7 +11096,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -11114,7 +11120,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.17,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -11138,7 +11144,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -11162,7 +11168,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -11232,7 +11238,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -11256,7 +11262,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -11280,7 +11286,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -11304,7 +11310,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -11374,7 +11380,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -11398,7 +11404,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -11422,7 +11428,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -11446,7 +11452,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -11516,7 +11522,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -11540,7 +11546,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -11564,7 +11570,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -11611,8 +11617,8 @@
               "created_at": "2026-05-21T01:18:21.232109+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             }
           ],
           "paper_only": true,
@@ -11658,7 +11664,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -11754,7 +11760,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             }
           ],
           "paper_only": true,
@@ -11800,7 +11806,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -11824,7 +11830,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -11848,7 +11854,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -11872,7 +11878,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "2beccc28-c763-4f47-836e-18aac6183b89",
@@ -11896,7 +11902,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             }
           ],
           "paper_only": true,
@@ -11942,7 +11948,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -11990,7 +11996,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             }
           ],
           "paper_only": true,
@@ -12036,7 +12042,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -12084,7 +12090,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             }
           ],
           "paper_only": true,
@@ -12094,7 +12100,7 @@
     },
     "market_exposure_digest": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T14:08:08.044Z",
+      "generated_at": "2026-05-27T14:14:13.538Z",
       "status": "observing",
       "status_label": "Observing",
       "message": "Open live paper exposure is grouped by market so repeated agent bets are visible before review.",
@@ -12976,7 +12982,7 @@
     },
     "agent_edge_watchlist": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T14:08:08.044Z",
+      "generated_at": "2026-05-27T14:14:13.538Z",
       "status": "watching",
       "status_label": "Watching",
       "message": "Canonical agent-edge live signals are being tracked for paper-only tradability.",
@@ -13040,7 +13046,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -13064,7 +13070,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.17,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -13088,7 +13094,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -13112,7 +13118,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -13182,7 +13188,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -13206,7 +13212,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -13230,7 +13236,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -13277,8 +13283,8 @@
               "created_at": "2026-05-21T01:18:21.232109+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             }
           ]
         },
@@ -13324,7 +13330,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -13372,7 +13378,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             }
           ]
         },
@@ -13418,7 +13424,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -13466,7 +13472,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             }
           ]
         },
@@ -13512,7 +13518,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -13536,7 +13542,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "c84bdaf4-95c1-4ae9-9519-f46bf41ebf15",
@@ -13559,8 +13565,8 @@
               "created_at": "2026-05-21T01:19:06.712543+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             },
             {
               "prediction_id": "3b2ed46c-2617-467d-9fe8-b6966e916d21",
@@ -13654,7 +13660,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "f696fbff-17ca-4605-b246-1ae3a6a5c59d",
@@ -13678,7 +13684,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -13796,7 +13802,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "f94651f5-5991-4107-8745-d832f9a274ae",
@@ -13820,7 +13826,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 21.45,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "66c5f32e-1350-4579-bdd3-26786202b70a",
@@ -13843,8 +13849,8 @@
               "created_at": "2026-05-21T01:18:38.533236+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             },
             {
               "prediction_id": "c702a100-4957-4a9f-a482-1870b6f79fce",
@@ -13938,7 +13944,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -14010,7 +14016,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "51535f43-ebf3-4b4d-8412-0d0e6531b44d",
@@ -14033,8 +14039,8 @@
               "created_at": "2026-05-21T01:18:30.485099+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             }
           ]
         },
@@ -14126,7 +14132,7 @@
     },
     "agent_edge_runway": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T14:08:08.044Z",
+      "generated_at": "2026-05-27T14:14:13.538Z",
       "status": "collecting",
       "status_label": "Collecting",
       "message": "Canonical agent-edge rules are collecting open paper tickets, but no rule can reach the proof sample from current opens yet.",
@@ -14200,7 +14206,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "f696fbff-17ca-4605-b246-1ae3a6a5c59d",
@@ -14224,7 +14230,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -14347,7 +14353,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -14371,7 +14377,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.17,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -14395,7 +14401,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -14419,7 +14425,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -14494,7 +14500,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -14518,7 +14524,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -14542,7 +14548,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 218.41,
-              "age_days": 6.53
+              "age_days": 6.54
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -14589,8 +14595,8 @@
               "created_at": "2026-05-21T01:18:21.232109+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             }
           ]
         },
@@ -14641,7 +14647,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 34.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -14713,7 +14719,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "51535f43-ebf3-4b4d-8412-0d0e6531b44d",
@@ -14736,8 +14742,8 @@
               "created_at": "2026-05-21T01:18:30.485099+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             }
           ]
         },
@@ -14788,7 +14794,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "f94651f5-5991-4107-8745-d832f9a274ae",
@@ -14812,7 +14818,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 21.45,
-              "age_days": 6.55
+              "age_days": 6.56
             },
             {
               "prediction_id": "66c5f32e-1350-4579-bdd3-26786202b70a",
@@ -14835,8 +14841,8 @@
               "created_at": "2026-05-21T01:18:38.533236+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             },
             {
               "prediction_id": "c702a100-4957-4a9f-a482-1870b6f79fce",
@@ -14935,7 +14941,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -14959,7 +14965,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "c84bdaf4-95c1-4ae9-9519-f46bf41ebf15",
@@ -14982,8 +14988,8 @@
               "created_at": "2026-05-21T01:19:06.712543+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.52,
-              "age_days": 6.53
+              "days_until_close": 76.51,
+              "age_days": 6.54
             },
             {
               "prediction_id": "3b2ed46c-2617-467d-9fe8-b6966e916d21",
@@ -15082,7 +15088,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -15130,7 +15136,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             }
           ]
         },
@@ -15181,7 +15187,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.41,
-              "age_days": 2.07
+              "age_days": 2.08
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -15229,7 +15235,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 24.41,
-              "age_days": 2.07
+              "age_days": 2.08
             }
           ]
         },
@@ -15341,7 +15347,7 @@
     },
     "agent_edge_trade_ledger": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T14:08:08.044Z",
+      "generated_at": "2026-05-27T14:14:13.538Z",
       "status": "collecting",
       "status_label": "Collecting",
       "message": "Canonical agent-edge rules have not resolved paper tickets yet.",
@@ -15697,7 +15703,7 @@
     },
     "agent_edge_proof": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T14:08:40.367Z",
+      "generated_at": "2026-05-27T14:14:47.919Z",
       "status": "collecting",
       "status_label": "Collecting",
       "message": "Canonical agent-edge rules are being captured, but no live paper trades have resolved in the proof window yet.",
@@ -15737,7 +15743,7 @@
         ]
       },
       "latest_snapshot_date": "2026-05-27",
-      "latest_captured_at": "2026-05-27T14:08:08.044Z",
+      "latest_captured_at": "2026-05-27T14:14:13.538Z",
       "best_resolved_rule": null,
       "best_open_ev_rule": {
         "strategy_id": "sage-live-edge-10",
@@ -15763,7 +15769,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -15854,7 +15860,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 654.71,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -15944,7 +15950,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 551.42,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16034,7 +16040,7 @@
           "open_exposure_usd": 300,
           "open_expected_pnl_usd": 223.7,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16124,7 +16130,7 @@
           "open_exposure_usd": 300,
           "open_expected_pnl_usd": 215.04,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16214,7 +16220,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 164.21,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16304,7 +16310,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 161.2,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16394,7 +16400,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 125.04,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16484,7 +16490,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 109.88,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16574,7 +16580,7 @@
           "open_exposure_usd": 0,
           "open_expected_pnl_usd": 0,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16664,7 +16670,7 @@
           "open_exposure_usd": 0,
           "open_expected_pnl_usd": 0,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16754,7 +16760,7 @@
           "open_exposure_usd": 0,
           "open_expected_pnl_usd": 0,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16844,7 +16850,7 @@
           "open_exposure_usd": 0,
           "open_expected_pnl_usd": 0,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T14:08:08.044Z",
+          "latest_captured_at": "2026-05-27T14:14:13.538Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -16937,7 +16943,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 551.42,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -16990,7 +16996,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17043,7 +17049,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 109.88,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17096,7 +17102,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 161.2,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17149,7 +17155,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 125.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17202,7 +17208,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 223.7,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17255,7 +17261,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17308,7 +17314,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17361,7 +17367,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 164.21,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17414,7 +17420,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 215.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17467,7 +17473,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -17520,7 +17526,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T14:08:08.044Z",
+        "latest_captured_at": "2026-05-27T14:14:13.538Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
