@@ -10,7 +10,7 @@ export const revalidate = 0;
 export const runtime = "nodejs";
 
 const MAX_LIMIT = 500;
-const DEFAULT_LIMIT = 96;
+const DEFAULT_LIMIT = 360;
 
 function parseLimit(request: NextRequest): number {
   const raw = request.nextUrl.searchParams.get("limit");

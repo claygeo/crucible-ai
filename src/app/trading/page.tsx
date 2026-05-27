@@ -43,7 +43,9 @@ function sideClass(side: "YES" | "NO") {
 
 function proofStatusClass(status: string) {
   if (status === "candidate") return "bg-positive/10 text-positive";
-  if (status === "not_qualified") return "bg-rose-400/10 text-rose-400";
+  if (status === "not_qualified" || status === "stale") {
+    return "bg-rose-400/10 text-rose-400";
+  }
   if (status === "control_only") return "bg-text-muted/10 text-text-muted";
   return "bg-warn/10 text-warn";
 }
@@ -93,7 +95,7 @@ export default async function TradingPage({
   const controls = parseTradingControls(await searchParams);
   const [snapshot, persisted] = await Promise.all([
     getTradingSnapshot(controls),
-    loadPaperTradingSnapshotHistory(96),
+    loadPaperTradingSnapshotHistory(360),
   ]);
   const leader = snapshot.agent_summaries[0];
   const liveResolved =
@@ -114,7 +116,7 @@ export default async function TradingPage({
   );
   const selectedQuery = tradingControlsToQuery(snapshot.controls);
   const jsonHref = `/api/trading.json?${selectedQuery}`;
-  const snapshotJsonHref = "/api/trading-snapshots?limit=96";
+  const snapshotJsonHref = "/api/trading-snapshots?limit=360";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
   ).sort((a, b) => a - b);
@@ -601,54 +603,63 @@ export default async function TradingPage({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-subtle/60">
-                    {persistedRollups.map((rollup) => (
-                      <tr key={rollup.strategy_id}>
-                        <td className="py-3 pr-3">
-                          <div className="text-sm text-text-primary">
-                            {rollup.strategy_label}
-                          </div>
-                          <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                            latest {rollup.latest_snapshot_date ?? "-"} /{" "}
-                            {rollup.source} / {rollup.sample.replace("_", " ")}
-                          </div>
-                        </td>
-                        <td className="py-3 px-3 mono text-right text-text-secondary">
-                          {int(rollup.captured_days)}/30
-                          {rollup.days_remaining_to_30 > 0 ? (
-                            <span className="text-text-muted">
-                              {" "}
-                              ({int(rollup.days_remaining_to_30)} left)
+                    {persistedRollups.map((rollup) => {
+                      const durableGate = rollup.durable_proof_gate;
+                      return (
+                        <tr key={rollup.strategy_id}>
+                          <td className="py-3 pr-3">
+                            <div className="text-sm text-text-primary">
+                              {rollup.strategy_label}
+                            </div>
+                            <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                              latest {rollup.latest_snapshot_date ?? "-"} /{" "}
+                              {rollup.source} / {rollup.sample.replace("_", " ")}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {int(durableGate.captured_days)}/
+                            {int(durableGate.required_captured_days)}
+                            {rollup.days_remaining_to_30 > 0 ? (
+                              <span className="text-text-muted">
+                                {" "}
+                                ({int(rollup.days_remaining_to_30)} left)
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {int(rollup.captured_rows)}
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <span
+                              className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofStatusClass(durableGate.status)}`}
+                            >
+                              {durableGate.status_label}
                             </span>
-                          ) : null}
-                        </td>
-                        <td className="py-3 px-3 mono text-right text-text-secondary">
-                          {int(rollup.captured_rows)}
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <span
-                            className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofStatusClass(rollup.proof_status)}`}
+                            {durableGate.blockers[0] ? (
+                              <div className="mt-1 mono text-[10px] text-text-muted normal-case tracking-normal">
+                                {durableGate.blockers[0]}
+                              </div>
+                            ) : null}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {int(durableGate.resolved_trades)}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-warn">
+                            {int(rollup.latest_skipped_trades)}
+                          </td>
+                          <td
+                            className={`py-3 px-3 mono text-right ${pnlClass(
+                              durableGate.resolved_net_pnl_usd
+                            )}`}
                           >
-                            {rollup.proof_status_label}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 mono text-right text-text-secondary">
-                          {int(rollup.latest_resolved_trades)}
-                        </td>
-                        <td className="py-3 px-3 mono text-right text-warn">
-                          {int(rollup.latest_skipped_trades)}
-                        </td>
-                        <td
-                          className={`py-3 px-3 mono text-right ${pnlClass(
-                            rollup.latest_resolved_net_pnl_usd
-                          )}`}
-                        >
-                          {dollars(rollup.latest_resolved_net_pnl_usd, 0)}
-                        </td>
-                        <td className="py-3 pl-3 mono text-right text-text-secondary">
-                          {dollars(rollup.latest_open_exposure_usd, 0)}
-                        </td>
-                      </tr>
-                    ))}
+                            {dollars(durableGate.resolved_net_pnl_usd, 0)}
+                          </td>
+                          <td className="py-3 pl-3 mono text-right text-text-secondary">
+                            {dollars(rollup.latest_open_exposure_usd, 0)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
