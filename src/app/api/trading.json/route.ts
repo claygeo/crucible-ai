@@ -9,6 +9,7 @@ import {
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
 import { buildPaperTradingLabStatus } from "@/lib/trading-lab-status";
+import { buildPaperTradingLiquidityReview } from "@/lib/trading-liquidity-review";
 import { buildResolutionCatchupPreview } from "@/lib/trading-resolution-catchup";
 import {
   buildResolutionReviewQueue,
@@ -76,6 +77,7 @@ export async function GET(request: Request) {
     persistedRows: persisted.agent_edge_proof_matrix,
     publishedArtifactProof,
   });
+  const liquidityReview = buildPaperTradingLiquidityReview(snapshot);
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -126,6 +128,7 @@ export async function GET(request: Request) {
       paper_write_readiness: writeReadiness,
       paper_evidence_sla: evidenceSla,
       paper_agent_edge_proof: agentEdgeProof,
+      paper_liquidity_review: liquidityReview,
       persistence: {
         status: persisted.status,
         message: persisted.message,
@@ -148,6 +151,7 @@ export async function GET(request: Request) {
         lab_status: labStatus,
         agent_edge_proof: agentEdgeProof,
         agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
+        liquidity_review: liquidityReview,
       },
       persisted_registry_sync: registrySync,
       description:

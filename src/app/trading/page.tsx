@@ -19,6 +19,7 @@ import {
   buildResolutionReviewQueue,
   enrichResolutionReviewQueueWithProviderResolution,
 } from "@/lib/trading-resolution-review";
+import { buildPaperTradingLiquidityReview } from "@/lib/trading-liquidity-review";
 import { buildPaperTradingProofAudit } from "@/lib/trading-proof-audit";
 import { dollars, int, pct, prob, relativeTime, signed } from "@/lib/format";
 import {
@@ -387,6 +388,7 @@ export default async function TradingPage({
     selectedAgentId: snapshot.controls.agent_id,
     selectedMinEdge: snapshot.controls.min_edge,
   });
+  const liquidityReview = buildPaperTradingLiquidityReview(snapshot);
   const proofAudit = buildPaperTradingProofAudit({
     snapshot,
     persisted,
@@ -470,6 +472,7 @@ export default async function TradingPage({
   const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
   const agentEdgeEvidenceJsonHref = `/api/trading-agent-edge-evidence?${selectedQuery}`;
   const agentEdgeDossierJsonHref = `/api/trading-agent-edge-dossier?${selectedQuery}`;
+  const liquidityReviewJsonHref = `/api/trading-liquidity-review?${selectedQuery}`;
   const agentEdgeTradesJsonHref = `/api/trading-agent-edge-trades?${selectedQuery}`;
   const agentEdgeWatchlistJsonHref = `/api/trading-agent-edge-watchlist?${selectedQuery}`;
   const agentEdgeRunwayJsonHref = `/api/trading-agent-edge-runway?${selectedQuery}`;
@@ -3374,6 +3377,150 @@ export default async function TradingPage({
               </table>
             </div>
           )}
+        </section>
+
+        <section className="panel px-5 py-5 flex flex-col gap-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="heading text-base text-text-primary">
+                Liquidity / slippage review
+              </h2>
+              <p className="text-xs text-text-muted mt-1">
+                Source-level execution quality is a capital-review blocker, not
+                paper P&amp;L.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href={liquidityReviewJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                liquidity json
+              </Link>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${readinessStatusClass(
+                  liquidityReview.status
+                )}`}
+              >
+                {liquidityReview.status_label}
+              </span>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Sources
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(liquidityReview.source_count)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Blocked
+              </div>
+              <div className="heading text-2xl text-warn mt-1">
+                {int(liquidityReview.blocked_source_count)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Open signals
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(liquidityReview.live_open_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Open risk
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {dollars(liquidityReview.open_exposure_usd, 0)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Recent resolved
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(liquidityReview.recent_resolved_trades)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Adj. P&amp;L
+              </div>
+              <div className="heading text-2xl text-warn mt-1">missing</div>
+            </div>
+          </div>
+          {liquidityReview.sources.length === 0 ? (
+            <div className="text-sm text-text-muted mono">
+              [no live source activity needs liquidity review yet]
+            </div>
+          ) : (
+            <div className="overflow-x-auto border-t border-border-subtle pt-4">
+              <table
+                className="w-full"
+                aria-label="Source liquidity and slippage review"
+              >
+                <thead>
+                  <tr className="border-b border-border-subtle text-text-muted">
+                    <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Source</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Open</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Exposure</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Resolved</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Fields</th>
+                    <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle/60">
+                  {liquidityReview.sources.map((source) => (
+                    <tr key={source.source_id}>
+                      <td className="py-3 pr-3">
+                        <div className="text-sm text-text-primary">
+                          {source.source_label}
+                        </div>
+                        <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                          {source.missing_fields.length} required fields missing
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {int(source.live_open_signals)} /{" "}
+                        {int(source.unique_open_markets)} markets
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {dollars(source.open_exposure_usd, 0)}
+                      </td>
+                      <td
+                        className={`py-3 px-3 mono text-right ${pnlClass(
+                          source.recent_resolved_net_pnl_usd
+                        )}`}
+                      >
+                        {int(source.recent_resolved_trades)} /{" "}
+                        {dollars(source.recent_resolved_net_pnl_usd, 0)}
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-warn">
+                        missing
+                      </td>
+                      <td className="py-3 pl-3 text-right">
+                        <span
+                          className={`mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${readinessStatusClass(
+                            source.status
+                          )}`}
+                        >
+                          {source.status_label}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="border-t border-border-subtle pt-3 text-xs text-text-muted">
+            {liquidityReview.next_required_action}
+          </div>
         </section>
 
         <section className="grid lg:grid-cols-[0.9fr_1.1fr] gap-5">

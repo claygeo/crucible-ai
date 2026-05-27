@@ -269,6 +269,13 @@ The 30-day proof window now has a durable audit surface:
   as `selected_agent_edge_proof_lag`, so a live replay that sees a resolved miss
   before the next Supabase/artifact proof capture is labeled as proof-source lag
   instead of being silently hidden.
+- `GET /api/trading-liquidity-review` is the source-level liquidity/slippage
+  blocker for capital review. It groups current live paper activity and recent
+  canonical resolved tickets by market source, then reports that spread, depth,
+  fee, fill-size, and slippage-adjusted entry data are not persisted yet. The
+  proof-readiness checklist now treats that missing execution-quality evidence
+  as a hard blocker before any profitable paper candidate can move to operator
+  capital review.
 - `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
   the latest paper-proof workflow run, matching artifact bundle, expiry, run
   URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,
@@ -452,4 +459,6 @@ P&L. This label is evidence hygiene, not an execution signal.
 
 ## Later Phases
 
-- Add source-level liquidity/slippage filters before any capital review.
+- Ingest actual source-level order-book/depth/spread/fee snapshots so the
+  liquidity review can graduate from a conservative blocker to a measured
+  slippage-adjusted proof gate.
