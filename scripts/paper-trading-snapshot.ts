@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
 const DEFAULT_QUERY: Record<string, string> = {
@@ -18,6 +18,7 @@ type CliOptions = {
   json: boolean;
   allowDemoWrite: boolean;
   envFiles: string[];
+  rowsOutput: string | null;
   params: URLSearchParams;
 };
 
@@ -57,6 +58,7 @@ function parseArgs(argv: string[]): CliOptions {
   let write = false;
   let json = false;
   let allowDemoWrite = false;
+  let rowsOutput: string | null = null;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -77,6 +79,8 @@ function parseArgs(argv: string[]): CliOptions {
       allowDemoWrite = true;
     } else if (flag === "--env") {
       envFiles.push(nextValue());
+    } else if (flag === "--rows-output") {
+      rowsOutput = nextValue();
     } else if (flag === "--sample") {
       params.set("sample", nextValue());
     } else if (flag === "--agent") {
@@ -103,7 +107,7 @@ function parseArgs(argv: string[]): CliOptions {
     }
   }
 
-  return { write, json, allowDemoWrite, envFiles, params };
+  return { write, json, allowDemoWrite, envFiles, rowsOutput, params };
 }
 
 function printHelp() {
@@ -120,6 +124,7 @@ Options:
   --dry-run                  Build rows and print a summary without inserting. Default.
   --json                     Print machine-readable JSON.
   --env <file>               Load an additional env file before importing app code.
+  --rows-output <file>       Write full snapshot rows JSON for archival evidence.
   --sample <live_only|all|backfill>
   --agent <all|sage|hawk|magpie|echo|mirror|crowd>
   --category <all|politics|sports|ai-tech|crypto|other>
@@ -156,6 +161,15 @@ function summarizeRows(rows: Array<Record<string, unknown>>) {
   };
 }
 
+function writeRowsArtifact(
+  path: string,
+  value: Record<string, unknown>
+): string {
+  const fullPath = resolve(process.cwd(), path);
+  writeFileSync(fullPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  return fullPath;
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const loadedEnvFiles = options.envFiles.filter((file) => loadEnvFile(file));
@@ -172,6 +186,19 @@ async function main() {
   const snapshot = await getTradingSnapshot(controls);
   const rows = buildPaperTradingSnapshotRows(snapshot);
   const rowSummary = summarizeRows(rows as Array<Record<string, unknown>>);
+  const rowsArtifact = {
+    source: snapshot.source,
+    generated_at: snapshot.generated_at,
+    controls,
+    loaded_env_files: loadedEnvFiles,
+    snapshot_date: snapshot.generated_at.slice(0, 10),
+    schema_version: "1",
+    row_count: rows.length,
+    rows,
+  };
+  const rowsArtifactPath = options.rowsOutput
+    ? writeRowsArtifact(options.rowsOutput, rowsArtifact)
+    : null;
   const baseSummary = {
     dry_run: !options.write,
     source: snapshot.source,
@@ -190,6 +217,7 @@ async function main() {
     },
     resolution_watch: snapshot.resolution_watch,
     rows: rowSummary,
+    rows_artifact_path: rowsArtifactPath,
   };
 
   if (!options.write) {

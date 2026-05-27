@@ -98,6 +98,7 @@ jobs:
             --ticket-usd 25
             --max-stake-usd 100
             --max-open-exposure-usd 500
+            --rows-output paper-snapshot-rows.json
           )
 
           node -e 'const fs = require("fs"); fs.writeFileSync("paper-snapshot-workflow.json", JSON.stringify({ requested_dry_run: process.env.SNAPSHOT_DRY_RUN === "true", effective_dry_run: process.env.SNAPSHOT_EFFECTIVE_DRY_RUN === "true", write_enabled: process.env.SNAPSHOT_WRITE_ENABLED === "true", mode_reason: process.env.SNAPSHOT_MODE_REASON || "" }, null, 2) + "\n");'
@@ -126,6 +127,7 @@ jobs:
           path: |
             paper-snapshot-workflow.json
             paper-snapshot-result.json
+            paper-snapshot-rows.json
             paper-audit-result.json
           if-no-files-found: ignore
           retention-days: 30
