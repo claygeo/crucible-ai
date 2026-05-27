@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
         status: history.status,
         message: history.message,
         latest_captured_at: history.latest_captured_at,
+        capture_health: history.capture_health,
       },
       count: history.snapshots.length,
       strategy_rollups: history.strategy_rollups,

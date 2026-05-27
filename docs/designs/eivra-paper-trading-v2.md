@@ -105,6 +105,8 @@ The 30-day proof window now has a durable audit surface:
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.
+- `persistence.capture_health` reports the daily recorder status, latest capture
+  age, next expected capture, cron expression, and stale threshold.
 
 The database table is public-read, service-role-write, and RLS-enabled. Snapshot
 rows are analytics evidence only; they do not create wallets, orders, leverage,
@@ -114,6 +116,10 @@ Persisted strategy rollups dedupe repeated same-day captures by keeping the
 latest row for each `(strategy_id, snapshot_date)` pair. The 30-day proof count
 is therefore `captured_days`, not raw row count. Raw rows remain in the feed for
 auditability.
+
+Capture health is `fresh` while the latest persisted row is less than 36 hours
+old. It becomes `stale` after that window, which makes a missed daily snapshot
+visible before anyone trusts the proof gate.
 
 ## Proof Gate
 

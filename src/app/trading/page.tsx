@@ -54,6 +54,13 @@ function persistenceStatusClass(status: string) {
   return "text-text-muted";
 }
 
+function captureHealthClass(status: string) {
+  if (status === "fresh") return "text-positive";
+  if (status === "stale") return "text-rose-400";
+  if (status === "waiting_first_capture") return "text-warn";
+  return "text-text-muted";
+}
+
 const SAMPLE_LABELS = {
   live_only: "Live only",
   all: "All",
@@ -114,6 +121,7 @@ export default async function TradingPage({
   const selectedOpenSignals = snapshot.selected_open_signals;
   const latestPersistedSnapshots = persisted.snapshots.slice(0, 8);
   const persistedRollups = persisted.strategy_rollups.slice(0, 8);
+  const captureHealth = persisted.capture_health;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -506,7 +514,7 @@ export default async function TradingPage({
               json feed
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Archive
@@ -539,19 +547,45 @@ export default async function TradingPage({
             </div>
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                Writer
+                Capture health
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${captureHealthClass(
+                  captureHealth.status
+                )}`}
+              >
+                {captureHealth.status_label}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Next capture
               </div>
               <div className="heading text-2xl text-text-primary mt-1">
-                locked
+                {relativeTime(captureHealth.next_expected_capture_at)}
               </div>
             </div>
           </div>
+          <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
+            <span className={captureHealthClass(captureHealth.status)}>
+              {captureHealth.message}
+            </span>
+            <span>cron {captureHealth.cron} UTC</span>
+            <span>
+              stale after {int(captureHealth.stale_after_hours)}h
+            </span>
+            {captureHealth.latest_capture_age_hours !== null ? (
+              <span>
+                age {captureHealth.latest_capture_age_hours.toFixed(1)}h
+              </span>
+            ) : null}
+          </div>
           {latestPersistedSnapshots.length === 0 ? (
-            <div className="border-t border-border-subtle pt-4 text-sm text-text-muted mono">
+            <div className="text-sm text-text-muted mono">
               [{persisted.message}]
             </div>
           ) : (
-            <div className="border-t border-border-subtle pt-4 flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div className="overflow-x-auto">
                 <table className="w-full" aria-label="Persisted strategy proof progress">
                   <thead>
