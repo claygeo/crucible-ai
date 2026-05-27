@@ -425,6 +425,7 @@ export default async function TradingPage({
     snapshot,
     persisted,
     agentEdgeProof,
+    publishedArtifactProof,
     registrySync,
     readiness: proofReadiness,
     runway: proofRunway,

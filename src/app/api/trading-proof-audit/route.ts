@@ -46,6 +46,7 @@ export async function GET(request: Request) {
     snapshot,
     persisted,
     agentEdgeProof,
+    publishedArtifactProof,
     registrySync,
     readiness,
     runway,
