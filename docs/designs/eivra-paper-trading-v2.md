@@ -136,6 +136,10 @@ The 30-day proof window now has a durable audit surface:
   API consumers. The CLI and route share `buildPaperTradingProofAudit`, so the
   local gate and public JSON cannot drift.
 - A Netlify scheduled function runs the writer once per day on published deploys.
+- `.github/workflows/paper-trading-snapshot.yml` is the deploy-independent
+  fallback recorder. It runs the same local snapshot writer daily at 05:22 UTC,
+  refuses demo-sourced writes by default, runs the soft proof audit after each
+  attempt, and stores both JSON outputs as 30-day GitHub Actions artifacts.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.
