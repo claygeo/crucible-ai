@@ -140,6 +140,8 @@ The 30-day proof window now has a durable audit surface:
   fallback recorder. It runs the same local snapshot writer daily at 05:22 UTC,
   refuses demo-sourced writes by default, runs the soft proof audit after each
   attempt, and stores both JSON outputs as 30-day GitHub Actions artifacts.
+  Non-dry-run jobs fail fast when Supabase repository secrets are missing;
+  manual dry runs remain safe and do not insert rows.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.

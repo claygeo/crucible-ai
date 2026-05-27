@@ -19,6 +19,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 concurrency:
   group: paper-trading-snapshot
   cancel-in-progress: false
@@ -37,6 +40,27 @@ jobs:
       SNAPSHOT_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
 
     steps:
+      - name: Validate snapshot secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$SNAPSHOT_DRY_RUN" == "true" ]]; then
+            echo "Dry run requested; Supabase write secrets are not required."
+            exit 0
+          fi
+
+          missing=()
+          [[ -n "${NEXT_PUBLIC_SUPABASE_URL:-}" ]] || missing+=(NEXT_PUBLIC_SUPABASE_URL)
+          [[ -n "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]] || missing+=(NEXT_PUBLIC_SUPABASE_ANON_KEY)
+          [[ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]] || missing+=(SUPABASE_SERVICE_ROLE_KEY)
+
+          if (( ${#missing[@]} > 0 )); then
+            printf '::error title=Missing required repository secrets::Scheduled paper proof writes require %s\n' "${missing[*]}"
+            printf 'Missing required repository secrets: %s\n' "${missing[*]}"
+            exit 1
+          fi
+
       - name: Check out repo
         uses: actions/checkout@v4
 
