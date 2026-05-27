@@ -12,6 +12,9 @@ import type {
 const SNAPSHOT_TABLE = "paper_trading_snapshots";
 const DEFAULT_HISTORY_LIMIT = 96;
 const REQUIRED_PROOF_DAYS = 30;
+const SNAPSHOT_CRON_UTC_HOUR = 5;
+const SNAPSHOT_CRON_UTC_MINUTE = 12;
+const STALE_AFTER_HOURS = 36;
 
 export type PaperTradingSnapshotRow = {
   id: string;
@@ -50,6 +53,7 @@ export type PaperTradingPersistenceRead = {
   status: "available" | "unconfigured" | "table_missing" | "error";
   message: string;
   latest_captured_at: string | null;
+  capture_health: PaperTradingCaptureHealth;
   snapshots: PaperTradingSnapshotRow[];
   strategy_rollups: PaperTradingStrategyProofRollup[];
 };
@@ -60,6 +64,19 @@ export type PaperTradingPersistenceWrite = {
   inserted: number;
   snapshot_date: string;
   captured_strategy_ids: string[];
+};
+
+export type PaperTradingCaptureHealth = {
+  status: "fresh" | "waiting_first_capture" | "stale" | "unavailable";
+  status_label: string;
+  message: string;
+  cron: string;
+  scheduled_time_utc: string;
+  stale_after_hours: number;
+  latest_captured_at: string | null;
+  latest_capture_age_hours: number | null;
+  previous_expected_capture_at: string;
+  next_expected_capture_at: string;
 };
 
 export type PaperTradingStrategyProofRollup = {
@@ -208,6 +225,103 @@ function isMissingTableError(error: { code?: string; message?: string }): boolea
   );
 }
 
+function scheduledCaptureAt(reference: Date, offsetDays: number): Date {
+  const scheduled = new Date(
+    Date.UTC(
+      reference.getUTCFullYear(),
+      reference.getUTCMonth(),
+      reference.getUTCDate() + offsetDays,
+      SNAPSHOT_CRON_UTC_HOUR,
+      SNAPSHOT_CRON_UTC_MINUTE,
+      0,
+      0
+    )
+  );
+  return scheduled;
+}
+
+function previousExpectedCaptureAt(now = new Date()): Date {
+  const today = scheduledCaptureAt(now, 0);
+  if (now.getTime() >= today.getTime()) return today;
+  return scheduledCaptureAt(now, -1);
+}
+
+function nextExpectedCaptureAt(now = new Date()): Date {
+  const today = scheduledCaptureAt(now, 0);
+  if (now.getTime() < today.getTime()) return today;
+  return scheduledCaptureAt(now, 1);
+}
+
+function unavailableCaptureHealth(
+  statusLabel: string,
+  message: string
+): PaperTradingCaptureHealth {
+  const now = new Date();
+  return {
+    status: "unavailable",
+    status_label: statusLabel,
+    message,
+    cron: `${SNAPSHOT_CRON_UTC_MINUTE} ${SNAPSHOT_CRON_UTC_HOUR} * * *`,
+    scheduled_time_utc: "05:12",
+    stale_after_hours: STALE_AFTER_HOURS,
+    latest_captured_at: null,
+    latest_capture_age_hours: null,
+    previous_expected_capture_at: previousExpectedCaptureAt(now).toISOString(),
+    next_expected_capture_at: nextExpectedCaptureAt(now).toISOString(),
+  };
+}
+
+export function buildPaperTradingCaptureHealth(
+  latestCapturedAt: string | null,
+  now = new Date()
+): PaperTradingCaptureHealth {
+  const previousExpected = previousExpectedCaptureAt(now);
+  const nextExpected = nextExpectedCaptureAt(now);
+  const base = {
+    cron: `${SNAPSHOT_CRON_UTC_MINUTE} ${SNAPSHOT_CRON_UTC_HOUR} * * *`,
+    scheduled_time_utc: "05:12",
+    stale_after_hours: STALE_AFTER_HOURS,
+    latest_captured_at: latestCapturedAt,
+    previous_expected_capture_at: previousExpected.toISOString(),
+    next_expected_capture_at: nextExpected.toISOString(),
+  };
+
+  if (!latestCapturedAt) {
+    return {
+      ...base,
+      status: "waiting_first_capture",
+      status_label: "Waiting",
+      message: "No persisted paper-trading snapshots have been captured yet.",
+      latest_capture_age_hours: null,
+    };
+  }
+
+  const latestTs = Date.parse(latestCapturedAt);
+  if (!Number.isFinite(latestTs)) {
+    return {
+      ...base,
+      status: "stale",
+      status_label: "Stale",
+      message: "Latest persisted capture timestamp is not parseable.",
+      latest_capture_age_hours: null,
+    };
+  }
+
+  const ageHours = Math.max(0, (now.getTime() - latestTs) / (60 * 60 * 1000));
+  const roundedAgeHours = Math.round(ageHours * 10) / 10;
+  const isFresh = ageHours <= STALE_AFTER_HOURS;
+
+  return {
+    ...base,
+    status: isFresh ? "fresh" : "stale",
+    status_label: isFresh ? "Fresh" : "Stale",
+    message: isFresh
+      ? "Latest persisted capture is within the daily freshness window."
+      : "Latest persisted capture is older than the daily freshness window.",
+    latest_capture_age_hours: roundedAgeHours,
+  };
+}
+
 function latestRowForDay(rows: PaperTradingSnapshotRow[]): PaperTradingSnapshotRow {
   return rows
     .slice()
@@ -285,6 +399,10 @@ export async function loadPaperTradingSnapshotHistory(
       status: "unconfigured",
       message: "Supabase env is not configured for persisted paper-trading snapshots.",
       latest_captured_at: null,
+      capture_health: unavailableCaptureHealth(
+        "Unconfigured",
+        "Supabase env is not configured for persisted paper-trading snapshots."
+      ),
       snapshots: [],
       strategy_rollups: [],
     };
@@ -302,6 +420,10 @@ export async function loadPaperTradingSnapshotHistory(
       status: isMissingTableError(error) ? "table_missing" : "error",
       message: error.message,
       latest_captured_at: null,
+      capture_health: unavailableCaptureHealth(
+        isMissingTableError(error) ? "Table missing" : "Error",
+        error.message
+      ),
       snapshots: [],
       strategy_rollups: [],
     };
@@ -312,6 +434,9 @@ export async function loadPaperTradingSnapshotHistory(
     status: "available",
     message: "Persisted paper-trading snapshots loaded.",
     latest_captured_at: snapshots[0]?.captured_at ?? null,
+    capture_health: buildPaperTradingCaptureHealth(
+      snapshots[0]?.captured_at ?? null
+    ),
     snapshots,
     strategy_rollups: buildPaperTradingStrategyRollups(snapshots),
   };
