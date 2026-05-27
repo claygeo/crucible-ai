@@ -1,0 +1,95 @@
+name: Paper trading snapshot
+
+on:
+  schedule:
+    - cron: "22 5 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build the snapshot without inserting rows."
+        required: false
+        type: boolean
+        default: false
+      min_edge:
+        description: "Minimum forecast edge for the selected-query row."
+        required: false
+        type: string
+        default: "0.1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: paper-trading-snapshot
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    name: Capture daily proof rows
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_USE_DEMO_DATA: "false"
+      SNAPSHOT_MIN_EDGE: ${{ github.event_name == 'workflow_dispatch' && inputs.min_edge || '0.1' }}
+      SNAPSHOT_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Capture paper-trading snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          args=(
+            --json
+            --sample live_only
+            --agent all
+            --category all
+            --side all
+            --min-edge "$SNAPSHOT_MIN_EDGE"
+            --stake-mode kelly_capped
+            --ticket-usd 25
+            --max-stake-usd 100
+            --max-open-exposure-usd 500
+          )
+
+          if [[ "$SNAPSHOT_DRY_RUN" == "true" ]]; then
+            npx tsx scripts/paper-trading-snapshot.ts "${args[@]}" \
+              | tee paper-snapshot-result.json
+          else
+            npx tsx scripts/paper-trading-snapshot.ts --write "${args[@]}" \
+              | tee paper-snapshot-result.json
+          fi
+
+      - name: Run soft proof audit
+        if: always()
+        shell: bash
+        run: |
+          set -o pipefail
+          npx tsx scripts/paper-trading-proof-audit.ts --soft --json \
+            | tee paper-audit-result.json
+
+      - name: Upload proof artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-trading-proof-${{ github.run_id }}
+          path: |
+            paper-snapshot-result.json
+            paper-audit-result.json
+          if-no-files-found: ignore
+          retention-days: 30

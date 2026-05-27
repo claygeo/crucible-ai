@@ -195,6 +195,15 @@ Net result: continuous backfill on a Max subscription. **Zero dollars billed to 
 
 Idempotent. Resilient to mid-run failures. `git pull` before the backfill run picks up agent prompt edits without redeploy.
 
+## Paper proof snapshots
+
+The 30-day paper-trading lab has two daily capture paths:
+
+- Netlify scheduled function: `netlify/functions/paper-trading-snapshot.ts` posts to `/api/trading-snapshots` at `05:12 UTC` and requires `CRON_SHARED_SECRET` in the deployed site env.
+- GitHub Actions fallback: `.github/workflows/paper-trading-snapshot.yml` runs `scripts/paper-trading-snapshot.ts --write` at `05:22 UTC`, then uploads the snapshot and soft-audit JSON artifacts for that run.
+
+The GitHub workflow does not depend on the deployed frontend. It needs repository secrets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. It sets `NEXT_PUBLIC_USE_DEMO_DATA=false` and the snapshot script refuses to write demo-sourced rows unless `--allow-demo-write` is passed manually.
+
 ## Stack
 
 | Layer | Tech |
@@ -233,12 +242,14 @@ Full DDL in [`supabase/migrations/`](./supabase/migrations).
 eivra/
 ├── README.md  PLAN.md  DESIGN.md  LAUNCH.md  LAUNCH-X.md  HANDOFF.md
 ├── netlify.toml                  ← @netlify/plugin-nextjs pin (required)
+├── .github/workflows/            ← daily paper proof snapshot fallback
 ├── backfill/
 │   ├── run.ts                    ← claude -p agent forecasts (6h cron)
 │   ├── pull-open.ts              ← scrape open markets (15min cron)
 │   └── generate-eureka.ts        ← daily insight cards (24h cron)
 ├── scripts/
 │   ├── vps-bootstrap.sh          ← VPS setup, idempotent
+│   ├── paper-trading-snapshot.ts ← persisted paper proof capture
 │   ├── wsl-deploy.sh             ← fallback deploy via WSL Linux build
 │   └── VPS-SETUP.md              ← operator runbook
 ├── src/
