@@ -374,11 +374,19 @@ function evidenceCheckStatus(
   return "unavailable";
 }
 
-function writeModeCheckStatus(
-  status: PaperTradingWriteReadiness["status"],
-): PaperTradingLabCheckStatus {
-  if (status === "persisting") return "pass";
-  if (status === "artifact_only") return "warning";
+function writeModeCheckStatus(args: {
+  status: PaperTradingWriteReadiness["status"];
+  evidenceSla: PaperTradingEvidenceSla;
+}): PaperTradingLabCheckStatus {
+  const primaryPersistedEvidenceFresh =
+    args.status === "artifact_only" &&
+    args.evidenceSla.data_source_status === "supabase_and_artifacts" &&
+    args.evidenceSla.status !== "blocked" &&
+    args.evidenceSla.status !== "unavailable";
+
+  if (primaryPersistedEvidenceFresh) return "collecting";
+  if (args.status === "persisting") return "pass";
+  if (args.status === "artifact_only") return "warning";
   return "warning";
 }
 
@@ -426,9 +434,8 @@ function buildOperatingPlan(args: {
   const evidenceSlaCheck =
     args.checks.find((item) => item.id === "evidence_sla") ?? null;
 
-  let operatingStatus: PaperTradingLabOperatingPlanStatus = warningActions.length
-    ? "attention"
-    : "collecting";
+  let operatingStatus: PaperTradingLabOperatingPlanStatus =
+    warningActions.length ? "attention" : "collecting";
   let primaryAction = args.evidenceSla.next_required_action;
   let primaryReason =
     "The 30-day proof window is the gating evidence source for any future capital discussion.";
@@ -595,10 +602,19 @@ export function buildPaperTradingLabStatus(args: {
     check({
       id: "write_mode",
       label: "Write mode",
-      status: writeModeCheckStatus(args.writeReadiness.status),
+      status: writeModeCheckStatus({
+        status: args.writeReadiness.status,
+        evidenceSla: args.evidenceSla,
+      }),
       current: args.writeReadiness.status_label,
       target: "persisting Supabase rows plus public artifact fallback",
-      detail: args.writeReadiness.next_required_action,
+      detail:
+        args.writeReadiness.status === "artifact_only" &&
+        args.evidenceSla.data_source_status === "supabase_and_artifacts" &&
+        args.evidenceSla.status !== "blocked" &&
+        args.evidenceSla.status !== "unavailable"
+          ? "Primary Supabase proof rows are fresh; GitHub artifacts remain a read-only public fallback."
+          : args.writeReadiness.next_required_action,
     }),
     check({
       id: "resolution_catchup",
