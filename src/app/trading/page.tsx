@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
 import {
+  buildPaperTradingEvidenceSla,
   buildPaperTradingWriteReadiness,
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
@@ -160,6 +161,14 @@ function writeReadinessStatusClass(status: string) {
   return "bg-text-muted/10 text-text-muted";
 }
 
+function evidenceSlaStatusClass(status: string) {
+  if (status === "on_track") return "bg-positive/10 text-positive";
+  if (status === "collecting") return "bg-accent/10 text-accent";
+  if (status === "degraded") return "bg-warn/10 text-warn";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  return "bg-text-muted/10 text-text-muted";
+}
+
 function proofEvidenceSourceStatusClass(status: string) {
   if (status === "active" || status === "available" || status === "reviewable") {
     return "bg-positive/10 text-positive";
@@ -296,6 +305,13 @@ export default async function TradingPage({
     artifactWorkflow,
     publishedArtifactProof,
   });
+  const evidenceSla = buildPaperTradingEvidenceSla({
+    persistence: persisted,
+    publishedArtifactProof,
+    writeReadiness,
+    registrySync,
+    resolutionWatch,
+  });
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -325,6 +341,7 @@ export default async function TradingPage({
   const resolutionReviewJsonHref = `/api/trading-resolution-review?${selectedQuery}`;
   const capitalReviewJsonHref = `/api/trading-capital-review?${selectedQuery}`;
   const writeReadinessJsonHref = "/api/trading-write-readiness";
+  const evidenceSlaJsonHref = `/api/trading-evidence-sla?${selectedQuery}`;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -1043,6 +1060,12 @@ export default async function TradingPage({
                 write readiness
               </Link>
               <Link
+                href={evidenceSlaJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                evidence sla
+              </Link>
+              <Link
                 href={publishedProofHref}
                 className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
               >
@@ -1056,7 +1079,7 @@ export default async function TradingPage({
               </Link>
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Capital review
@@ -1067,6 +1090,20 @@ export default async function TradingPage({
                 )}`}
               >
                 {proofSummary.capital_review_status_label}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Evidence SLA
+              </div>
+              <div className="mt-2">
+                <span
+                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${evidenceSlaStatusClass(
+                    evidenceSla.status
+                  )}`}
+                >
+                  {evidenceSla.status_label}
+                </span>
               </div>
             </div>
             <div>
@@ -1159,6 +1196,30 @@ export default async function TradingPage({
             <span className={proofSummaryClass(proofSummary.capital_review_status)}>
               real-money execution disabled
             </span>
+            <Link
+              href={evidenceSlaJsonHref}
+              className={`${
+                evidenceSla.status === "on_track" ||
+                evidenceSla.status === "collecting"
+                  ? "text-accent"
+                  : evidenceSla.status === "degraded"
+                    ? "text-warn"
+                    : "text-rose-400"
+              } hover:text-text-primary transition-colors`}
+            >
+              evidence sla {evidenceSla.status_label.toLowerCase()}
+            </Link>
+            <span>
+              source {evidenceSla.data_source_status.replaceAll("_", " ")} /{" "}
+              complete {int(evidenceSla.complete_days)}/
+              {int(evidenceSla.proof_window_days)}
+            </span>
+            {evidenceSla.status === "blocked" ||
+            evidenceSla.status === "degraded" ? (
+              <span className="text-warn">
+                {evidenceSla.next_required_action}
+              </span>
+            ) : null}
             <span className={registrySyncClass(registrySync.status)}>
               registry {registrySync.status_label.toLowerCase()}{" "}
               {int(registrySync.persisted_latest_live_strategy_count)}/

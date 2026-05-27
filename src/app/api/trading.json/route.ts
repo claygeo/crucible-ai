@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
 import {
+  buildPaperTradingEvidenceSla,
   buildPaperTradingWriteReadiness,
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
@@ -54,6 +55,13 @@ export async function GET(request: Request) {
     artifactWorkflow,
     publishedArtifactProof,
   });
+  const evidenceSla = buildPaperTradingEvidenceSla({
+    persistence: persisted,
+    publishedArtifactProof,
+    writeReadiness,
+    registrySync,
+    resolutionWatch: snapshot.resolution_watch,
+  });
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -81,6 +89,7 @@ export async function GET(request: Request) {
       github_artifact_workflow: artifactWorkflow,
       published_artifact_proof: publishedArtifactProof,
       paper_write_readiness: writeReadiness,
+      paper_evidence_sla: evidenceSla,
       persistence: {
         status: persisted.status,
         message: persisted.message,
@@ -97,6 +106,7 @@ export async function GET(request: Request) {
         github_artifact_workflow: artifactWorkflow,
         published_artifact_proof: publishedArtifactProof,
         write_readiness: writeReadiness,
+        evidence_sla: evidenceSla,
         agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       },
       persisted_registry_sync: registrySync,
