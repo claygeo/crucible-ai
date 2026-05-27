@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AGENTS } from "@/lib/agents";
 import {
   DEFAULT_TRADING_CONTROLS,
@@ -9,6 +9,7 @@ import {
 
 type UnknownRecord = Record<string, unknown>;
 type Fetcher = (input: string | URL, init?: RequestInit) => Promise<Response>;
+type UntypedSupabaseClient = SupabaseClient<any, "public", any>;
 
 type DueMarketRecord = {
   id: string;
@@ -30,6 +31,10 @@ type LivePredictionRecord = {
   probability: unknown;
   market_price_at_forecast: unknown;
   created_at: string;
+};
+
+type ScorePredictionRecord = LivePredictionRecord & {
+  abstained: boolean;
 };
 
 export type ResolutionCatchupProviderStatus =
@@ -110,6 +115,45 @@ export type ResolutionCatchupPreview = {
   projected_loss_count: number;
   markets: ResolutionCatchupMarketPreview[];
   top_projected_trades: ResolutionCatchupTradePreview[];
+};
+
+export type ResolutionCatchupApplyMarketResult = {
+  market_id: string;
+  market_question: string;
+  provider_status: ResolutionCatchupProviderStatus;
+  provider_message: string;
+  resolved_outcome: "YES" | "NO" | null;
+  resolved_at: string | null;
+  write_status:
+    | "dry_run"
+    | "scored"
+    | "pending_provider"
+    | "ambiguous_provider"
+    | "no_predictions"
+    | "error";
+  predictions_considered: number;
+  scores_written: number;
+  error: string | null;
+};
+
+export type ResolutionCatchupApplyResult = {
+  status: "dry_run" | "applied" | "clear" | "unconfigured" | "error";
+  status_label: string;
+  generated_at: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  dry_run: boolean;
+  checked_market_limit: number;
+  market_id: string | null;
+  candidates_checked: number;
+  provider_resolved_markets: number;
+  markets_updated: number;
+  predictions_considered: number;
+  scores_written: number;
+  errors: string[];
+  markets: ResolutionCatchupApplyMarketResult[];
 };
 
 function readEnv(name: string): string | undefined {
@@ -234,6 +278,43 @@ function errorPreview(
     projected_loss_count: 0,
     markets: [],
     top_projected_trades: [],
+  };
+}
+
+function applyResult(args: {
+  status: ResolutionCatchupApplyResult["status"];
+  statusLabel: string;
+  message: string;
+  nextRequiredAction: string;
+  dryRun: boolean;
+  limit: number;
+  marketId: string | null;
+  candidatesChecked?: number;
+  providerResolvedMarkets?: number;
+  marketsUpdated?: number;
+  predictionsConsidered?: number;
+  scoresWritten?: number;
+  errors?: string[];
+  markets?: ResolutionCatchupApplyMarketResult[];
+}): ResolutionCatchupApplyResult {
+  return {
+    status: args.status,
+    status_label: args.statusLabel,
+    generated_at: new Date().toISOString(),
+    message: args.message,
+    next_required_action: args.nextRequiredAction,
+    paper_only: true,
+    real_money_execution_allowed: false,
+    dry_run: args.dryRun,
+    checked_market_limit: args.limit,
+    market_id: args.marketId,
+    candidates_checked: args.candidatesChecked ?? 0,
+    provider_resolved_markets: args.providerResolvedMarkets ?? 0,
+    markets_updated: args.marketsUpdated ?? 0,
+    predictions_considered: args.predictionsConsidered ?? 0,
+    scores_written: args.scoresWritten ?? 0,
+    errors: args.errors ?? [],
+    markets: args.markets ?? [],
   };
 }
 
@@ -544,6 +625,169 @@ function buildTradePreview(
   };
 }
 
+function buildScoreRow(
+  market: DueMarketRecord,
+  prediction: ScorePredictionRecord,
+  provider: ResolutionCatchupProviderCheck,
+): Record<string, unknown> | null {
+  if (prediction.abstained) return null;
+  if (provider.status !== "resolved" || !provider.resolved_outcome) return null;
+  if (!provider.resolved_at) return null;
+  if (Date.parse(prediction.created_at) >= Date.parse(provider.resolved_at)) {
+    return null;
+  }
+
+  const outcome = provider.resolved_outcome === "YES" ? 1 : 0;
+  const probability = clampProbability(numberValue(prediction.probability));
+  const marketPrice = clampProbability(
+    numberValue(
+      prediction.market_price_at_forecast,
+      numberValue(market.outcome_yes_price, 0.5),
+    ),
+  );
+  const brier = (probability - outcome) ** 2;
+  const logLoss = -(
+    outcome * Math.log(probability) +
+    (1 - outcome) * Math.log(1 - probability)
+  );
+  const tookYes = probability > marketPrice;
+  const paperPnl = tookYes
+    ? 25 * (outcome - marketPrice)
+    : 25 * (marketPrice - outcome);
+
+  return {
+    prediction_id: prediction.id,
+    agent_id: prediction.agent_id,
+    market_id: market.id,
+    brier,
+    log_loss: logLoss,
+    paper_pnl: paperPnl,
+    was_correct: probability > 0.5 === Boolean(outcome),
+  };
+}
+
+async function refreshAgentStats(sb: UntypedSupabaseClient): Promise<void> {
+  const { data: agents } = await sb.from("agents").select("id");
+  if (!agents) return;
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000).toISOString();
+
+  for (const agent of agents as Array<{ id: string }>) {
+    const { data: recentScores } = await sb
+      .from("scores")
+      .select("brier, log_loss, paper_pnl, was_correct, scored_at")
+      .eq("agent_id", agent.id)
+      .gte("scored_at", thirtyDaysAgo);
+    const { data: allScores } = await sb
+      .from("scores")
+      .select("brier, log_loss, paper_pnl")
+      .eq("agent_id", agent.id);
+    const { count: totalPredictions } = await sb
+      .from("predictions")
+      .select("*", { count: "exact", head: true })
+      .eq("agent_id", agent.id);
+
+    const recentSample = (recentScores ?? []) as Array<{
+      brier: unknown;
+      log_loss: unknown;
+      paper_pnl: unknown;
+      was_correct: boolean;
+    }>;
+    const allSample = (allScores ?? []) as Array<{
+      brier: unknown;
+      log_loss: unknown;
+      paper_pnl: unknown;
+    }>;
+
+    const avg = (values: number[]) =>
+      values.length === 0
+        ? null
+        : values.reduce((sum, value) => sum + value, 0) / values.length;
+    const brier30 = avg(recentSample.map((score) => numberValue(score.brier)));
+    const logLoss30 = avg(
+      recentSample.map((score) => numberValue(score.log_loss)),
+    );
+    const brierAll = avg(allSample.map((score) => numberValue(score.brier)));
+    const logLossAll = avg(
+      allSample.map((score) => numberValue(score.log_loss)),
+    );
+    const pnl30 = recentSample.reduce(
+      (sum, score) => sum + numberValue(score.paper_pnl),
+      0,
+    );
+    const pnlAll = allSample.reduce(
+      (sum, score) => sum + numberValue(score.paper_pnl),
+      0,
+    );
+    const winRate30 =
+      recentSample.length === 0
+        ? null
+        : recentSample.filter((score) => score.was_correct).length /
+          recentSample.length;
+
+    await sb.from("agent_stats").upsert(
+      {
+        agent_id: agent.id,
+        total_predictions: totalPredictions ?? 0,
+        total_scored: allSample.length,
+        brier_30d: brier30,
+        log_loss_30d: logLoss30,
+        brier_alltime: brierAll,
+        log_loss_alltime: logLossAll,
+        win_rate_30d: winRate30,
+        paper_pnl_30d: pnl30,
+        paper_pnl_alltime: pnlAll,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "agent_id" },
+    );
+  }
+
+  const { data: stats } = await sb
+    .from("agent_stats")
+    .select("agent_id, brier_30d, log_loss_30d, win_rate_30d");
+  const scoredStats = ((stats ?? []) as Array<Record<string, unknown>>).filter(
+    (stat) =>
+      stat.brier_30d !== null &&
+      stat.log_loss_30d !== null &&
+      stat.win_rate_30d !== null,
+  );
+  if (scoredStats.length === 0) return;
+
+  const briers = scoredStats.map((stat) => numberValue(stat.brier_30d));
+  const logLosses = scoredStats.map((stat) => numberValue(stat.log_loss_30d));
+  const minBrier = Math.min(...briers);
+  const maxBrier = Math.max(...briers);
+  const minLogLoss = Math.min(...logLosses);
+  const maxLogLoss = Math.max(...logLosses);
+
+  const ranked = scoredStats
+    .map((stat) => {
+      const brier = numberValue(stat.brier_30d);
+      const logLoss = numberValue(stat.log_loss_30d);
+      const winRate = numberValue(stat.win_rate_30d);
+      const brierNorm =
+        maxBrier > minBrier ? (brier - minBrier) / (maxBrier - minBrier) : 0;
+      const logLossNorm =
+        maxLogLoss > minLogLoss
+          ? (logLoss - minLogLoss) / (maxLogLoss - minLogLoss)
+          : 0;
+      return {
+        agent_id: String(stat.agent_id),
+        eivra_score:
+          0.5 * (1 - brierNorm) + 0.3 * winRate + 0.2 * (1 - logLossNorm),
+      };
+    })
+    .sort((a, b) => b.eivra_score - a.eivra_score);
+
+  for (const [index, stat] of ranked.entries()) {
+    await sb
+      .from("agent_stats")
+      .update({ eivra_score: stat.eivra_score, rank: index + 1 })
+      .eq("agent_id", stat.agent_id);
+  }
+}
+
 function statusForPreview(args: {
   dueMarkets: number;
   providerResolvedMarkets: number;
@@ -778,4 +1022,359 @@ export async function buildResolutionCatchupPreview(
     ),
     top_projected_trades: sortedTrades.slice(0, 10),
   };
+}
+
+export async function applyResolutionCatchup(
+  options: {
+    dryRun?: boolean;
+    limit?: number;
+    marketId?: string | null;
+    fetcher?: Fetcher;
+    timeoutMs?: number;
+  } = {},
+): Promise<ResolutionCatchupApplyResult> {
+  const dryRun = options.dryRun ?? true;
+  const limit = Math.max(1, Math.min(options.limit ?? 25, 100));
+  const marketId = options.marketId?.trim() || null;
+  const supabaseUrl = readEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const serviceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return applyResult({
+      status: "unconfigured",
+      statusLabel: "Unconfigured",
+      message: "Supabase service-role write access is unavailable.",
+      nextRequiredAction:
+        "Restore Supabase service-role access before applying resolution catch-up.",
+      dryRun,
+      limit,
+      marketId,
+    });
+  }
+
+  const sb = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  let marketsQuery = sb
+    .from("markets")
+    .select(
+      "id, source, source_id, question, category, url, status, closes_at, outcome_yes_price, raw",
+    )
+    .in("status", ["open", "pending_resolution"])
+    .or("closes_at.lt.now(),closes_at.is.null")
+    .limit(limit);
+
+  if (marketId) marketsQuery = marketsQuery.eq("id", marketId);
+
+  const { data: dueMarkets, error: marketsError } = await marketsQuery;
+  if (marketsError) {
+    return applyResult({
+      status: "error",
+      statusLabel: "Error",
+      message: `Failed to load due markets: ${marketsError.message}`,
+      nextRequiredAction:
+        "Fix catch-up database access before applying resolver lag updates.",
+      dryRun,
+      limit,
+      marketId,
+      errors: [marketsError.message],
+    });
+  }
+
+  const markets = ((dueMarkets ?? []) as DueMarketRecord[]).filter(
+    (market) => market.id && market.source && market.source_id,
+  );
+  if (markets.length === 0) {
+    return applyResult({
+      status: "clear",
+      statusLabel: "Clear",
+      message: "No due unresolved markets were found.",
+      nextRequiredAction: "Continue daily paper-only collection.",
+      dryRun,
+      limit,
+      marketId,
+    });
+  }
+
+  const fetcher = options.fetcher ?? fetch;
+  const timeoutMs = options.timeoutMs ?? 5000;
+  const marketResults: ResolutionCatchupApplyMarketResult[] = [];
+  const errors: string[] = [];
+  let providerResolvedMarkets = 0;
+  let marketsUpdated = 0;
+  let predictionsConsidered = 0;
+  let scoresWritten = 0;
+
+  for (const market of markets) {
+    const provider = await fetchProviderResolution(market, fetcher, timeoutMs);
+    if (provider.status !== "resolved" || !provider.resolved_outcome) {
+      marketResults.push({
+        market_id: market.id,
+        market_question: market.question,
+        provider_status: provider.status,
+        provider_message: provider.message,
+        resolved_outcome: null,
+        resolved_at: provider.resolved_at,
+        write_status:
+          provider.status === "ambiguous"
+            ? "ambiguous_provider"
+            : "pending_provider",
+        predictions_considered: 0,
+        scores_written: 0,
+        error: null,
+      });
+      continue;
+    }
+
+    providerResolvedMarkets += 1;
+    const resolvedAt = provider.resolved_at ?? new Date().toISOString();
+    const { data: predictions, error: predictionsError } = await sb
+      .from("predictions")
+      .select(
+        "id, agent_id, market_id, probability, market_price_at_forecast, abstained, created_at",
+      )
+      .eq("market_id", market.id)
+      .lt("created_at", resolvedAt);
+
+    if (predictionsError) {
+      const message = `Failed to load predictions for market ${market.id}: ${predictionsError.message}`;
+      errors.push(message);
+      marketResults.push({
+        market_id: market.id,
+        market_question: market.question,
+        provider_status: provider.status,
+        provider_message: provider.message,
+        resolved_outcome: provider.resolved_outcome,
+        resolved_at: resolvedAt,
+        write_status: "error",
+        predictions_considered: 0,
+        scores_written: 0,
+        error: message,
+      });
+      continue;
+    }
+
+    const predictionRows = (predictions ?? []) as ScorePredictionRecord[];
+    const predictionIds = predictionRows.map((prediction) => prediction.id);
+    const scoredPredictionIds = new Set<string>();
+    if (predictionIds.length > 0) {
+      const { data: existingScores, error: scoresError } = await sb
+        .from("scores")
+        .select("prediction_id")
+        .in("prediction_id", predictionIds);
+      if (scoresError) {
+        const message = `Failed to load score coverage for market ${market.id}: ${scoresError.message}`;
+        errors.push(message);
+        marketResults.push({
+          market_id: market.id,
+          market_question: market.question,
+          provider_status: provider.status,
+          provider_message: provider.message,
+          resolved_outcome: provider.resolved_outcome,
+          resolved_at: resolvedAt,
+          write_status: "error",
+          predictions_considered: predictionRows.length,
+          scores_written: 0,
+          error: message,
+        });
+        continue;
+      }
+      for (const score of (existingScores ?? []) as Array<{
+        prediction_id: string;
+      }>) {
+        scoredPredictionIds.add(score.prediction_id);
+      }
+    }
+
+    const scoreRows = predictionRows
+      .filter((prediction) => !scoredPredictionIds.has(prediction.id))
+      .map((prediction) => buildScoreRow(market, prediction, provider))
+      .filter((score): score is Record<string, unknown> => Boolean(score));
+    predictionsConsidered += scoreRows.length;
+
+    if (scoreRows.length === 0) {
+      if (!dryRun) {
+        const { error: marketUpdateError } = await sb
+          .from("markets")
+          .update({
+            status: "resolved",
+            resolved_outcome: provider.resolved_outcome === "YES",
+            resolved_at: resolvedAt,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", market.id);
+
+        if (marketUpdateError) {
+          const message = `Failed to update market ${market.id}: ${marketUpdateError.message}`;
+          errors.push(message);
+          marketResults.push({
+            market_id: market.id,
+            market_question: market.question,
+            provider_status: provider.status,
+            provider_message: provider.message,
+            resolved_outcome: provider.resolved_outcome,
+            resolved_at: resolvedAt,
+            write_status: "error",
+            predictions_considered: 0,
+            scores_written: 0,
+            error: message,
+          });
+          continue;
+        }
+
+        marketsUpdated += 1;
+      }
+
+      marketResults.push({
+        market_id: market.id,
+        market_question: market.question,
+        provider_status: provider.status,
+        provider_message: provider.message,
+        resolved_outcome: provider.resolved_outcome,
+        resolved_at: resolvedAt,
+        write_status: "no_predictions",
+        predictions_considered: 0,
+        scores_written: 0,
+        error: null,
+      });
+      continue;
+    }
+
+    if (!dryRun) {
+      const { error: marketUpdateError } = await sb
+        .from("markets")
+        .update({
+          status: "resolved",
+          resolved_outcome: provider.resolved_outcome === "YES",
+          resolved_at: resolvedAt,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", market.id);
+
+      if (marketUpdateError) {
+        const message = `Failed to update market ${market.id}: ${marketUpdateError.message}`;
+        errors.push(message);
+        marketResults.push({
+          market_id: market.id,
+          market_question: market.question,
+          provider_status: provider.status,
+          provider_message: provider.message,
+          resolved_outcome: provider.resolved_outcome,
+          resolved_at: resolvedAt,
+          write_status: "error",
+          predictions_considered: scoreRows.length,
+          scores_written: 0,
+          error: message,
+        });
+        continue;
+      }
+
+      const { error: scoreUpsertError } = await sb
+        .from("scores")
+        .upsert(scoreRows, { onConflict: "prediction_id" });
+
+      if (scoreUpsertError) {
+        const message = `Failed to upsert scores for market ${market.id}: ${scoreUpsertError.message}`;
+        errors.push(message);
+        marketResults.push({
+          market_id: market.id,
+          market_question: market.question,
+          provider_status: provider.status,
+          provider_message: provider.message,
+          resolved_outcome: provider.resolved_outcome,
+          resolved_at: resolvedAt,
+          write_status: "error",
+          predictions_considered: scoreRows.length,
+          scores_written: 0,
+          error: message,
+        });
+        continue;
+      }
+
+      marketsUpdated += 1;
+      scoresWritten += scoreRows.length;
+    }
+
+    marketResults.push({
+      market_id: market.id,
+      market_question: market.question,
+      provider_status: provider.status,
+      provider_message: provider.message,
+      resolved_outcome: provider.resolved_outcome,
+      resolved_at: resolvedAt,
+      write_status: dryRun ? "dry_run" : "scored",
+      predictions_considered: scoreRows.length,
+      scores_written: dryRun ? 0 : scoreRows.length,
+      error: null,
+    });
+  }
+
+  if (!dryRun && (marketsUpdated > 0 || scoresWritten > 0)) {
+    try {
+      await refreshAgentStats(sb);
+    } catch (error) {
+      errors.push(
+        error instanceof Error
+          ? `Failed to refresh agent stats: ${error.message}`
+          : "Failed to refresh agent stats.",
+      );
+    }
+  }
+
+  if (!dryRun) {
+    await sb.from("system_events").insert({
+      level: errors.length ? "warn" : "info",
+      source: "trading-resolution-catchup",
+      message: "resolution catch-up complete",
+      meta: {
+        candidates_checked: markets.length,
+        provider_resolved_markets: providerResolvedMarkets,
+        markets_updated: marketsUpdated,
+        scores_written: scoresWritten,
+        errors,
+      },
+    });
+  }
+
+  const wroteAnything = marketsUpdated > 0 || scoresWritten > 0;
+  const status: ResolutionCatchupApplyResult["status"] = dryRun
+    ? "dry_run"
+    : errors.length
+      ? "error"
+      : wroteAnything
+        ? "applied"
+        : "clear";
+
+  return applyResult({
+    status,
+    statusLabel:
+      status === "dry_run"
+        ? "Dry run"
+        : status === "applied"
+          ? "Applied"
+          : status === "error"
+            ? "Error"
+            : "Clear",
+    message: dryRun
+      ? "Resolution catch-up dry run completed without writes."
+      : wroteAnything
+        ? "Resolution catch-up wrote provider-resolved paper evidence."
+        : "Resolution catch-up found no new resolved predictions to score.",
+    nextRequiredAction: dryRun
+      ? "Run with dry_run=false after reviewing the candidate markets."
+      : errors.length
+        ? "Review catch-up errors before trusting the next paper snapshot."
+        : "Publish a fresh paper snapshot so the scored live evidence enters the proof log.",
+    dryRun,
+    limit,
+    marketId,
+    candidatesChecked: markets.length,
+    providerResolvedMarkets,
+    marketsUpdated,
+    predictionsConsidered,
+    scoresWritten,
+    errors,
+    markets: marketResults,
+  });
 }
