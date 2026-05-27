@@ -92,7 +92,12 @@ function readEnv(name: string): string | undefined {
   return value ? value : undefined;
 }
 
-type MarketStatus = "open" | "pending_resolution" | "resolved" | "disputed" | "voided";
+type MarketStatus =
+  | "open"
+  | "pending_resolution"
+  | "resolved"
+  | "disputed"
+  | "voided";
 
 type PredictionMarketRow = {
   id: string;
@@ -200,6 +205,9 @@ export type ResolutionWatchSignal = {
   prediction_id: string;
   market_id: string;
   market_question: string;
+  market_source: string;
+  market_url: string | null;
+  market_status: MarketStatus;
   agent_id: string;
   agent_name: string;
   side: TradeSide;
@@ -441,7 +449,7 @@ const AGENT_EDGE_STRATEGY_DEFINITIONS: StrategyDefinition[] = AGENTS.flatMap(
       minEdge,
       stakeMode: "kelly_capped" as StakeMode,
       agentIds: [agent.id],
-    }))
+    })),
 );
 
 const STRATEGY_DEFINITIONS: StrategyDefinition[] = [
@@ -449,7 +457,8 @@ const STRATEGY_DEFINITIONS: StrategyDefinition[] = [
   {
     id: "all-live-edge-10",
     label: "All agents live, edge >= 10pp",
-    description: "Broad live strategy with a stricter edge gate across the house roster.",
+    description:
+      "Broad live strategy with a stricter edge gate across the house roster.",
     sample: "live_only",
     minEdge: 0.1,
     stakeMode: "kelly_capped",
@@ -466,7 +475,8 @@ const STRATEGY_DEFINITIONS: StrategyDefinition[] = [
   {
     id: "sports-live-edge-10",
     label: "Sports live, edge >= 10pp",
-    description: "Sports markets only. Keeps fast-resolving edge separate from politics.",
+    description:
+      "Sports markets only. Keeps fast-resolving edge separate from politics.",
     sample: "live_only",
     minEdge: 0.1,
     stakeMode: "kelly_capped",
@@ -475,7 +485,8 @@ const STRATEGY_DEFINITIONS: StrategyDefinition[] = [
   {
     id: "mirror-backfill-sanity",
     label: "Mirror backfill sanity",
-    description: "Historical control. Useful for comparison, not a live-trading proof.",
+    description:
+      "Historical control. Useful for comparison, not a live-trading proof.",
     sample: "backfill",
     minEdge: 0.1,
     stakeMode: "kelly_capped",
@@ -495,7 +506,7 @@ function numberParam(
   key: string,
   fallback: number,
   min: number,
-  max: number
+  max: number,
 ): number {
   const raw = readParam(source, key);
   if (raw === null || raw.trim() === "") return fallback;
@@ -506,13 +517,13 @@ function numberParam(
 
 function includesOption<T extends readonly string[]>(
   options: T,
-  value: string | null
+  value: string | null,
 ): value is T[number] {
   return value !== null && options.includes(value);
 }
 
 export function parseTradingControls(
-  source: TradingParamSource = {}
+  source: TradingParamSource = {},
 ): TradingControls {
   const sampleRaw = readParam(source, "sample");
   const stakeModeRaw = readParam(source, "stake_mode");
@@ -527,7 +538,8 @@ export function parseTradingControls(
       : DEFAULT_TRADING_CONTROLS.sample,
     agent_id: agent ? agent.id : null,
     category:
-      includesOption(TRADING_CATEGORY_OPTIONS, categoryRaw) && categoryRaw !== "all"
+      includesOption(TRADING_CATEGORY_OPTIONS, categoryRaw) &&
+      categoryRaw !== "all"
         ? categoryRaw
         : null,
     side:
@@ -540,8 +552,8 @@ export function parseTradingControls(
         "min_edge",
         DEFAULT_TRADING_CONTROLS.min_edge,
         0.01,
-        0.5
-      )
+        0.5,
+      ),
     ),
     stake_mode: includesOption(TRADING_STAKE_MODE_OPTIONS, stakeModeRaw)
       ? stakeModeRaw
@@ -552,8 +564,8 @@ export function parseTradingControls(
         "ticket_usd",
         DEFAULT_TRADING_CONTROLS.flat_stake_usd,
         PAPER_TRADING_CONFIG.minStakeUsd,
-        PAPER_TRADING_CONFIG.maxStakeUsd
-      )
+        PAPER_TRADING_CONFIG.maxStakeUsd,
+      ),
     ),
     max_stake_usd: round2(
       numberParam(
@@ -561,8 +573,8 @@ export function parseTradingControls(
         "max_stake_usd",
         DEFAULT_TRADING_CONTROLS.max_stake_usd,
         PAPER_TRADING_CONFIG.minStakeUsd,
-        PAPER_TRADING_CONFIG.maxStakeUsd
-      )
+        PAPER_TRADING_CONFIG.maxStakeUsd,
+      ),
     ),
     max_open_exposure_usd: round2(
       numberParam(
@@ -570,8 +582,8 @@ export function parseTradingControls(
         "max_open_exposure_usd",
         DEFAULT_TRADING_CONTROLS.max_open_exposure_usd,
         PAPER_TRADING_CONFIG.maxStakeUsd,
-        PAPER_TRADING_CONFIG.bankrollUsd
-      )
+        PAPER_TRADING_CONFIG.bankrollUsd,
+      ),
     ),
   };
 }
@@ -607,7 +619,7 @@ function strategyFromControls(controls: TradingControls): StrategyDefinition {
   return {
     id: "selected-query",
     label: `${agentLabel} ${sampleLabel}, edge >= ${Math.round(
-      controls.min_edge * 100
+      controls.min_edge * 100,
     )}pp${categoryLabel}${sideLabel}`,
     description:
       "URL-configured paper strategy. Changes analytics only; no orders are created.",
@@ -628,10 +640,7 @@ const clampProbability = (n: number) => Math.min(0.9999, Math.max(0.0001, n));
 
 function validEntryPrice(n: number, config: PaperTradingConfig): number | null {
   if (!Number.isFinite(n)) return null;
-  if (
-    n < config.minEntryPrice ||
-    n > config.maxEntryPrice
-  ) {
+  if (n < config.minEntryPrice || n > config.maxEntryPrice) {
     return null;
   }
   return n;
@@ -645,41 +654,36 @@ function stakeForTrade(
   edge: number,
   entryPrice: number,
   stakeMode: StakeMode,
-  config: PaperTradingConfig
+  config: PaperTradingConfig,
 ): number {
   if (stakeMode === "flat") return config.flatStakeUsd;
 
   const denominator = side === "YES" ? 1 - entryPrice : entryPrice;
   const fullKelly = denominator > 0 ? Math.abs(edge) / denominator : 0;
-  const rawStake =
-    config.bankrollUsd *
-    config.kellyFraction *
-    fullKelly;
+  const rawStake = config.bankrollUsd * config.kellyFraction * fullKelly;
 
   return round2(
-    Math.min(
-      config.maxStakeUsd,
-      Math.max(config.minStakeUsd, rawStake)
-    )
+    Math.min(config.maxStakeUsd, Math.max(config.minStakeUsd, rawStake)),
   );
 }
 
 function buildTrade(
   row: PredictionMarketRow,
-  opts: { minEdge: number; stakeMode: StakeMode; config?: PaperTradingConfig }
+  opts: { minEdge: number; stakeMode: StakeMode; config?: PaperTradingConfig },
 ): PaperTrade | null {
   const config = opts.config ?? PAPER_TRADING_CONFIG;
   const probability = clampProbability(Number(row.probability));
   const marketPrice = validEntryPrice(
     Number(row.market_price_at_forecast ?? row.market.outcome_yes_price ?? 0.5),
-    config
+    config,
   );
   if (marketPrice === null) return null;
   const edge = probability - marketPrice;
   const absEdge = Math.abs(edge);
 
   if (!Number.isFinite(absEdge) || absEdge < opts.minEdge) return null;
-  if (row.market.status === "voided" || row.market.status === "disputed") return null;
+  if (row.market.status === "voided" || row.market.status === "disputed")
+    return null;
 
   const side: TradeSide = edge >= 0 ? "YES" : "NO";
   const stakeUsd = stakeForTrade(
@@ -687,7 +691,7 @@ function buildTrade(
     edge,
     marketPrice,
     opts.stakeMode,
-    config
+    config,
   );
   const profitIfCorrectUsd =
     side === "YES"
@@ -704,8 +708,7 @@ function buildTrade(
       ? Boolean(row.market.resolved_outcome)
       : !Boolean(row.market.resolved_outcome)
     : null;
-  const pnlUsd =
-    won === null ? null : won ? profitIfCorrectUsd : -stakeUsd;
+  const pnlUsd = won === null ? null : won ? profitIfCorrectUsd : -stakeUsd;
 
   const agent = AGENTS.find((a) => a.id === row.agent_id);
 
@@ -743,7 +746,7 @@ function buildTrade(
 function summarizeAgent(
   agentId: string,
   trades: PaperTrade[],
-  rank: number
+  rank: number,
 ): AgentTradingSummary | null {
   const mine = trades
     .filter((t) => t.agent_id === agentId && t.pnl_usd !== null)
@@ -777,10 +780,12 @@ function summarizeAgent(
     stake_usd: round2(stakeUsd),
     net_pnl_usd: round2(netPnlUsd),
     roi_on_stake: stakeUsd > 0 ? round4(netPnlUsd / stakeUsd) : 0,
-    avg_edge: round4(mine.reduce((sum, t) => sum + t.abs_edge, 0) / mine.length),
+    avg_edge: round4(
+      mine.reduce((sum, t) => sum + t.abs_edge, 0) / mine.length,
+    ),
     avg_stake_usd: round2(stakeUsd / mine.length),
     avg_expected_pnl_usd: round2(
-      mine.reduce((sum, t) => sum + t.expected_pnl_usd, 0) / mine.length
+      mine.reduce((sum, t) => sum + t.expected_pnl_usd, 0) / mine.length,
     ),
     max_drawdown_usd: round2(Math.abs(maxDrawdown)),
   };
@@ -793,14 +798,14 @@ function summarizeScenario(
     label: string;
     minEdge: number;
     stakeMode: StakeMode;
-  }
+  },
 ): ScenarioSummary {
   const trades = rows
     .map((row) =>
       buildTrade(row, {
         minEdge: scenario.minEdge,
         stakeMode: scenario.stakeMode,
-      })
+      }),
     )
     .filter((t): t is PaperTrade => Boolean(t))
     .filter((t) => t.pnl_usd !== null);
@@ -810,7 +815,7 @@ function summarizeScenario(
   const wins = trades.filter((t) => t.won).length;
   const maxLossPerTrade = trades.reduce(
     (max, t) => Math.max(max, t.max_loss_usd),
-    0
+    0,
   );
 
   return {
@@ -842,15 +847,18 @@ function inSample(trade: PaperTrade, sample: TradingSample): boolean {
 function summarizeTotals(trades: PaperTrade[]): TradingTotals {
   const resolvedTrades = trades.filter((t) => t.pnl_usd !== null);
   const openTrades = trades.filter((t) => t.pnl_usd === null);
-  const resolvedStakeUsd = resolvedTrades.reduce((sum, t) => sum + t.stake_usd, 0);
+  const resolvedStakeUsd = resolvedTrades.reduce(
+    (sum, t) => sum + t.stake_usd,
+    0,
+  );
   const resolvedNetPnlUsd = resolvedTrades.reduce(
     (sum, t) => sum + (t.pnl_usd ?? 0),
-    0
+    0,
   );
   const openExposureUsd = openTrades.reduce((sum, t) => sum + t.stake_usd, 0);
   const openExpectedPnlUsd = openTrades.reduce(
     (sum, t) => sum + t.expected_pnl_usd,
-    0
+    0,
   );
 
   return {
@@ -864,7 +872,8 @@ function summarizeTotals(trades: PaperTrade[]): TradingTotals {
     open_exposure_usd: round2(openExposureUsd),
     open_expected_pnl_usd: round2(openExpectedPnlUsd),
     live_resolved_trades: resolvedTrades.filter((t) => !t.is_backfill).length,
-    backfill_resolved_trades: resolvedTrades.filter((t) => t.is_backfill).length,
+    backfill_resolved_trades: resolvedTrades.filter((t) => t.is_backfill)
+      .length,
   };
 }
 
@@ -876,7 +885,7 @@ function dayDelta(from: Date, toIso: string): number | null {
 }
 
 function resolutionStatusRank(
-  status: ResolutionWatchSignal["close_status"]
+  status: ResolutionWatchSignal["close_status"],
 ): number {
   if (status === "overdue") return 0;
   if (status === "closing_next_7d") return 1;
@@ -886,22 +895,26 @@ function resolutionStatusRank(
 
 function buildResolutionWatch(
   liveTrades: PaperTrade[],
-  now = new Date()
+  now = new Date(),
 ): TradingResolutionWatch {
   const openLiveTrades = liveTrades.filter((trade) => trade.pnl_usd === null);
   const nowTs = now.getTime();
   const weekFromNowTs = nowTs + 7 * 24 * 60 * 60 * 1000;
   const signals = openLiveTrades.map((trade): ResolutionWatchSignal => {
-    const closeTs = trade.market_closes_at ? Date.parse(trade.market_closes_at) : NaN;
-    const ageDays = dayDelta(new Date(trade.created_at), now.toISOString()) ?? 0;
-    const closeStatus: ResolutionWatchSignal["close_status"] =
-      !Number.isFinite(closeTs)
-        ? "unknown_close"
-        : closeTs < nowTs
-          ? "overdue"
-          : closeTs <= weekFromNowTs
-            ? "closing_next_7d"
-            : "future";
+    const closeTs = trade.market_closes_at
+      ? Date.parse(trade.market_closes_at)
+      : NaN;
+    const ageDays =
+      dayDelta(new Date(trade.created_at), now.toISOString()) ?? 0;
+    const closeStatus: ResolutionWatchSignal["close_status"] = !Number.isFinite(
+      closeTs,
+    )
+      ? "unknown_close"
+      : closeTs < nowTs
+        ? "overdue"
+        : closeTs <= weekFromNowTs
+          ? "closing_next_7d"
+          : "future";
     const tradabilityStatus: ResolutionWatchSignal["tradability_status"] =
       closeStatus === "overdue" || closeStatus === "unknown_close"
         ? "needs_review"
@@ -911,6 +924,9 @@ function buildResolutionWatch(
       prediction_id: trade.prediction_id,
       market_id: trade.market_id,
       market_question: trade.market_question,
+      market_source: trade.market_source,
+      market_url: trade.market_url,
+      market_status: trade.market_status,
       agent_id: trade.agent_id,
       agent_name: trade.agent_name,
       side: trade.side,
@@ -928,23 +944,23 @@ function buildResolutionWatch(
   });
 
   const overdueCount = signals.filter(
-    (signal) => signal.close_status === "overdue"
+    (signal) => signal.close_status === "overdue",
   ).length;
   const closingSoonCount = signals.filter(
-    (signal) => signal.close_status === "closing_next_7d"
+    (signal) => signal.close_status === "closing_next_7d",
   ).length;
   const unknownCloseCount = signals.filter(
-    (signal) => signal.close_status === "unknown_close"
+    (signal) => signal.close_status === "unknown_close",
   ).length;
   const tradableSignals = signals.filter(
-    (signal) => signal.tradability_status === "tradable"
+    (signal) => signal.tradability_status === "tradable",
   );
   const reviewRequiredSignals = signals.filter(
-    (signal) => signal.tradability_status === "needs_review"
+    (signal) => signal.tradability_status === "needs_review",
   );
   const futureCloseTimes = signals
     .map((signal) =>
-      signal.market_closes_at ? Date.parse(signal.market_closes_at) : NaN
+      signal.market_closes_at ? Date.parse(signal.market_closes_at) : NaN,
     )
     .filter((ts) => Number.isFinite(ts) && ts >= nowTs)
     .sort((a, b) => a - b);
@@ -961,7 +977,7 @@ function buildResolutionWatch(
           resolutionStatusRank(b.close_status) ||
         (a.days_until_close ?? Number.POSITIVE_INFINITY) -
           (b.days_until_close ?? Number.POSITIVE_INFINITY) ||
-        Date.parse(a.created_at) - Date.parse(b.created_at)
+        Date.parse(a.created_at) - Date.parse(b.created_at),
     )
     .slice(0, 12);
   const status: TradingResolutionWatch["status"] =
@@ -992,25 +1008,25 @@ function buildResolutionWatch(
     oldest_opened_at:
       openedTimes.length > 0 ? new Date(openedTimes[0]).toISOString() : null,
     total_open_exposure_usd: round2(
-      openLiveTrades.reduce((sum, trade) => sum + trade.stake_usd, 0)
+      openLiveTrades.reduce((sum, trade) => sum + trade.stake_usd, 0),
     ),
     total_open_expected_pnl_usd: round2(
-      openLiveTrades.reduce((sum, trade) => sum + trade.expected_pnl_usd, 0)
+      openLiveTrades.reduce((sum, trade) => sum + trade.expected_pnl_usd, 0),
     ),
     tradable_open_exposure_usd: round2(
-      tradableSignals.reduce((sum, signal) => sum + signal.stake_usd, 0)
+      tradableSignals.reduce((sum, signal) => sum + signal.stake_usd, 0),
     ),
     tradable_open_expected_pnl_usd: round2(
-      tradableSignals.reduce((sum, signal) => sum + signal.expected_pnl_usd, 0)
+      tradableSignals.reduce((sum, signal) => sum + signal.expected_pnl_usd, 0),
     ),
     review_required_open_exposure_usd: round2(
-      reviewRequiredSignals.reduce((sum, signal) => sum + signal.stake_usd, 0)
+      reviewRequiredSignals.reduce((sum, signal) => sum + signal.stake_usd, 0),
     ),
     review_required_open_expected_pnl_usd: round2(
       reviewRequiredSignals.reduce(
         (sum, signal) => sum + signal.expected_pnl_usd,
-        0
-      )
+        0,
+      ),
     ),
     signals: sortedSignals,
   };
@@ -1036,7 +1052,7 @@ function configForStrategy(strategy: StrategyDefinition): PaperTradingConfig {
 
 function rawTradesForStrategy(
   rows: PredictionMarketRow[],
-  strategy: StrategyDefinition
+  strategy: StrategyDefinition,
 ): PaperTrade[] {
   const strategyConfig = configForStrategy(strategy);
 
@@ -1046,12 +1062,14 @@ function rawTradesForStrategy(
         minEdge: strategy.minEdge,
         stakeMode: strategy.stakeMode,
         config: strategyConfig,
-      })
+      }),
     )
     .filter((t): t is PaperTrade => Boolean(t))
     .filter((t) => inSample(t, strategy.sample))
     .filter((t) => !strategy.agentIds || strategy.agentIds.includes(t.agent_id))
-    .filter((t) => !strategy.category || t.market_category === strategy.category)
+    .filter(
+      (t) => !strategy.category || t.market_category === strategy.category,
+    )
     .filter((t) => !strategy.side || t.side === strategy.side);
 }
 
@@ -1065,7 +1083,7 @@ function tradeResolutionTs(trade: PaperTrade, createdTs: number): number {
 
 function applyExposureCap(
   trades: PaperTrade[],
-  maxOpenExposureUsd: number
+  maxOpenExposureUsd: number,
 ): {
   acceptedTrades: PaperTrade[];
   ledger: ExposureLedgerSummary;
@@ -1075,7 +1093,11 @@ function applyExposureCap(
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
   const acceptedTrades: PaperTrade[] = [];
   const entries: ExposureLedgerEntry[] = [];
-  const active: Array<{ predictionId: string; stakeUsd: number; closesAt: number }> = [];
+  const active: Array<{
+    predictionId: string;
+    stakeUsd: number;
+    closesAt: number;
+  }> = [];
   let peakOpenExposure = 0;
   let skippedExposureUsd = 0;
   let skippedExpectedOpenPnlUsd = 0;
@@ -1144,9 +1166,11 @@ function applyExposureCap(
     });
   }
 
-  const acceptedOpenSignals = acceptedTrades.filter((trade) => trade.pnl_usd === null);
+  const acceptedOpenSignals = acceptedTrades.filter(
+    (trade) => trade.pnl_usd === null,
+  );
   const acceptedResolvedTrades = acceptedTrades.filter(
-    (trade) => trade.pnl_usd !== null
+    (trade) => trade.pnl_usd !== null,
   );
 
   return {
@@ -1155,18 +1179,21 @@ function applyExposureCap(
       max_open_exposure_usd: round2(maxOpenExposureUsd),
       accepted_trades: acceptedTrades.length,
       skipped_trades: entries.filter(
-        (entry) => entry.status === "skipped_exposure_cap"
+        (entry) => entry.status === "skipped_exposure_cap",
       ).length,
       accepted_open_signals: acceptedOpenSignals.length,
       skipped_open_signals: skippedOpenSignals,
       accepted_resolved_trades: acceptedResolvedTrades.length,
       current_open_exposure_usd: round2(
-        acceptedOpenSignals.reduce((sum, trade) => sum + trade.stake_usd, 0)
+        acceptedOpenSignals.reduce((sum, trade) => sum + trade.stake_usd, 0),
       ),
       peak_open_exposure_usd: round2(peakOpenExposure),
       skipped_exposure_usd: round2(skippedExposureUsd),
       accepted_expected_open_pnl_usd: round2(
-        acceptedOpenSignals.reduce((sum, trade) => sum + trade.expected_pnl_usd, 0)
+        acceptedOpenSignals.reduce(
+          (sum, trade) => sum + trade.expected_pnl_usd,
+          0,
+        ),
       ),
       skipped_expected_open_pnl_usd: round2(skippedExpectedOpenPnlUsd),
       recent_entries: entries
@@ -1179,7 +1206,7 @@ function applyExposureCap(
 
 function tradesForStrategy(
   rows: PredictionMarketRow[],
-  strategy: StrategyDefinition
+  strategy: StrategyDefinition,
 ): {
   acceptedTrades: PaperTrade[];
   ledger: ExposureLedgerSummary;
@@ -1187,21 +1214,24 @@ function tradesForStrategy(
   const strategyConfig = configForStrategy(strategy);
   return applyExposureCap(
     rawTradesForStrategy(rows, strategy),
-    strategyConfig.maxOpenExposureUsd
+    strategyConfig.maxOpenExposureUsd,
   );
 }
 
 function summarizeStrategyFromTrades(
   strategy: StrategyDefinition,
   trades: PaperTrade[],
-  ledger: ExposureLedgerSummary
+  ledger: ExposureLedgerSummary,
 ): StrategyVariantSummary {
   const resolvedTrades = trades
     .filter((t) => t.pnl_usd !== null)
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
   const openTrades = trades.filter((t) => t.pnl_usd === null);
   const stakeUsd = resolvedTrades.reduce((sum, t) => sum + t.stake_usd, 0);
-  const netPnlUsd = resolvedTrades.reduce((sum, t) => sum + (t.pnl_usd ?? 0), 0);
+  const netPnlUsd = resolvedTrades.reduce(
+    (sum, t) => sum + (t.pnl_usd ?? 0),
+    0,
+  );
   const wins = resolvedTrades.filter((t) => t.won).length;
   let equity = 0;
   let peak = 0;
@@ -1237,15 +1267,17 @@ function summarizeStrategyFromTrades(
       resolvedTrades.length > 0
         ? round4(
             resolvedTrades.reduce((sum, t) => sum + t.abs_edge, 0) /
-              resolvedTrades.length
+              resolvedTrades.length,
           )
         : 0,
     avg_stake_usd:
       resolvedTrades.length > 0 ? round2(stakeUsd / resolvedTrades.length) : 0,
     max_drawdown_usd: round2(Math.abs(maxDrawdown)),
-    open_exposure_usd: round2(openTrades.reduce((sum, t) => sum + t.stake_usd, 0)),
+    open_exposure_usd: round2(
+      openTrades.reduce((sum, t) => sum + t.stake_usd, 0),
+    ),
     open_expected_pnl_usd: round2(
-      openTrades.reduce((sum, t) => sum + t.expected_pnl_usd, 0)
+      openTrades.reduce((sum, t) => sum + t.expected_pnl_usd, 0),
     ),
     exposure_ledger: ledger,
   };
@@ -1256,21 +1288,21 @@ function summarizeStrategyFromTrades(
   };
 }
 
-function isAgentEdgeVariant(
-  strategy: StrategyVariantSummary
-): boolean {
+function isAgentEdgeVariant(strategy: StrategyVariantSummary): boolean {
   return (
     strategy.sample === "live_only" &&
     !strategy.is_custom &&
     strategy.agent_ids.length === 1 &&
     strategy.category === null &&
     strategy.side === null &&
-    AGENT_EDGE_GATES.includes(strategy.min_edge as (typeof AGENT_EDGE_GATES)[number])
+    AGENT_EDGE_GATES.includes(
+      strategy.min_edge as (typeof AGENT_EDGE_GATES)[number],
+    )
   );
 }
 
 function buildAgentEdgeMatrix(
-  strategies: StrategyVariantSummary[]
+  strategies: StrategyVariantSummary[],
 ): AgentEdgeRuleSummary[] {
   const agentRank = new Map(AGENTS.map((agent, index) => [agent.id, index]));
 
@@ -1304,8 +1336,7 @@ function buildAgentEdgeMatrix(
     .sort(
       (a, b) =>
         (agentRank.get(a.agent_id) ?? 999) -
-          (agentRank.get(b.agent_id) ?? 999) ||
-        a.min_edge - b.min_edge
+          (agentRank.get(b.agent_id) ?? 999) || a.min_edge - b.min_edge,
     );
 }
 
@@ -1317,17 +1348,21 @@ function dayKey(date: string): string {
 
 function buildDailySnapshots(
   trades: PaperTrade[],
-  sample: TradingSample
+  sample: TradingSample,
 ): DailyEvidenceSnapshot[] {
   const filtered = trades
     .filter((trade) => inSample(trade, sample))
     .filter((trade) => Number.isFinite(Date.parse(trade.created_at)));
   if (filtered.length === 0) return [];
 
-  const latestTs = Math.max(...filtered.map((trade) => Date.parse(trade.created_at)));
+  const latestTs = Math.max(
+    ...filtered.map((trade) => Date.parse(trade.created_at)),
+  );
   const cutoffTs =
     latestTs - (PAPER_TRADING_CONFIG.dailyWindowDays - 1) * 24 * 60 * 60 * 1000;
-  const recent = filtered.filter((trade) => Date.parse(trade.created_at) >= cutoffTs);
+  const recent = filtered.filter(
+    (trade) => Date.parse(trade.created_at) >= cutoffTs,
+  );
 
   const byDay = new Map<string, PaperTrade[]>();
   for (const trade of recent) {
@@ -1343,15 +1378,27 @@ function buildDailySnapshots(
     .map(([date, dayTrades]) => {
       const resolved = dayTrades.filter((trade) => trade.pnl_usd !== null);
       const open = dayTrades.filter((trade) => trade.pnl_usd === null);
-      const netPnl = resolved.reduce((sum, trade) => sum + (trade.pnl_usd ?? 0), 0);
+      const netPnl = resolved.reduce(
+        (sum, trade) => sum + (trade.pnl_usd ?? 0),
+        0,
+      );
       cumulativePnl += netPnl;
       const wins = resolved.filter((trade) => trade.won).length;
-      const resolvedStake = resolved.reduce((sum, trade) => sum + trade.stake_usd, 0);
-      const totalRisk = dayTrades.reduce((sum, trade) => sum + trade.stake_usd, 0);
-      const openExposure = open.reduce((sum, trade) => sum + trade.stake_usd, 0);
+      const resolvedStake = resolved.reduce(
+        (sum, trade) => sum + trade.stake_usd,
+        0,
+      );
+      const totalRisk = dayTrades.reduce(
+        (sum, trade) => sum + trade.stake_usd,
+        0,
+      );
+      const openExposure = open.reduce(
+        (sum, trade) => sum + trade.stake_usd,
+        0,
+      );
       const openExpectedPnl = open.reduce(
         (sum, trade) => sum + trade.expected_pnl_usd,
-        0
+        0,
       );
 
       return {
@@ -1377,7 +1424,7 @@ function buildDailySnapshots(
 function buildStrategyDailySeries(
   strategy: StrategyDefinition,
   trades: PaperTrade[],
-  proofGate: StrategyProofGate
+  proofGate: StrategyProofGate,
 ): StrategyDailyEvidenceSeries {
   return {
     strategy_id: strategy.id,
@@ -1392,7 +1439,7 @@ function buildStrategyDailySeries(
 
 function evaluateStrategy(
   rows: PredictionMarketRow[],
-  strategy: StrategyDefinition
+  strategy: StrategyDefinition,
 ): StrategyEvaluation {
   const { acceptedTrades, ledger } = tradesForStrategy(rows, strategy);
   const summary = summarizeStrategyFromTrades(strategy, acceptedTrades, ledger);
@@ -1400,7 +1447,11 @@ function evaluateStrategy(
     summary,
     acceptedTrades,
     ledger,
-    dailySeries: buildStrategyDailySeries(strategy, acceptedTrades, summary.proof_gate),
+    dailySeries: buildStrategyDailySeries(
+      strategy,
+      acceptedTrades,
+      summary.proof_gate,
+    ),
   };
 }
 
@@ -1429,7 +1480,7 @@ function calendarSpanDays(trades: PaperTrade[]): {
 function buildProofGate(
   strategy: StrategyDefinition,
   summary: Omit<StrategyVariantSummary, "proof_gate">,
-  trades: PaperTrade[]
+  trades: PaperTrade[],
 ): StrategyProofGate {
   const span = calendarSpanDays(trades);
   const dailySnapshots = buildDailySnapshots(trades, strategy.sample);
@@ -1438,7 +1489,9 @@ function buildProofGate(
       ? dailySnapshots.reduce((sum, day) => sum + day.net_pnl_usd, 0) /
         dailySnapshots.length
       : 0;
-  const positiveDays = dailySnapshots.filter((day) => day.net_pnl_usd > 0).length;
+  const positiveDays = dailySnapshots.filter(
+    (day) => day.net_pnl_usd > 0,
+  ).length;
   const losingDays = dailySnapshots.filter((day) => day.net_pnl_usd < 0).length;
   const blockers: string[] = [];
 
@@ -1468,12 +1521,14 @@ function buildProofGate(
 
   if (span.days < PAPER_TRADING_PROOF_RULES.requiredLiveDays) {
     blockers.push(
-      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - span.days} more live calendar days needed.`
+      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - span.days} more live calendar days needed.`,
     );
   }
-  if (summary.resolved_trades < PAPER_TRADING_PROOF_RULES.requiredResolvedTrades) {
+  if (
+    summary.resolved_trades < PAPER_TRADING_PROOF_RULES.requiredResolvedTrades
+  ) {
     blockers.push(
-      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - summary.resolved_trades} more resolved live trades needed.`
+      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - summary.resolved_trades} more resolved live trades needed.`,
     );
   }
 
@@ -1542,7 +1597,7 @@ async function loadPredictionRows(): Promise<{
       const { data, error } = await sb
         .from("predictions")
         .select(
-          "id, agent_id, market_id, probability, confidence, reasoning, market_price_at_forecast, is_backfill, created_at, markets!inner(id, source, question, category, url, status, resolved_outcome, resolved_at, closes_at, outcome_yes_price)"
+          "id, agent_id, market_id, probability, confidence, reasoning, market_price_at_forecast, is_backfill, created_at, markets!inner(id, source, question, category, url, status, resolved_outcome, resolved_at, closes_at, outcome_yes_price)",
         )
         .eq("abstained", false)
         .order("created_at", { ascending: false })
@@ -1619,7 +1674,7 @@ async function loadPredictionRows(): Promise<{
 }
 
 export async function getTradingSnapshot(
-  controls: TradingControls = DEFAULT_TRADING_CONTROLS
+  controls: TradingControls = DEFAULT_TRADING_CONTROLS,
 ): Promise<TradingSnapshot> {
   const { source, rows } = await loadPredictionRows();
   const selectedDefinition = strategyFromControls(controls);
@@ -1628,7 +1683,7 @@ export async function getTradingSnapshot(
       buildTrade(row, {
         minEdge: PAPER_TRADING_CONFIG.minEdge,
         stakeMode: "kelly_capped",
-      })
+      }),
     )
     .filter((t): t is PaperTrade => Boolean(t));
 
@@ -1671,11 +1726,11 @@ export async function getTradingSnapshot(
   ].map((scenario) => summarizeScenario(rows, scenario));
 
   const evaluatedStrategies = STRATEGY_DEFINITIONS.map((strategy) =>
-    evaluateStrategy(rows, strategy)
+    evaluateStrategy(rows, strategy),
   );
   const strategyVariants = evaluatedStrategies.map(({ summary }) => summary);
   const strategyDailySeries = evaluatedStrategies.map(
-    ({ dailySeries }) => dailySeries
+    ({ dailySeries }) => dailySeries,
   );
   const selectedEvaluation = evaluateStrategy(rows, selectedDefinition);
   const selectedTrades = selectedEvaluation.acceptedTrades;
@@ -1702,7 +1757,7 @@ export async function getTradingSnapshot(
     resolution_watch: buildResolutionWatch(liveTrades),
     selected_strategy: selectedStrategy,
     proof_gates: [selectedStrategy, ...strategyVariants].map(
-      (strategy) => strategy.proof_gate
+      (strategy) => strategy.proof_gate,
     ),
     selected_exposure_ledger: selectedExposureLedger,
     selected_open_signals: selectedOpenSignals,

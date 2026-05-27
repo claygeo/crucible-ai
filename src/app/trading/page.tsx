@@ -7,6 +7,7 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
+import { buildResolutionReviewQueue } from "@/lib/trading-resolution-review";
 import { dollars, int, pct, prob, relativeTime, signed } from "@/lib/format";
 import {
   TRADING_CATEGORY_OPTIONS,
@@ -116,6 +117,12 @@ function readinessStatusClass(status: string) {
   if (status === "blocked") return "bg-rose-400/10 text-rose-400";
   if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
   return "bg-warn/10 text-warn";
+}
+
+function resolutionQueueStatusClass(status: string) {
+  if (status === "clear") return "bg-positive/10 text-positive";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  return "bg-text-muted/10 text-text-muted";
 }
 
 function proofRunwayStatusClass(status: string) {
@@ -250,6 +257,10 @@ export default async function TradingPage({
     proofRunway,
     resolutionWatch,
   });
+  const resolutionReviewQueue = buildResolutionReviewQueue({
+    resolutionWatch,
+    publishedArtifactProof,
+  });
   const latestArtifactRun = artifactWorkflow.latest_successful_artifact_run;
   const latestWorkflowRun = artifactWorkflow.latest_run;
   const publishedAudit = publishedArtifactProof.artifact_audit;
@@ -266,6 +277,7 @@ export default async function TradingPage({
     typeof publishedReadiness?.status === "string"
       ? publishedReadiness.status
       : "unavailable";
+  const resolutionReviewJsonHref = `/api/trading-resolution-review?${selectedQuery}`;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -978,6 +990,130 @@ export default async function TradingPage({
                 audit {proofEvidenceSources.artifact_contract.audit_command}
               </span>
             </div>
+          </div>
+          <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="heading text-sm text-text-primary">
+                  Resolution review queue
+                </h3>
+                <p className="text-xs text-text-muted mt-1">
+                  {resolutionReviewQueue.message}
+                </p>
+              </div>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${resolutionQueueStatusClass(
+                  resolutionReviewQueue.status
+                )}`}
+              >
+                {resolutionReviewQueue.status_label}
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Current
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(resolutionReviewQueue.current_review_required)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Published
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(resolutionReviewQueue.published_review_required)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Action
+                </div>
+                <Link
+                  href={resolutionReviewJsonHref}
+                  className="mono text-[11px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+                >
+                  review JSON
+                </Link>
+              </div>
+            </div>
+            {resolutionReviewQueue.items.length === 0 ? (
+              <div className="text-sm text-text-muted mono">
+                [no review-required paper markets in current or published proof]
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full" aria-label="Resolution review queue">
+                  <thead>
+                    <tr className="border-b border-border-subtle text-text-muted">
+                      <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Market</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Evidence</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Agent</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">EV</th>
+                      <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Close</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-subtle/60">
+                    {resolutionReviewQueue.items.slice(0, 8).map((item) => (
+                      <tr key={`${item.source}-${item.prediction_id}`}>
+                        <td className="py-3 pr-3">
+                          <Link
+                            href={`/markets/${item.market_id}`}
+                            className="text-sm text-text-primary hover:text-accent transition-colors line-clamp-2"
+                          >
+                            {item.market_question}
+                          </Link>
+                          <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                            {item.market_source ?? "unknown source"} /{" "}
+                            {item.market_status ?? "unknown status"} /{" "}
+                            {item.close_status.replaceAll("_", " ")}
+                          </div>
+                          {item.market_url ? (
+                            <a
+                              href={item.market_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+                            >
+                              source market
+                            </a>
+                          ) : null}
+                        </td>
+                        <td className="py-3 px-3 mono text-right text-text-secondary">
+                          <div>{item.source_label}</div>
+                          <div className="text-[10px] text-text-muted">
+                            {item.source_run_id ? `run ${item.source_run_id}` : "live"}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 mono text-right text-text-secondary">
+                          {item.agent_name} {item.side}
+                        </td>
+                        <td
+                          className={`py-3 px-3 mono text-right ${pnlClass(
+                            item.expected_pnl_usd
+                          )}`}
+                        >
+                          {dollars(item.expected_pnl_usd, 2)}
+                        </td>
+                        <td
+                          suppressHydrationWarning
+                          className={`py-3 pl-3 mono text-right ${
+                            item.close_status === "overdue"
+                              ? "text-warn"
+                              : "text-text-secondary"
+                          }`}
+                        >
+                          {item.market_closes_at
+                            ? relativeTime(item.market_closes_at)
+                            : "unknown"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
           <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">

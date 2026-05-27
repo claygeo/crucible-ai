@@ -200,6 +200,11 @@ The 30-day proof window now has a durable audit surface:
   capital-review boundary. The readiness payload also includes per-status item
   counts, blocked item ids, and structured evidence for gates with live blockers
   such as overdue resolution signals.
+- `/api/trading-resolution-review` returns the read-only resolution review queue
+  from the current live snapshot and latest published artifact proof. It names
+  every overdue or unknown-close paper market that blocks open EV from being
+  trusted, including source-market links when available; it never writes outcomes
+  or enables execution.
 - `persistence.proof_runway` and the top-level `persisted_proof_runway` turn the
   same evidence into an operator timeline: earliest possible capital-review
   date, remaining capture days, remaining resolved live trades, open resolution
