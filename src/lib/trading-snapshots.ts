@@ -61,6 +61,7 @@ export type PaperTradingPersistenceRead = {
   capture_calendar: PaperTradingCaptureCalendar;
   proof_summary: PaperTradingProofSummary;
   proof_readiness: PaperTradingProofReadiness;
+  proof_runway: PaperTradingProofRunway;
   agent_edge_proof_matrix: PaperTradingAgentEdgeProofRow[];
   snapshots: PaperTradingSnapshotRow[];
   strategy_rollups: PaperTradingStrategyProofRollup[];
@@ -310,6 +311,42 @@ export type PaperTradingProofReadiness = {
   unavailable_item_count: number;
   blocked_item_ids: string[];
   items: PaperTradingProofReadinessItem[];
+};
+
+export type PaperTradingProofRunwayStatus =
+  | "reviewable"
+  | "collecting"
+  | "blocked"
+  | "unavailable";
+
+export type PaperTradingProofRunwayMilestone = {
+  id: string;
+  label: string;
+  status: PaperTradingProofRunwayStatus;
+  status_label: string;
+  current: string;
+  target: string;
+  eta_at: string | null;
+  detail: string;
+};
+
+export type PaperTradingProofRunway = {
+  status: PaperTradingProofRunwayStatus;
+  status_label: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  earliest_capital_review_at: string | null;
+  earliest_capital_review_date: string | null;
+  days_until_earliest_review: number | null;
+  capture_days_remaining: number;
+  resolved_trades_remaining: number;
+  open_live_signals: number | null;
+  overdue_live_signals: number | null;
+  closing_next_7d_signals: number | null;
+  unknown_close_live_signals: number | null;
+  pending_resolution_capacity: number | null;
+  blocker_summary: string;
+  milestones: PaperTradingProofRunwayMilestone[];
 };
 
 function getSupabaseEnv(): { url: string; key: string } | null {
@@ -1485,6 +1522,242 @@ function resolutionSignalEvidence(
   };
 }
 
+function proofRunwayStatusLabel(status: PaperTradingProofRunwayStatus): string {
+  if (status === "reviewable") return "Reviewable";
+  if (status === "blocked") return "Blocked";
+  if (status === "unavailable") return "Unavailable";
+  return "Collecting";
+}
+
+function parseDateOrNull(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function addDaysAtSameTime(date: Date, days: number): Date {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+function daysUntil(date: Date, now = new Date()): number {
+  return Math.max(
+    0,
+    Math.ceil((date.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+  );
+}
+
+function buildRunwayMilestone(
+  id: string,
+  label: string,
+  status: PaperTradingProofRunwayStatus,
+  current: string,
+  target: string,
+  etaAt: string | null,
+  detail: string
+): PaperTradingProofRunwayMilestone {
+  return {
+    id,
+    label,
+    status,
+    status_label: proofRunwayStatusLabel(status),
+    current,
+    target,
+    eta_at: etaAt,
+    detail,
+  };
+}
+
+function earliestCaptureCompletionAt(
+  captureCalendar: PaperTradingCaptureCalendar,
+  captureHealth: PaperTradingCaptureHealth
+): string | null {
+  if (captureCalendar.days_remaining_to_30 <= 0) {
+    return captureHealth.latest_captured_at;
+  }
+
+  const nextCapture = parseDateOrNull(captureHealth.next_expected_capture_at);
+  if (!nextCapture) return null;
+
+  return addDaysAtSameTime(
+    nextCapture,
+    Math.max(0, captureCalendar.days_remaining_to_30 - 1)
+  ).toISOString();
+}
+
+export function buildPaperTradingProofRunway(args: {
+  proofSummary: PaperTradingProofSummary;
+  captureHealth: PaperTradingCaptureHealth;
+  captureCalendar: PaperTradingCaptureCalendar;
+  resolutionWatch?: TradingResolutionWatch | null;
+  now?: Date;
+}): PaperTradingProofRunway {
+  const now = args.now ?? new Date();
+  const captureDaysRemaining = Math.max(
+    0,
+    REQUIRED_PROOF_DAYS - args.captureCalendar.complete_days
+  );
+  const resolvedTradesRemaining = Math.max(
+    0,
+    PAPER_TRADING_PROOF_RULES.requiredResolvedTrades -
+      args.proofSummary.best_live_resolved_trades
+  );
+  const captureEta = earliestCaptureCompletionAt(
+    args.captureCalendar,
+    args.captureHealth
+  );
+  const resolvedCapacity =
+    args.resolutionWatch === undefined
+      ? null
+      : args.resolutionWatch?.open_live_signals ?? 0;
+  const openLiveSignals =
+    args.resolutionWatch === undefined
+      ? null
+      : args.resolutionWatch?.open_live_signals ?? 0;
+  const overdueLiveSignals =
+    args.resolutionWatch === undefined
+      ? null
+      : args.resolutionWatch?.overdue_live_signals ?? 0;
+  const closingNext7dSignals =
+    args.resolutionWatch === undefined
+      ? null
+      : args.resolutionWatch?.closing_next_7d_signals ?? 0;
+  const unknownCloseLiveSignals =
+    args.resolutionWatch === undefined
+      ? null
+      : args.resolutionWatch?.unknown_close_live_signals ?? 0;
+  const captureBlocked =
+    args.captureHealth.status === "stale" ||
+    args.captureHealth.status === "unavailable" ||
+    args.captureCalendar.status === "missing" ||
+    args.captureCalendar.status === "partial";
+  const resolutionUnchecked = args.resolutionWatch === undefined;
+  const resolutionBlocked = (overdueLiveSignals ?? 0) > 0;
+  const unavailable =
+    args.proofSummary.status === "unavailable" ||
+    args.captureCalendar.status === "unavailable";
+  const status: PaperTradingProofRunwayStatus = unavailable
+    ? "unavailable"
+    : captureBlocked || resolutionBlocked
+      ? "blocked"
+      : args.proofSummary.capital_review_status === "reviewable" &&
+          !resolutionUnchecked
+        ? "reviewable"
+        : "collecting";
+  const blockerSummary = unavailable
+    ? "Persisted proof data is unavailable."
+    : resolutionBlocked
+      ? `Resolve ${overdueLiveSignals} overdue live paper market${
+          overdueLiveSignals === 1 ? "" : "s"
+        } before trusting open EV.`
+      : captureBlocked
+        ? "Repair capture freshness or missing daily proof rows before review."
+        : resolutionUnchecked
+          ? "Check the current live resolution backlog before capital review."
+        : captureDaysRemaining > 0 || resolvedTradesRemaining > 0
+          ? `Collect ${captureDaysRemaining} more proof day${
+              captureDaysRemaining === 1 ? "" : "s"
+            } and ${resolvedTradesRemaining} more resolved live paper trade${
+              resolvedTradesRemaining === 1 ? "" : "s"
+            }.`
+          : "A durable live candidate can be reviewed; execution remains disabled.";
+  const earliestReviewAt =
+    status === "reviewable"
+      ? args.captureHealth.latest_captured_at
+      : captureEta;
+  const earliestReviewDate = earliestReviewAt?.slice(0, 10) ?? null;
+  const earliestReviewDateObject = parseDateOrNull(earliestReviewAt);
+  const captureMilestoneStatus: PaperTradingProofRunwayStatus = captureBlocked
+    ? "blocked"
+    : captureDaysRemaining === 0
+      ? "reviewable"
+      : "collecting";
+  const resolvedMilestoneStatus: PaperTradingProofRunwayStatus =
+    resolvedTradesRemaining === 0 ? "reviewable" : "collecting";
+  const resolutionMilestoneStatus: PaperTradingProofRunwayStatus =
+    args.resolutionWatch === undefined || !args.resolutionWatch
+      ? "unavailable"
+      : args.resolutionWatch.overdue_live_signals > 0
+        ? "blocked"
+        : args.resolutionWatch.open_live_signals > 0
+          ? "collecting"
+          : "reviewable";
+  const capitalReviewMilestoneStatus: PaperTradingProofRunwayStatus =
+    args.proofSummary.capital_review_status === "reviewable"
+      ? "reviewable"
+      : status === "blocked"
+        ? "blocked"
+        : status === "unavailable"
+          ? "unavailable"
+          : "collecting";
+
+  return {
+    status,
+    status_label: proofRunwayStatusLabel(status),
+    paper_only: true,
+    real_money_execution_allowed: false,
+    earliest_capital_review_at: earliestReviewAt,
+    earliest_capital_review_date: earliestReviewDate,
+    days_until_earliest_review: earliestReviewDateObject
+      ? daysUntil(earliestReviewDateObject, now)
+      : null,
+    capture_days_remaining: captureDaysRemaining,
+    resolved_trades_remaining: resolvedTradesRemaining,
+    open_live_signals: openLiveSignals,
+    overdue_live_signals: overdueLiveSignals,
+    closing_next_7d_signals: closingNext7dSignals,
+    unknown_close_live_signals: unknownCloseLiveSignals,
+    pending_resolution_capacity: resolvedCapacity,
+    blocker_summary: blockerSummary,
+    milestones: [
+      buildRunwayMilestone(
+        "capture_window",
+        "30-day capture runway",
+        captureMilestoneStatus,
+        `${args.captureCalendar.complete_days}/${REQUIRED_PROOF_DAYS} complete days`,
+        `${REQUIRED_PROOF_DAYS} complete days`,
+        captureEta,
+        captureBlocked
+          ? "Daily capture quality must be repaired before the runway is meaningful."
+          : "Earliest date assumes the daily snapshot keeps landing on schedule."
+      ),
+      buildRunwayMilestone(
+        "resolved_trades",
+        "Resolved trade runway",
+        resolvedMilestoneStatus,
+        `${args.proofSummary.best_live_resolved_trades}/${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades} resolved`,
+        `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades} resolved live paper trades`,
+        null,
+        resolvedCapacity === null
+          ? "Current open live resolution capacity is only available from /api/trading.json."
+          : `${resolvedCapacity} open live paper tickets can become realized evidence when markets resolve.`
+      ),
+      buildRunwayMilestone(
+        "resolution_hygiene",
+        "Resolution hygiene",
+        resolutionMilestoneStatus,
+        args.resolutionWatch
+          ? `${args.resolutionWatch.overdue_live_signals} overdue / ${args.resolutionWatch.open_live_signals} open`
+          : "not checked",
+        "0 overdue live paper markets",
+        args.resolutionWatch?.next_close_at ?? null,
+        args.resolutionWatch
+          ? "Open EV is not realized profit until the underlying market resolves."
+          : "Live resolution status is available only when paired with the current trading snapshot."
+      ),
+      buildRunwayMilestone(
+        "capital_review",
+        "Capital review boundary",
+        capitalReviewMilestoneStatus,
+        args.proofSummary.capital_review_status_label,
+        "reviewable candidate, execution still disabled",
+        earliestReviewAt,
+        args.proofSummary.capital_review_blockers[0] ??
+          "The lab can become reviewable, but it never enables real-money execution."
+      ),
+    ],
+  };
+}
+
 function proofReadinessNextAction(
   args: {
     persistenceStatus: PaperTradingPersistenceRead["status"];
@@ -1798,6 +2071,11 @@ export async function loadPaperTradingSnapshotHistory(
         captureHealth,
         captureCalendar,
       }),
+      proof_runway: buildPaperTradingProofRunway({
+        proofSummary,
+        captureHealth,
+        captureCalendar,
+      }),
       agent_edge_proof_matrix: [],
       snapshots: [],
       strategy_rollups: [],
@@ -1833,6 +2111,11 @@ export async function loadPaperTradingSnapshotHistory(
         captureHealth,
         captureCalendar,
       }),
+      proof_runway: buildPaperTradingProofRunway({
+        proofSummary,
+        captureHealth,
+        captureCalendar,
+      }),
       agent_edge_proof_matrix: [],
       snapshots: [],
       strategy_rollups: [],
@@ -1860,6 +2143,11 @@ export async function loadPaperTradingSnapshotHistory(
     proof_summary: proofSummary,
     proof_readiness: buildPaperTradingProofReadiness({
       persistenceStatus: "available",
+      proofSummary,
+      captureHealth,
+      captureCalendar,
+    }),
+    proof_runway: buildPaperTradingProofRunway({
       proofSummary,
       captureHealth,
       captureCalendar,
