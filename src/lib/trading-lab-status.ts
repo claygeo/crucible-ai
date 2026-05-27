@@ -118,6 +118,7 @@ export type PaperTradingLabStatus = {
     sample: string;
     min_edge: number;
     stake_mode: string;
+    bankroll_usd: number;
   };
   proof_window: {
     required_days: number;
@@ -735,6 +736,7 @@ export function buildPaperTradingLabStatus(args: {
       sample: selectedStrategy.sample,
       min_edge: selectedStrategy.min_edge,
       stake_mode: selectedStrategy.stake_mode,
+      bankroll_usd: selectedStrategy.bankroll_usd,
     },
     proof_window: {
       required_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,

@@ -1,7 +1,11 @@
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { AGENTS } from "@/lib/agents";
-import { AGENT_EDGE_GATES, PAPER_TRADING_PROOF_RULES } from "@/lib/trading";
+import {
+  AGENT_EDGE_GATES,
+  PAPER_TRADING_CONFIG,
+  PAPER_TRADING_PROOF_RULES,
+} from "@/lib/trading";
 import type {
   ResolutionWatchSignal,
   StrategyDailyEvidenceSeries,
@@ -573,6 +577,7 @@ function strategyRuleFingerprint(
     sample: strategy?.sample ?? null,
     min_edge: strategy?.min_edge ?? null,
     stake_mode: strategy?.stake_mode ?? null,
+    bankroll_usd: strategy?.bankroll_usd ?? PAPER_TRADING_CONFIG.bankrollUsd,
     flat_stake_usd: strategy?.flat_stake_usd ?? null,
     max_stake_usd: strategy?.max_stake_usd ?? null,
     max_open_exposure_usd: exposureLedger?.max_open_exposure_usd ?? null,

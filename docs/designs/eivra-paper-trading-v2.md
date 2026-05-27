@@ -59,15 +59,21 @@ sample: live_only | all | backfill
 agent: all | sage | hawk | magpie | echo | mirror | ensemble
 category: all | politics | sports | ai-tech | crypto | other
 side: all | YES | NO
+bankroll_usd: 100 to 50000
 min_edge: 0.01 to 0.50
 stake_mode: kelly_capped | flat
 ticket_usd: 5 to 100
 max_stake_usd: 5 to 100
-max_open_exposure_usd: 100 to 5000
+max_open_exposure_usd: 5 to selected bankroll
 ```
 
 These params only change analytics. They do not create wallets, orders, leverage,
 or any execution path.
+
+The canonical 30-day proof registry keeps the default `$5,000` paper bankroll
+unless a URL-selected custom strategy explicitly sets `bankroll_usd`. This lets
+operators replay questions such as "`$800` Mirror-only" without rewriting the
+durable agent-edge proof defaults or mutating historical snapshot rows.
 
 ## Canonical Agent Edge Matrix
 

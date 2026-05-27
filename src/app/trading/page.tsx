@@ -555,11 +555,19 @@ export default async function TradingPage({
               source: <span className="text-text-primary">{snapshot.source}</span>
             </span>
             <span className="px-2 py-1 rounded bg-surface-elevated border border-border-subtle">
-              bankroll:{" "}
+              selected bankroll:{" "}
               <span className="text-text-primary">
-                {dollars(snapshot.config.bankrollUsd, 0)}
+                {dollars(snapshot.controls.bankroll_usd, 0)}
               </span>
             </span>
+            {snapshot.controls.bankroll_usd !== snapshot.config.bankrollUsd && (
+              <span className="px-2 py-1 rounded bg-surface-elevated border border-border-subtle">
+                proof default:{" "}
+                <span className="text-text-primary">
+                  {dollars(snapshot.config.bankrollUsd, 0)}
+                </span>
+              </span>
+            )}
             <span className="px-2 py-1 rounded bg-surface-elevated border border-border-subtle">
               edge gate:{" "}
               <span className="text-text-primary">
@@ -997,6 +1005,20 @@ export default async function TradingPage({
             </label>
             <label className="flex flex-col gap-1">
               <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Bankroll
+              </span>
+              <input
+                name="bankroll_usd"
+                type="number"
+                min={100}
+                max={50000}
+                step="100"
+                defaultValue={snapshot.controls.bankroll_usd}
+                className="paper-control"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Stake mode
               </span>
               <select
@@ -1046,8 +1068,8 @@ export default async function TradingPage({
               <input
                 name="max_open_exposure_usd"
                 type="number"
-                min={snapshot.config.maxStakeUsd}
-                max={snapshot.config.bankrollUsd}
+                min={snapshot.config.minStakeUsd}
+                max={snapshot.controls.bankroll_usd}
                 step="50"
                 defaultValue={snapshot.controls.max_open_exposure_usd}
                 className="paper-control"

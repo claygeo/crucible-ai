@@ -71,6 +71,7 @@ export type TradingControls = {
   agent_id: string | null;
   category: string | null;
   side: TradeSide | null;
+  bankroll_usd: number;
   min_edge: number;
   stake_mode: StakeMode;
   flat_stake_usd: number;
@@ -87,6 +88,7 @@ export const DEFAULT_TRADING_CONTROLS: TradingControls = {
   agent_id: null,
   category: null,
   side: null,
+  bankroll_usd: PAPER_TRADING_CONFIG.bankrollUsd,
   min_edge: 0.1,
   stake_mode: "kelly_capped",
   flat_stake_usd: PAPER_TRADING_CONFIG.flatStakeUsd,
@@ -470,6 +472,7 @@ export type StrategyVariantSummary = {
   sample: TradingSample;
   min_edge: number;
   stake_mode: StakeMode;
+  bankroll_usd: number;
   flat_stake_usd: number;
   max_stake_usd: number;
   agent_ids: string[];
@@ -819,6 +822,7 @@ export type PaperTradingStrategyRegistryEntry = {
   sample: TradingSample;
   min_edge: number;
   stake_mode: StakeMode;
+  bankroll_usd: number;
   flat_stake_usd: number;
   max_stake_usd: number;
   max_open_exposure_usd: number;
@@ -847,6 +851,7 @@ export type PaperTradingStrategyRegistry = {
     sides: readonly string[];
     categories: readonly string[];
     min_edges: readonly number[];
+    bankroll_usd: { min: number; max: number; default: number };
     default_controls: TradingControls;
   };
   selected_strategy: PaperTradingStrategyRegistryEntry;
@@ -896,6 +901,7 @@ type StrategyDefinition = {
   sample: TradingSample;
   minEdge: number;
   stakeMode: StakeMode;
+  bankrollUsd?: number;
   flatStakeUsd?: number;
   maxStakeUsd?: number;
   maxOpenExposureUsd?: number;
@@ -1014,6 +1020,28 @@ export function parseTradingControls(
   const categoryRaw = readParam(source, "category");
   const agentRaw = readParam(source, "agent");
   const agent = AGENTS.find((a) => a.id === agentRaw);
+  const bankrollUsd = round2(
+    numberParam(
+      source,
+      "bankroll_usd",
+      DEFAULT_TRADING_CONTROLS.bankroll_usd,
+      100,
+      50_000,
+    ),
+  );
+  const maxStakeUsd = round2(
+    numberParam(
+      source,
+      "max_stake_usd",
+      DEFAULT_TRADING_CONTROLS.max_stake_usd,
+      PAPER_TRADING_CONFIG.minStakeUsd,
+      Math.min(PAPER_TRADING_CONFIG.maxStakeUsd, bankrollUsd),
+    ),
+  );
+  const defaultOpenExposureUsd = Math.min(
+    DEFAULT_TRADING_CONTROLS.max_open_exposure_usd,
+    bankrollUsd,
+  );
 
   return {
     sample: includesOption(TRADING_SAMPLE_OPTIONS, sampleRaw)
@@ -1029,6 +1057,7 @@ export function parseTradingControls(
       includesOption(TRADING_SIDE_OPTIONS, sideRaw) && sideRaw !== "all"
         ? sideRaw
         : null,
+    bankroll_usd: bankrollUsd,
     min_edge: round4(
       numberParam(
         source,
@@ -1050,22 +1079,14 @@ export function parseTradingControls(
         PAPER_TRADING_CONFIG.maxStakeUsd,
       ),
     ),
-    max_stake_usd: round2(
-      numberParam(
-        source,
-        "max_stake_usd",
-        DEFAULT_TRADING_CONTROLS.max_stake_usd,
-        PAPER_TRADING_CONFIG.minStakeUsd,
-        PAPER_TRADING_CONFIG.maxStakeUsd,
-      ),
-    ),
+    max_stake_usd: round2(maxStakeUsd),
     max_open_exposure_usd: round2(
       numberParam(
         source,
         "max_open_exposure_usd",
-        DEFAULT_TRADING_CONTROLS.max_open_exposure_usd,
-        PAPER_TRADING_CONFIG.maxStakeUsd,
-        PAPER_TRADING_CONFIG.bankrollUsd,
+        defaultOpenExposureUsd,
+        PAPER_TRADING_CONFIG.minStakeUsd,
+        bankrollUsd,
       ),
     ),
   };
@@ -1077,6 +1098,7 @@ export function tradingControlsToQuery(controls: TradingControls): string {
   params.set("agent", controls.agent_id ?? "all");
   params.set("category", controls.category ?? "all");
   params.set("side", controls.side ?? "all");
+  params.set("bankroll_usd", String(controls.bankroll_usd));
   params.set("min_edge", String(controls.min_edge));
   params.set("stake_mode", controls.stake_mode);
   params.set("ticket_usd", String(controls.flat_stake_usd));
@@ -1109,6 +1131,7 @@ function strategyFromControls(controls: TradingControls): StrategyDefinition {
     sample: controls.sample,
     minEdge: controls.min_edge,
     stakeMode: controls.stake_mode,
+    bankrollUsd: controls.bankroll_usd,
     flatStakeUsd: controls.flat_stake_usd,
     maxStakeUsd: controls.max_stake_usd,
     maxOpenExposureUsd: controls.max_open_exposure_usd,
@@ -1132,6 +1155,7 @@ function strategyRegistryEntry(
     sample: strategy.sample,
     min_edge: strategy.minEdge,
     stake_mode: strategy.stakeMode,
+    bankroll_usd: strategyConfig.bankrollUsd,
     flat_stake_usd: strategyConfig.flatStakeUsd,
     max_stake_usd: strategyConfig.maxStakeUsd,
     max_open_exposure_usd: strategyConfig.maxOpenExposureUsd,
@@ -1173,6 +1197,11 @@ export function buildPaperTradingStrategyRegistry(
       sides: TRADING_SIDE_OPTIONS,
       categories: TRADING_CATEGORY_OPTIONS,
       min_edges: TRADING_MIN_EDGE_OPTIONS,
+      bankroll_usd: {
+        min: 100,
+        max: 50_000,
+        default: PAPER_TRADING_CONFIG.bankrollUsd,
+      },
       default_controls: DEFAULT_TRADING_CONTROLS,
     },
     selected_strategy: selectedStrategy,
@@ -2042,6 +2071,7 @@ function summarizeAgentsForTrades(trades: PaperTrade[]): AgentTradingSummary[] {
 function configForStrategy(strategy: StrategyDefinition): PaperTradingConfig {
   return {
     ...PAPER_TRADING_CONFIG,
+    bankrollUsd: strategy.bankrollUsd ?? PAPER_TRADING_CONFIG.bankrollUsd,
     flatStakeUsd: strategy.flatStakeUsd ?? PAPER_TRADING_CONFIG.flatStakeUsd,
     maxStakeUsd: strategy.maxStakeUsd ?? PAPER_TRADING_CONFIG.maxStakeUsd,
     maxOpenExposureUsd:
@@ -2247,6 +2277,7 @@ function summarizeStrategyFromTrades(
   trades: PaperTrade[],
   ledger: ExposureLedgerSummary,
 ): StrategyVariantSummary {
+  const strategyConfig = configForStrategy(strategy);
   const resolvedTrades = trades
     .filter((t) => t.pnl_usd !== null)
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
@@ -2274,8 +2305,9 @@ function summarizeStrategyFromTrades(
     sample: strategy.sample,
     min_edge: strategy.minEdge,
     stake_mode: strategy.stakeMode,
-    flat_stake_usd: strategy.flatStakeUsd ?? PAPER_TRADING_CONFIG.flatStakeUsd,
-    max_stake_usd: strategy.maxStakeUsd ?? PAPER_TRADING_CONFIG.maxStakeUsd,
+    bankroll_usd: strategyConfig.bankrollUsd,
+    flat_stake_usd: strategyConfig.flatStakeUsd,
+    max_stake_usd: strategyConfig.maxStakeUsd,
     agent_ids: strategy.agentIds ?? [],
     category: strategy.category ?? null,
     side: strategy.side ?? null,
