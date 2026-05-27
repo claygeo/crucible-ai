@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const runtime = "nodejs";
 
-const MAX_LIMIT = 500;
-const DEFAULT_LIMIT = 500;
+const MAX_LIMIT = 1000;
+const DEFAULT_LIMIT = 1000;
 
 function parseLimit(request: NextRequest): number {
   const raw = request.nextUrl.searchParams.get("limit");

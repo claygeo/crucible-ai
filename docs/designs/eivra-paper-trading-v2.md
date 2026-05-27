@@ -69,6 +69,20 @@ max_open_exposure_usd: 100 to 5000
 These params only change analytics. They do not create wallets, orders, leverage,
 or any execution path.
 
+## Canonical Agent Edge Matrix
+
+The lab now tracks every house agent with two live-only rules:
+
+```text
+edge >= 5 percentage points
+edge >= 10 percentage points
+```
+
+These canonical rules are exposed as `agent_edge_matrix` in `/api/trading.json`
+and rendered on the dashboard as "Agent edge rules." The matrix is separate
+from custom URL controls so the 30-day lab can compare Sage, Hawk, Magpie, Echo,
+Mirror, and Crowd under the same stake caps, exposure cap, and proof gates.
+
 ## Exposure Ledger
 
 Each strategy is replayed chronologically through a paper exposure cap before
@@ -158,7 +172,7 @@ auditable without leading the live proof table.
 candidate can make the strategy reviewable by the operator, but it never enables
 execution in this app.
 
-The dashboard and public JSON feed load a 500-row persisted history window. That
+The dashboard and public JSON feed load a 1000-row persisted history window. That
 is intentionally larger than 30 days because the daily writer stores multiple
 strategy rows per capture, same-day manual probes can add duplicate rows, and
 the proof-window delta needs the baseline row before the 30-day window.

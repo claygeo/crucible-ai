@@ -279,6 +279,27 @@ export type StrategyVariantSummary = {
   proof_gate: StrategyProofGate;
 };
 
+export type AgentEdgeRuleSummary = {
+  strategy_id: string;
+  strategy_label: string;
+  agent_id: string;
+  agent_name: string;
+  min_edge: number;
+  stake_mode: StakeMode;
+  proof_status: ProofGateStatus;
+  proof_status_label: string;
+  resolved_trades: number;
+  open_signals: number;
+  skipped_trades: number;
+  resolved_net_pnl_usd: number;
+  resolved_roi_on_stake: number;
+  avg_edge: number;
+  avg_stake_usd: number;
+  max_drawdown_usd: number;
+  open_exposure_usd: number;
+  open_expected_pnl_usd: number;
+};
+
 export type DailyEvidenceSnapshot = {
   date: string;
   sample: TradingSample;
@@ -324,6 +345,7 @@ export type TradingSnapshot = {
   agent_summaries: AgentTradingSummary[];
   live_agent_summaries: AgentTradingSummary[];
   scenario_summaries: ScenarioSummary[];
+  agent_edge_matrix: AgentEdgeRuleSummary[];
   strategy_variants: StrategyVariantSummary[];
   strategy_daily_series: StrategyDailyEvidenceSeries[];
   daily_snapshots: DailyEvidenceSnapshot[];
@@ -355,43 +377,31 @@ type StrategyEvaluation = {
   dailySeries: StrategyDailyEvidenceSeries;
 };
 
+const AGENT_EDGE_GATES = [0.05, 0.1] as const;
+
+function edgeGateId(minEdge: number): string {
+  return String(Math.round(minEdge * 100)).padStart(2, "0");
+}
+
+function edgeGateLabel(minEdge: number): string {
+  return `${Math.round(minEdge * 100)}pp`;
+}
+
+const AGENT_EDGE_STRATEGY_DEFINITIONS: StrategyDefinition[] = AGENTS.flatMap(
+  (agent) =>
+    AGENT_EDGE_GATES.map((minEdge) => ({
+      id: `${agent.id}-live-edge-${edgeGateId(minEdge)}`,
+      label: `${agent.name} live, edge >= ${edgeGateLabel(minEdge)}`,
+      description: `${agent.name} only. Tests whether ${agent.persona.toLowerCase()} produces tradable live edge at ${edgeGateLabel(minEdge)}.`,
+      sample: "live_only" as TradingSample,
+      minEdge,
+      stakeMode: "kelly_capped" as StakeMode,
+      agentIds: [agent.id],
+    }))
+);
+
 const STRATEGY_DEFINITIONS: StrategyDefinition[] = [
-  {
-    id: "mirror-live-edge-05",
-    label: "Mirror live, edge >= 5pp",
-    description: "Cross-lab control only. Loose edge gate. Primary candidate to watch.",
-    sample: "live_only",
-    minEdge: 0.05,
-    stakeMode: "kelly_capped",
-    agentIds: ["mirror"],
-  },
-  {
-    id: "mirror-live-edge-10",
-    label: "Mirror live, edge >= 10pp",
-    description: "Mirror with a stricter mispricing gate to reduce noisy tickets.",
-    sample: "live_only",
-    minEdge: 0.1,
-    stakeMode: "kelly_capped",
-    agentIds: ["mirror"],
-  },
-  {
-    id: "hawk-live-edge-10",
-    label: "Hawk live, edge >= 10pp",
-    description: "Contrarian-only strategy. Tests whether deliberate disagreement is tradable.",
-    sample: "live_only",
-    minEdge: 0.1,
-    stakeMode: "kelly_capped",
-    agentIds: ["hawk"],
-  },
-  {
-    id: "ensemble-live-edge-05",
-    label: "Crowd live, edge >= 5pp",
-    description: "Synthetic ensemble strategy. Tests whether averaging agents beats specialists.",
-    sample: "live_only",
-    minEdge: 0.05,
-    stakeMode: "kelly_capped",
-    agentIds: ["ensemble"],
-  },
+  ...AGENT_EDGE_STRATEGY_DEFINITIONS,
   {
     id: "all-live-edge-10",
     label: "All agents live, edge >= 10pp",
@@ -1053,6 +1063,59 @@ function summarizeStrategyFromTrades(
   };
 }
 
+function isAgentEdgeVariant(
+  strategy: StrategyVariantSummary
+): boolean {
+  return (
+    strategy.sample === "live_only" &&
+    !strategy.is_custom &&
+    strategy.agent_ids.length === 1 &&
+    strategy.category === null &&
+    strategy.side === null &&
+    AGENT_EDGE_GATES.includes(strategy.min_edge as (typeof AGENT_EDGE_GATES)[number])
+  );
+}
+
+function buildAgentEdgeMatrix(
+  strategies: StrategyVariantSummary[]
+): AgentEdgeRuleSummary[] {
+  const agentRank = new Map(AGENTS.map((agent, index) => [agent.id, index]));
+
+  return strategies
+    .filter(isAgentEdgeVariant)
+    .map((strategy) => {
+      const agentId = strategy.agent_ids[0];
+      const agent = AGENTS.find((item) => item.id === agentId);
+
+      return {
+        strategy_id: strategy.id,
+        strategy_label: strategy.label,
+        agent_id: agentId,
+        agent_name: agent?.name ?? agentId,
+        min_edge: strategy.min_edge,
+        stake_mode: strategy.stake_mode,
+        proof_status: strategy.proof_gate.status,
+        proof_status_label: strategy.proof_gate.status_label,
+        resolved_trades: strategy.resolved_trades,
+        open_signals: strategy.open_signals,
+        skipped_trades: strategy.exposure_ledger.skipped_trades,
+        resolved_net_pnl_usd: strategy.net_pnl_usd,
+        resolved_roi_on_stake: strategy.roi_on_stake,
+        avg_edge: strategy.avg_edge,
+        avg_stake_usd: strategy.avg_stake_usd,
+        max_drawdown_usd: strategy.max_drawdown_usd,
+        open_exposure_usd: strategy.open_exposure_usd,
+        open_expected_pnl_usd: strategy.open_expected_pnl_usd,
+      };
+    })
+    .sort(
+      (a, b) =>
+        (agentRank.get(a.agent_id) ?? 999) -
+          (agentRank.get(b.agent_id) ?? 999) ||
+        a.min_edge - b.min_edge
+    );
+}
+
 function dayKey(date: string): string {
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return "unknown";
@@ -1455,6 +1518,7 @@ export async function getTradingSnapshot(
     agent_summaries: agentSummaries,
     live_agent_summaries: liveAgentSummaries,
     scenario_summaries: scenarioSummaries,
+    agent_edge_matrix: buildAgentEdgeMatrix(strategyVariants),
     strategy_variants: strategyVariants,
     strategy_daily_series: strategyDailySeries,
     daily_snapshots: buildDailySnapshots(allTrades, "all"),

@@ -11,7 +11,7 @@ import type {
 } from "@/lib/trading";
 
 const SNAPSHOT_TABLE = "paper_trading_snapshots";
-const DEFAULT_HISTORY_LIMIT = 500;
+const DEFAULT_HISTORY_LIMIT = 1000;
 const REQUIRED_PROOF_DAYS = PAPER_TRADING_PROOF_RULES.requiredLiveDays;
 const SNAPSHOT_CRON_UTC_HOUR = 5;
 const SNAPSHOT_CRON_UTC_MINUTE = 12;
@@ -1199,7 +1199,7 @@ export async function loadPaperTradingSnapshotHistory(
     .from(SNAPSHOT_TABLE)
     .select("*")
     .order("captured_at", { ascending: false })
-    .limit(Math.max(1, Math.min(limit, 500)));
+    .limit(Math.max(1, Math.min(limit, 1000)));
 
   if (error) {
     return {
