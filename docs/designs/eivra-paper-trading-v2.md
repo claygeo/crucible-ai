@@ -174,6 +174,12 @@ The 30-day proof window now has a durable audit surface:
   review gate. This keeps artifact-only proof visible when service-role
   persistence is unavailable, while still reporting
   `real_money_execution_allowed: false`.
+- `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
+  the latest paper-proof workflow run, matching artifact bundle, expiry, run
+  URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,
+  and the dashboard include the same `github_artifact_workflow` status so the
+  artifact fallback is backed by actual run metadata, not only a documented
+  contract.
 - `persistence.capture_health` reports the daily recorder status, latest capture
   age, next expected capture, cron expression, and stale threshold.
 - `persistence.capture_calendar` reports the proof window day by day, including

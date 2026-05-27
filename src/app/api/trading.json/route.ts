@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
+import { loadPaperTradingArtifactWorkflowStatus } from "@/lib/trading-artifacts";
 import {
   buildPaperTradingProofEvidenceSources,
   buildPaperTradingProofReadiness,
@@ -13,13 +14,14 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   const controls = parseTradingControls(new URL(request.url).searchParams);
-  const [snapshot, persisted] = await Promise.all([
+  const [snapshot, persisted, artifactWorkflow] = await Promise.all([
     getTradingSnapshot(controls),
     loadPaperTradingSnapshotHistory(1000),
+    loadPaperTradingArtifactWorkflowStatus(5),
   ]);
   const registrySync = buildPaperTradingStrategyRegistrySync(
     snapshot.strategy_variants,
-    persisted.snapshots
+    persisted.snapshots,
   );
   const proofReadiness = buildPaperTradingProofReadiness({
     persistenceStatus: persisted.status,
@@ -53,6 +55,7 @@ export async function GET(request: Request) {
       persisted_proof_runway: proofRunway,
       persisted_capture_calendar: persisted.capture_calendar,
       persisted_agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
+      github_artifact_workflow: artifactWorkflow,
       persistence: {
         status: persisted.status,
         message: persisted.message,
@@ -64,6 +67,7 @@ export async function GET(request: Request) {
         proof_readiness: proofReadiness,
         proof_runway: proofRunway,
         proof_evidence_sources: proofEvidenceSources,
+        github_artifact_workflow: artifactWorkflow,
         agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       },
       persisted_registry_sync: registrySync,
@@ -75,6 +79,6 @@ export async function GET(request: Request) {
         "cache-control": "no-store, max-age=0",
         "access-control-allow-origin": "*",
       },
-    }
+    },
   );
 }

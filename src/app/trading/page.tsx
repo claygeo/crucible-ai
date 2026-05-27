@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
+import { loadPaperTradingArtifactWorkflowStatus } from "@/lib/trading-artifacts";
 import { dollars, int, pct, prob, relativeTime, signed } from "@/lib/format";
 import {
   TRADING_CATEGORY_OPTIONS,
@@ -179,9 +180,10 @@ export default async function TradingPage({
   searchParams: TradingPageSearchParams;
 }) {
   const controls = parseTradingControls(await searchParams);
-  const [snapshot, persisted] = await Promise.all([
+  const [snapshot, persisted, artifactWorkflow] = await Promise.all([
     getTradingSnapshot(controls),
     loadPaperTradingSnapshotHistory(1000),
+    loadPaperTradingArtifactWorkflowStatus(5),
   ]);
   const leader = snapshot.agent_summaries[0];
   const liveResolved =
@@ -206,6 +208,7 @@ export default async function TradingPage({
   const jsonHref = `/api/trading.json?${selectedQuery}`;
   const snapshotJsonHref = "/api/trading-snapshots?limit=1000";
   const auditJsonHref = `/api/trading-proof-audit?${selectedQuery}`;
+  const artifactJsonHref = "/api/trading-artifacts";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
   ).sort((a, b) => a - b);
@@ -241,6 +244,8 @@ export default async function TradingPage({
     proofRunway,
     resolutionWatch,
   });
+  const latestArtifactRun = artifactWorkflow.latest_successful_artifact_run;
+  const latestWorkflowRun = artifactWorkflow.latest_run;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -634,6 +639,12 @@ export default async function TradingPage({
                 audit json
               </Link>
               <Link
+                href={artifactJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                artifact json
+              </Link>
+              <Link
                 href={snapshotJsonHref}
                 className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
               >
@@ -826,6 +837,80 @@ export default async function TradingPage({
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="border-t border-border-subtle pt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-4">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Artifact workflow
+                </div>
+                <div className="mt-1">
+                  <span
+                    className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofEvidenceSourceStatusClass(
+                      artifactWorkflow.status
+                    )}`}
+                  >
+                    {artifactWorkflow.status_label}
+                  </span>
+                </div>
+                <div className="text-xs text-text-muted mt-2 leading-relaxed">
+                  {artifactWorkflow.message}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Latest run
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {latestWorkflowRun ? (
+                    <a
+                      href={latestWorkflowRun.html_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-accent transition-colors"
+                    >
+                      {latestWorkflowRun.id}
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+                <div
+                  suppressHydrationWarning
+                  className="mono text-[10px] uppercase tracking-wider text-text-muted mt-1"
+                >
+                  {latestWorkflowRun
+                    ? `${latestWorkflowRun.conclusion ?? latestWorkflowRun.status} / ${relativeTime(
+                        latestWorkflowRun.updated_at
+                      )}`
+                    : "none"}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Latest artifact
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {latestArtifactRun
+                    ? latestArtifactRun.artifact.status_label
+                    : "-"}
+                </div>
+                <div
+                  suppressHydrationWarning
+                  className="mono text-[10px] uppercase tracking-wider text-text-muted mt-1"
+                >
+                  {latestArtifactRun?.artifact.expires_at
+                    ? `expires ${relativeTime(latestArtifactRun.artifact.expires_at)}`
+                    : "no artifact"}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Artifact action
+                </div>
+                <div className="text-sm text-text-primary mt-1 leading-relaxed">
+                  {artifactWorkflow.next_required_action}
+                </div>
+              </div>
             </div>
             <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
               <span>{proofEvidenceSources.artifact_contract.workflow_path}</span>
