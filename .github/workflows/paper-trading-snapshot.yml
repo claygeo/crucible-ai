@@ -45,20 +45,30 @@ jobs:
         run: |
           set -euo pipefail
 
+          [[ -n "${NEXT_PUBLIC_SUPABASE_URL:-}" ]] || {
+            printf '::error title=Missing Supabase URL::NEXT_PUBLIC_SUPABASE_URL is required for paper proof capture.\n'
+            exit 1
+          }
+
           if [[ "$SNAPSHOT_DRY_RUN" == "true" ]]; then
             echo "Dry run requested; Supabase write secrets are not required."
+            echo "SNAPSHOT_EFFECTIVE_DRY_RUN=true" >> "$GITHUB_ENV"
+            echo "SNAPSHOT_WRITE_ENABLED=false" >> "$GITHUB_ENV"
+            echo "SNAPSHOT_MODE_REASON=manual dry run requested" >> "$GITHUB_ENV"
             exit 0
           fi
 
-          missing=()
-          [[ -n "${NEXT_PUBLIC_SUPABASE_URL:-}" ]] || missing+=(NEXT_PUBLIC_SUPABASE_URL)
-          [[ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]] || missing+=(SUPABASE_SERVICE_ROLE_KEY)
-
-          if (( ${#missing[@]} > 0 )); then
-            printf '::error title=Missing required repository secrets::Scheduled paper proof writes require %s\n' "${missing[*]}"
-            printf 'Missing required repository secrets: %s\n' "${missing[*]}"
-            exit 1
+          if [[ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]]; then
+            printf '::warning title=Read-only paper proof capture::SUPABASE_SERVICE_ROLE_KEY is not configured, so this run will upload live proof artifacts without writing Supabase snapshot rows.\n'
+            echo "SNAPSHOT_EFFECTIVE_DRY_RUN=true" >> "$GITHUB_ENV"
+            echo "SNAPSHOT_WRITE_ENABLED=false" >> "$GITHUB_ENV"
+            echo "SNAPSHOT_MODE_REASON=missing SUPABASE_SERVICE_ROLE_KEY; read-only artifacts only" >> "$GITHUB_ENV"
+            exit 0
           fi
+
+          echo "SNAPSHOT_EFFECTIVE_DRY_RUN=false" >> "$GITHUB_ENV"
+          echo "SNAPSHOT_WRITE_ENABLED=true" >> "$GITHUB_ENV"
+          echo "SNAPSHOT_MODE_REASON=service role secret configured; persisting snapshot rows" >> "$GITHUB_ENV"
 
       - name: Check out repo
         uses: actions/checkout@v6
@@ -90,7 +100,9 @@ jobs:
             --max-open-exposure-usd 500
           )
 
-          if [[ "$SNAPSHOT_DRY_RUN" == "true" ]]; then
+          node -e 'const fs = require("fs"); fs.writeFileSync("paper-snapshot-workflow.json", JSON.stringify({ requested_dry_run: process.env.SNAPSHOT_DRY_RUN === "true", effective_dry_run: process.env.SNAPSHOT_EFFECTIVE_DRY_RUN === "true", write_enabled: process.env.SNAPSHOT_WRITE_ENABLED === "true", mode_reason: process.env.SNAPSHOT_MODE_REASON || "" }, null, 2) + "\n");'
+
+          if [[ "$SNAPSHOT_EFFECTIVE_DRY_RUN" == "true" ]]; then
             npx tsx scripts/paper-trading-snapshot.ts "${args[@]}" \
               | tee paper-snapshot-result.json
           else
@@ -112,6 +124,7 @@ jobs:
         with:
           name: paper-trading-proof-${{ github.run_id }}
           path: |
+            paper-snapshot-workflow.json
             paper-snapshot-result.json
             paper-audit-result.json
           if-no-files-found: ignore
