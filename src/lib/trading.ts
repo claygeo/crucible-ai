@@ -409,7 +409,7 @@ type StrategyEvaluation = {
   dailySeries: StrategyDailyEvidenceSeries;
 };
 
-const AGENT_EDGE_GATES = [0.05, 0.1] as const;
+export const AGENT_EDGE_GATES = [0.05, 0.1] as const;
 
 function edgeGateId(minEdge: number): string {
   return String(Math.round(minEdge * 100)).padStart(2, "0");
