@@ -1554,13 +1554,21 @@ export default async function TradingPage({
               {resolutionWatch.status_label}
             </span>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Open live
               </div>
               <div className="heading text-2xl text-text-primary mt-1">
                 {int(resolutionWatch.open_live_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Tradable
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(resolutionWatch.tradable_open_live_signals)}
               </div>
             </div>
             <div>
@@ -1614,14 +1622,33 @@ export default async function TradingPage({
             </div>
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                Open EV
+                Tradable EV
               </div>
               <div
                 className={`heading text-2xl mt-1 ${pnlClass(
-                  resolutionWatch.total_open_expected_pnl_usd
+                  resolutionWatch.tradable_open_expected_pnl_usd
                 )}`}
               >
-                {dollars(resolutionWatch.total_open_expected_pnl_usd, 0)}
+                {dollars(resolutionWatch.tradable_open_expected_pnl_usd, 0)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Review EV
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${
+                  resolutionWatch.review_required_live_signals > 0
+                    ? "text-warn"
+                    : pnlClass(
+                        resolutionWatch.review_required_open_expected_pnl_usd
+                      )
+                }`}
+              >
+                {dollars(
+                  resolutionWatch.review_required_open_expected_pnl_usd,
+                  0
+                )}
               </div>
             </div>
           </div>
@@ -1653,6 +1680,7 @@ export default async function TradingPage({
                           {signal.market_question}
                         </Link>
                         <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                          {signal.tradability_status.replaceAll("_", " ")} /{" "}
                           {signal.close_status.replaceAll("_", " ")}
                           {signal.age_days > 0
                             ? ` / open ${signal.age_days.toFixed(1)}d`

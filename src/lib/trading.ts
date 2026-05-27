@@ -208,6 +208,7 @@ export type ResolutionWatchSignal = {
   market_closes_at: string | null;
   created_at: string;
   close_status: "overdue" | "closing_next_7d" | "future" | "unknown_close";
+  tradability_status: "tradable" | "needs_review";
   days_until_close: number | null;
   age_days: number;
 };
@@ -217,12 +218,18 @@ export type TradingResolutionWatch = {
   status_label: string;
   open_live_signals: number;
   overdue_live_signals: number;
+  tradable_open_live_signals: number;
+  review_required_live_signals: number;
   closing_next_7d_signals: number;
   unknown_close_live_signals: number;
   next_close_at: string | null;
   oldest_opened_at: string | null;
   total_open_exposure_usd: number;
   total_open_expected_pnl_usd: number;
+  tradable_open_exposure_usd: number;
+  tradable_open_expected_pnl_usd: number;
+  review_required_open_exposure_usd: number;
+  review_required_open_expected_pnl_usd: number;
   signals: ResolutionWatchSignal[];
 };
 
@@ -895,6 +902,10 @@ function buildResolutionWatch(
           : closeTs <= weekFromNowTs
             ? "closing_next_7d"
             : "future";
+    const tradabilityStatus: ResolutionWatchSignal["tradability_status"] =
+      closeStatus === "overdue" || closeStatus === "unknown_close"
+        ? "needs_review"
+        : "tradable";
 
     return {
       prediction_id: trade.prediction_id,
@@ -908,6 +919,7 @@ function buildResolutionWatch(
       market_closes_at: trade.market_closes_at,
       created_at: trade.created_at,
       close_status: closeStatus,
+      tradability_status: tradabilityStatus,
       days_until_close: trade.market_closes_at
         ? dayDelta(now, trade.market_closes_at)
         : null,
@@ -924,6 +936,12 @@ function buildResolutionWatch(
   const unknownCloseCount = signals.filter(
     (signal) => signal.close_status === "unknown_close"
   ).length;
+  const tradableSignals = signals.filter(
+    (signal) => signal.tradability_status === "tradable"
+  );
+  const reviewRequiredSignals = signals.filter(
+    (signal) => signal.tradability_status === "needs_review"
+  );
   const futureCloseTimes = signals
     .map((signal) =>
       signal.market_closes_at ? Date.parse(signal.market_closes_at) : NaN
@@ -963,6 +981,8 @@ function buildResolutionWatch(
           : "Waiting",
     open_live_signals: signals.length,
     overdue_live_signals: overdueCount,
+    tradable_open_live_signals: tradableSignals.length,
+    review_required_live_signals: reviewRequiredSignals.length,
     closing_next_7d_signals: closingSoonCount,
     unknown_close_live_signals: unknownCloseCount,
     next_close_at:
@@ -976,6 +996,21 @@ function buildResolutionWatch(
     ),
     total_open_expected_pnl_usd: round2(
       openLiveTrades.reduce((sum, trade) => sum + trade.expected_pnl_usd, 0)
+    ),
+    tradable_open_exposure_usd: round2(
+      tradableSignals.reduce((sum, signal) => sum + signal.stake_usd, 0)
+    ),
+    tradable_open_expected_pnl_usd: round2(
+      tradableSignals.reduce((sum, signal) => sum + signal.expected_pnl_usd, 0)
+    ),
+    review_required_open_exposure_usd: round2(
+      reviewRequiredSignals.reduce((sum, signal) => sum + signal.stake_usd, 0)
+    ),
+    review_required_open_expected_pnl_usd: round2(
+      reviewRequiredSignals.reduce(
+        (sum, signal) => sum + signal.expected_pnl_usd,
+        0
+      )
     ),
     signals: sortedSignals,
   };
