@@ -300,6 +300,13 @@ export type PaperTradingWouldTradeFeed = {
   real_money_execution_allowed: false;
   selected_strategy_id: string;
   selected_strategy: PaperTradingWouldTradeStrategy | null;
+  global_resolution_status: TradingResolutionWatch["status"];
+  global_resolution_status_label: string;
+  global_open_live_signals: number;
+  global_review_required_live_signals: number;
+  global_overdue_live_signals: number;
+  global_unknown_close_live_signals: number;
+  global_review_required_signals: ResolutionWatchSignal[];
   unique_open_signals: number;
   unique_tradable_signals: number;
   unique_review_required_signals: number;
@@ -1338,6 +1345,7 @@ function buildWouldTradeStrategy(
 function buildWouldTradeTodayFeed(
   evaluations: StrategyEvaluation[],
   selectedEvaluation: StrategyEvaluation,
+  resolutionWatch: TradingResolutionWatch,
   generatedAt: string,
 ): PaperTradingWouldTradeFeed {
   const now = new Date(generatedAt);
@@ -1374,10 +1382,14 @@ function buildWouldTradeTodayFeed(
     rankedStrategies.find(
       (strategy) => strategy.strategy_id === selectedEvaluation.summary.id,
     ) ?? null;
+  const globalReviewRequiredSignals = resolutionWatch.signals.filter(
+    (signal) => signal.tradability_status === "needs_review",
+  );
   const status: PaperTradingWouldTradeFeed["status"] =
     uniqueOpenSignals.length === 0
       ? "no_live_signals"
-      : uniqueReviewRequiredSignals.length > 0
+      : resolutionWatch.review_required_live_signals > 0 ||
+          uniqueReviewRequiredSignals.length > 0
         ? "blocked"
         : "collecting";
 
@@ -1392,19 +1404,32 @@ function buildWouldTradeTodayFeed(
           ? "Paper watchlist"
           : "No live signals",
     message:
-      status === "blocked"
-        ? `${uniqueReviewRequiredSignals.length} live paper signal${
-            uniqueReviewRequiredSignals.length === 1 ? "" : "s"
-          } need resolution review before open EV is trusted.`
-        : status === "collecting"
-          ? "Live paper candidates are ranked for observation only; execution remains disabled until the 30-day proof gate passes capital review."
-          : "No live paper candidates are currently open under the lab rules.",
+      resolutionWatch.review_required_live_signals > 0
+        ? `${resolutionWatch.review_required_live_signals} global live paper market${
+            resolutionWatch.review_required_live_signals === 1 ? "" : "s"
+          } need resolution review before any would-trade watchlist is trusted.`
+        : status === "blocked"
+          ? `${uniqueReviewRequiredSignals.length} live paper signal${
+              uniqueReviewRequiredSignals.length === 1 ? "" : "s"
+            } need resolution review before open EV is trusted.`
+          : status === "collecting"
+            ? "Live paper candidates are ranked for observation only; execution remains disabled until the 30-day proof gate passes capital review."
+            : "No live paper candidates are currently open under the lab rules.",
     execution_recommendation: "paper_watch_only",
     capital_review_allowed: false,
     paper_only: true,
     real_money_execution_allowed: false,
     selected_strategy_id: selectedEvaluation.summary.id,
     selected_strategy: selectedStrategy,
+    global_resolution_status: resolutionWatch.status,
+    global_resolution_status_label: resolutionWatch.status_label,
+    global_open_live_signals: resolutionWatch.open_live_signals,
+    global_review_required_live_signals:
+      resolutionWatch.review_required_live_signals,
+    global_overdue_live_signals: resolutionWatch.overdue_live_signals,
+    global_unknown_close_live_signals:
+      resolutionWatch.unknown_close_live_signals,
+    global_review_required_signals: globalReviewRequiredSignals,
     unique_open_signals: uniqueOpenSignals.length,
     unique_tradable_signals: uniqueTradableSignals.length,
     unique_review_required_signals: uniqueReviewRequiredSignals.length,
@@ -2143,6 +2168,10 @@ export async function getTradingSnapshot(
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
     .slice(0, 24);
   const selectedStrategy = selectedEvaluation.summary;
+  const resolutionWatch = buildResolutionWatch(
+    liveTrades,
+    new Date(generatedAt),
+  );
 
   return {
     generated_at: generatedAt,
@@ -2154,12 +2183,13 @@ export async function getTradingSnapshot(
     would_trade_today: buildWouldTradeTodayFeed(
       evaluatedStrategies,
       selectedEvaluation,
+      resolutionWatch,
       generatedAt,
     ),
     totals: summarizeTotals(allTrades),
     live_totals: summarizeTotals(liveTrades),
     backfill_totals: summarizeTotals(backfillTrades),
-    resolution_watch: buildResolutionWatch(liveTrades),
+    resolution_watch: resolutionWatch,
     selected_strategy: selectedStrategy,
     proof_gates: [selectedStrategy, ...strategyVariants].map(
       (strategy) => strategy.proof_gate,
