@@ -1603,7 +1603,7 @@ export default async function TradingPage({
                 {resolutionReviewQueue.status_label}
               </span>
             </div>
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-4 gap-3">
               <div>
                 <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                   Current
@@ -1618,6 +1618,14 @@ export default async function TradingPage({
                 </div>
                 <div className="heading text-xl text-text-primary mt-1">
                   {int(resolutionReviewQueue.published_review_required)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Unique
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(resolutionReviewQueue.item_count)}
                 </div>
               </div>
               <div>
@@ -1650,7 +1658,7 @@ export default async function TradingPage({
                   </thead>
                   <tbody className="divide-y divide-border-subtle/60">
                     {resolutionReviewQueue.items.slice(0, 8).map((item) => (
-                      <tr key={`${item.source}-${item.prediction_id}`}>
+                      <tr key={item.prediction_id}>
                         <td className="py-3 pr-3">
                           <Link
                             href={`/markets/${item.market_id}`}
@@ -1675,9 +1683,11 @@ export default async function TradingPage({
                           ) : null}
                         </td>
                         <td className="py-3 px-3 mono text-right text-text-secondary">
-                          <div>{item.source_label}</div>
+                          <div>{item.source_labels.join(" + ")}</div>
                           <div className="text-[10px] text-text-muted">
-                            {item.source_run_id ? `run ${item.source_run_id}` : "live"}
+                            {item.source_run_ids.length > 0
+                              ? `run ${item.source_run_ids.join(", ")}`
+                              : "live"}
                           </div>
                         </td>
                         <td className="py-3 px-3 mono text-right text-text-secondary">

@@ -12,8 +12,13 @@ export type ResolutionReviewQueueSource =
 export type ResolutionReviewQueueItem = {
   source: ResolutionReviewQueueSource;
   source_label: string;
+  source_labels: string[];
   source_run_id: string | null;
+  source_run_ids: string[];
   source_generated_at: string | null;
+  source_count: number;
+  seen_in_current_snapshot: boolean;
+  seen_in_published_artifact: boolean;
   prediction_id: string;
   market_id: string;
   market_question: string;
@@ -45,6 +50,8 @@ export type ResolutionReviewQueue = {
   current_review_required: number;
   published_review_required: number;
   item_count: number;
+  evidence_item_count: number;
+  duplicate_item_count: number;
   current_snapshot_items: ResolutionReviewQueueItem[];
   published_artifact_items: ResolutionReviewQueueItem[];
   items: ResolutionReviewQueueItem[];
@@ -88,8 +95,13 @@ function currentSignalToQueueItem(
   return {
     source: "current_snapshot",
     source_label: "Current snapshot",
+    source_labels: ["Current snapshot"],
     source_run_id: null,
+    source_run_ids: [],
     source_generated_at: null,
+    source_count: 1,
+    seen_in_current_snapshot: true,
+    seen_in_published_artifact: false,
     prediction_id: signal.prediction_id,
     market_id: signal.market_id,
     market_question: signal.market_question,
@@ -167,11 +179,19 @@ function publishedEvidenceToQueueItem(
   }
 
   const closeStatus = closeStatusValue(evidence.close_status);
+  const sourceRunId = workflowRunId(publishedArtifactProof);
   return {
     source: "published_artifact_proof",
     source_label: "Published artifact",
-    source_run_id: workflowRunId(publishedArtifactProof),
+    source_labels: ["Published artifact"],
+    source_run_id: sourceRunId,
+    source_run_ids: [sourceRunId].filter((value): value is string =>
+      Boolean(value),
+    ),
     source_generated_at: publishedArtifactProof.generated_at,
+    source_count: 1,
+    seen_in_current_snapshot: false,
+    seen_in_published_artifact: true,
     prediction_id: predictionId,
     market_id: marketId,
     market_question: marketQuestion,
@@ -218,6 +238,60 @@ function sortQueueItems(
   });
 }
 
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function queueItemKey(item: ResolutionReviewQueueItem): string {
+  return (
+    item.prediction_id ||
+    `${item.market_id}-${item.agent_id}-${item.created_at}`
+  );
+}
+
+function mergeQueueItemPair(
+  left: ResolutionReviewQueueItem,
+  right: ResolutionReviewQueueItem,
+): ResolutionReviewQueueItem {
+  const primary =
+    left.source === "current_snapshot" || right.source !== "current_snapshot"
+      ? left
+      : right;
+  const secondary = primary === left ? right : left;
+  const sourceLabels = uniqueStrings([
+    ...primary.source_labels,
+    ...secondary.source_labels,
+  ]);
+  const sourceRunIds = uniqueStrings([
+    ...primary.source_run_ids,
+    ...secondary.source_run_ids,
+  ]);
+
+  return {
+    ...primary,
+    source_labels: sourceLabels,
+    source_run_ids: sourceRunIds,
+    source_count: primary.source_count + secondary.source_count,
+    seen_in_current_snapshot:
+      primary.seen_in_current_snapshot || secondary.seen_in_current_snapshot,
+    seen_in_published_artifact:
+      primary.seen_in_published_artifact ||
+      secondary.seen_in_published_artifact,
+  };
+}
+
+function dedupeQueueItems(
+  items: ResolutionReviewQueueItem[],
+): ResolutionReviewQueueItem[] {
+  const byKey = new Map<string, ResolutionReviewQueueItem>();
+  for (const item of sortQueueItems(items)) {
+    const key = queueItemKey(item);
+    const existing = byKey.get(key);
+    byKey.set(key, existing ? mergeQueueItemPair(existing, item) : item);
+  }
+  return sortQueueItems(Array.from(byKey.values()));
+}
+
 export function buildResolutionReviewQueue(args: {
   resolutionWatch?: TradingResolutionWatch | null;
   publishedArtifactProof?: PublishedPaperTradingArtifactProof | null;
@@ -233,7 +307,9 @@ export function buildResolutionReviewQueue(args: {
         )
         .filter((item): item is ResolutionReviewQueueItem => Boolean(item))
     : [];
-  const items = sortQueueItems([
+  const evidenceItemCount =
+    currentSnapshotItems.length + publishedArtifactItems.length;
+  const items = dedupeQueueItems([
     ...currentSnapshotItems,
     ...publishedArtifactItems,
   ]);
@@ -281,6 +357,8 @@ export function buildResolutionReviewQueue(args: {
     current_review_required: currentReviewRequired,
     published_review_required: publishedReviewRequired,
     item_count: items.length,
+    evidence_item_count: evidenceItemCount,
+    duplicate_item_count: Math.max(0, evidenceItemCount - items.length),
     current_snapshot_items: sortQueueItems(currentSnapshotItems),
     published_artifact_items: sortQueueItems(publishedArtifactItems),
     items,
