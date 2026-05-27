@@ -4,6 +4,7 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
+import { buildResolutionReviewQueue } from "@/lib/trading-resolution-review";
 import {
   buildPaperTradingProofEvidenceSources,
   buildPaperTradingProofReadiness,
@@ -48,10 +49,15 @@ export async function GET(request: Request) {
     proofRunway,
     resolutionWatch: snapshot.resolution_watch,
   });
+  const resolutionReviewQueue = buildResolutionReviewQueue({
+    resolutionWatch: snapshot.resolution_watch,
+    publishedArtifactProof,
+  });
 
   return NextResponse.json(
     {
       ...snapshot,
+      resolution_review_queue: resolutionReviewQueue,
       proof_evidence_sources: proofEvidenceSources,
       persisted_daily_snapshots: persisted.snapshots,
       persisted_strategy_rollups: persisted.strategy_rollups,
@@ -73,6 +79,7 @@ export async function GET(request: Request) {
         proof_readiness: proofReadiness,
         proof_runway: proofRunway,
         proof_evidence_sources: proofEvidenceSources,
+        resolution_review_queue: resolutionReviewQueue,
         github_artifact_workflow: artifactWorkflow,
         published_artifact_proof: publishedArtifactProof,
         agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,

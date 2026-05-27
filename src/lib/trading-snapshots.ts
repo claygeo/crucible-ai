@@ -327,6 +327,9 @@ export type PaperTradingProofReadinessEvidence = {
   prediction_id: string;
   market_id: string;
   market_question: string;
+  market_source: string;
+  market_url: string | null;
+  market_status: string;
   agent_id: string;
   agent_name: string;
   side: ResolutionWatchSignal["side"];
@@ -470,31 +473,36 @@ function stableJson(value: unknown): string {
     return `[${value.map((item) => stableJson(item)).join(",")}]`;
   }
   if (value && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-      a.localeCompare(b)
+    const entries = Object.entries(value as Record<string, unknown>).sort(
+      ([a], [b]) => a.localeCompare(b),
     );
     return `{${entries
-      .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableJson(entryValue)}`)
+      .map(
+        ([key, entryValue]) =>
+          `${JSON.stringify(key)}:${stableJson(entryValue)}`,
+      )
       .join(",")}}`;
   }
   return JSON.stringify(value);
 }
 
 function controlsHash(controls: TradingControls): string {
-  return createHash("sha256").update(stableJson(controls)).digest("hex").slice(0, 16);
+  return createHash("sha256")
+    .update(stableJson(controls))
+    .digest("hex")
+    .slice(0, 16);
 }
 
 function strategyRuleFingerprint(
-  strategy: Partial<StrategyVariantSummary> | null | undefined
+  strategy: Partial<StrategyVariantSummary> | null | undefined,
 ): string {
   const agentIds = Array.isArray(strategy?.agent_ids)
     ? [...strategy.agent_ids].sort()
     : [];
-  const exposureLedger =
-    strategy?.exposure_ledger as
-      | Partial<StrategyVariantSummary["exposure_ledger"]>
-      | null
-      | undefined;
+  const exposureLedger = strategy?.exposure_ledger as
+    | Partial<StrategyVariantSummary["exposure_ledger"]>
+    | null
+    | undefined;
 
   return stableJson({
     sample: strategy?.sample ?? null,
@@ -519,7 +527,10 @@ function snapshotDateFromGeneratedAt(generatedAt: string): string {
 
 function seriesByStrategyId(snapshot: TradingSnapshot) {
   return new Map(
-    snapshot.strategy_daily_series.map((series) => [series.strategy_id, series])
+    snapshot.strategy_daily_series.map((series) => [
+      series.strategy_id,
+      series,
+    ]),
   );
 }
 
@@ -527,7 +538,7 @@ function buildSnapshotRow(
   snapshot: TradingSnapshot,
   strategy: StrategyVariantSummary,
   dailySeries: StrategyDailyEvidenceSeries,
-  controls: TradingControls
+  controls: TradingControls,
 ): PaperTradingSnapshotInsert {
   return {
     snapshot_date: snapshotDateFromGeneratedAt(snapshot.generated_at),
@@ -555,14 +566,19 @@ function buildSnapshotRow(
 }
 
 export function buildPaperTradingSnapshotRows(
-  snapshot: TradingSnapshot
+  snapshot: TradingSnapshot,
 ): PaperTradingSnapshotInsert[] {
   const byStrategyId = seriesByStrategyId(snapshot);
   const rows = snapshot.strategy_variants
     .map((strategy) => {
       const dailySeries = byStrategyId.get(strategy.id);
       if (!dailySeries) return null;
-      return buildSnapshotRow(snapshot, strategy, dailySeries, snapshot.controls);
+      return buildSnapshotRow(
+        snapshot,
+        strategy,
+        dailySeries,
+        snapshot.controls,
+      );
     })
     .filter((row): row is PaperTradingSnapshotInsert => Boolean(row));
 
@@ -570,15 +586,15 @@ export function buildPaperTradingSnapshotRows(
     snapshot,
     snapshot.selected_strategy,
     snapshot.selected_daily_series,
-    snapshot.controls
+    snapshot.controls,
   );
   const selectedFingerprint = strategyRuleFingerprint(
-    selectedRow.strategy_summary
+    selectedRow.strategy_summary,
   );
   const selectedAlreadyCaptured = rows.some(
     (row) =>
       row.strategy_id === selectedRow.strategy_id ||
-      strategyRuleFingerprint(row.strategy_summary) === selectedFingerprint
+      strategyRuleFingerprint(row.strategy_summary) === selectedFingerprint,
   );
   if (!selectedAlreadyCaptured) {
     rows.push(selectedRow);
@@ -587,7 +603,10 @@ export function buildPaperTradingSnapshotRows(
   return rows;
 }
 
-function isMissingTableError(error: { code?: string; message?: string }): boolean {
+function isMissingTableError(error: {
+  code?: string;
+  message?: string;
+}): boolean {
   return (
     error.code === "42P01" ||
     error.message?.toLowerCase().includes(SNAPSHOT_TABLE) === true
@@ -603,8 +622,8 @@ function scheduledCaptureAt(reference: Date, offsetDays: number): Date {
       SNAPSHOT_CRON_UTC_HOUR,
       SNAPSHOT_CRON_UTC_MINUTE,
       0,
-      0
-    )
+      0,
+    ),
   );
   return scheduled;
 }
@@ -623,7 +642,7 @@ function nextExpectedCaptureAt(now = new Date()): Date {
 
 function unavailableCaptureHealth(
   statusLabel: string,
-  message: string
+  message: string,
 ): PaperTradingCaptureHealth {
   const now = new Date();
   return {
@@ -642,7 +661,7 @@ function unavailableCaptureHealth(
 
 export function buildPaperTradingCaptureHealth(
   latestCapturedAt: string | null,
-  now = new Date()
+  now = new Date(),
 ): PaperTradingCaptureHealth {
   const previousExpected = previousExpectedCaptureAt(now);
   const nextExpected = nextExpectedCaptureAt(now);
@@ -691,13 +710,15 @@ export function buildPaperTradingCaptureHealth(
   };
 }
 
-function latestRowForDay(rows: PaperTradingSnapshotRow[]): PaperTradingSnapshotRow {
+function latestRowForDay(
+  rows: PaperTradingSnapshotRow[],
+): PaperTradingSnapshotRow {
   return rows
     .slice()
     .sort(
       (a, b) =>
         Date.parse(b.captured_at) - Date.parse(a.captured_at) ||
-        Number(a.is_custom) - Number(b.is_custom)
+        Number(a.is_custom) - Number(b.is_custom),
     )[0];
 }
 
@@ -728,8 +749,8 @@ function addUtcDays(date: Date, days: number): Date {
       0,
       0,
       0,
-      0
-    )
+      0,
+    ),
   );
 }
 
@@ -755,7 +776,7 @@ function snapshotDateRange(startDate: string, endDate: string): string[] {
 
 function buildCaptureCoverage(
   latestRowsByDay: PaperTradingSnapshotRow[],
-  captureHealth: PaperTradingCaptureHealth
+  captureHealth: PaperTradingCaptureHealth,
 ): PaperTradingCaptureCoverage {
   const allCapturedDates = latestRowsByDay
     .map((row) => row.snapshot_date)
@@ -763,10 +784,15 @@ function buildCaptureCoverage(
     .sort((a, b) => a.localeCompare(b));
   const capturedSet = new Set(allCapturedDates);
   const firstCapturedDate = allCapturedDates[0] ?? null;
-  const previousExpectedDate = captureHealth.previous_expected_capture_at.slice(0, 10);
+  const previousExpectedDate = captureHealth.previous_expected_capture_at.slice(
+    0,
+    10,
+  );
   const previousExpectedUtc = snapshotDateToUtcDate(previousExpectedDate);
   const windowStartDate = previousExpectedUtc
-    ? utcSnapshotDate(addUtcDays(previousExpectedUtc, -(REQUIRED_PROOF_DAYS - 1)))
+    ? utcSnapshotDate(
+        addUtcDays(previousExpectedUtc, -(REQUIRED_PROOF_DAYS - 1)),
+      )
     : null;
   const firstExpectedDate =
     firstCapturedDate && windowStartDate
@@ -810,7 +836,7 @@ function buildCaptureCoverage(
 }
 
 function emptyCaptureCalendar(
-  statusLabel: string
+  statusLabel: string,
 ): PaperTradingCaptureCalendar {
   return {
     status: "unavailable",
@@ -831,20 +857,20 @@ function emptyCaptureCalendar(
 }
 
 function latestCapturedAtForRows(
-  rows: PaperTradingSnapshotRow[]
+  rows: PaperTradingSnapshotRow[],
 ): string | null {
   return latestRowForDay(rows)?.captured_at ?? null;
 }
 
 function uniqueStrategyRuleCount(rows: PaperTradingSnapshotRow[]): number {
   return new Set(
-    rows.map((row) => strategyRuleFingerprint(row.strategy_summary))
+    rows.map((row) => strategyRuleFingerprint(row.strategy_summary)),
   ).size;
 }
 
 export function buildPaperTradingCaptureCalendar(
   snapshots: PaperTradingSnapshotRow[],
-  captureHealth: PaperTradingCaptureHealth
+  captureHealth: PaperTradingCaptureHealth,
 ): PaperTradingCaptureCalendar {
   const byDate = new Map<string, PaperTradingSnapshotRow[]>();
   for (const snapshot of snapshots) {
@@ -855,13 +881,18 @@ export function buildPaperTradingCaptureCalendar(
   }
 
   const capturedDates = Array.from(byDate.keys()).sort((a, b) =>
-    a.localeCompare(b)
+    a.localeCompare(b),
   );
   const firstCapturedDate = capturedDates[0] ?? null;
-  const previousExpectedDate = captureHealth.previous_expected_capture_at.slice(0, 10);
+  const previousExpectedDate = captureHealth.previous_expected_capture_at.slice(
+    0,
+    10,
+  );
   const previousExpectedUtc = snapshotDateToUtcDate(previousExpectedDate);
   const windowStartDate = previousExpectedUtc
-    ? utcSnapshotDate(addUtcDays(previousExpectedUtc, -(REQUIRED_PROOF_DAYS - 1)))
+    ? utcSnapshotDate(
+        addUtcDays(previousExpectedUtc, -(REQUIRED_PROOF_DAYS - 1)),
+      )
     : null;
   const firstExpectedDate =
     firstCapturedDate && windowStartDate
@@ -886,9 +917,9 @@ export function buildPaperTradingCaptureCalendar(
     0,
     ...expectedDates.map((date) =>
       uniqueStrategyRuleCount(
-        (byDate.get(date) ?? []).filter((row) => row.sample === "live_only")
-      )
-    )
+        (byDate.get(date) ?? []).filter((row) => row.sample === "live_only"),
+      ),
+    ),
   );
 
   const days = expectedDates.map((date): PaperTradingCaptureCalendarDay => {
@@ -923,11 +954,14 @@ export function buildPaperTradingCaptureCalendar(
       custom_rows: rows.filter((row) => row.is_custom).length,
       expected_live_strategy_rows: expectedLiveStrategyCount,
       expected_live_strategy_count: expectedLiveStrategyCount,
-      strategy_ids: Array.from(new Set(rows.map((row) => row.strategy_id))).sort(),
-      live_strategy_ids: Array.from(
-        new Set(liveRows.map((row) => row.strategy_id))
+      strategy_ids: Array.from(
+        new Set(rows.map((row) => row.strategy_id)),
       ).sort(),
-      latest_captured_at: capturedRows > 0 ? latestCapturedAtForRows(rows) : null,
+      live_strategy_ids: Array.from(
+        new Set(liveRows.map((row) => row.strategy_id)),
+      ).sort(),
+      latest_captured_at:
+        capturedRows > 0 ? latestCapturedAtForRows(rows) : null,
     };
   });
 
@@ -941,11 +975,7 @@ export function buildPaperTradingCaptureCalendar(
   }
 
   const status: PaperTradingCaptureCalendar["status"] =
-    missingDays > 0
-      ? "missing"
-      : partialDays > 0
-        ? "partial"
-        : "complete";
+    missingDays > 0 ? "missing" : partialDays > 0 ? "partial" : "complete";
 
   return {
     status,
@@ -960,30 +990,37 @@ export function buildPaperTradingCaptureCalendar(
     partial_days: partialDays,
     missing_days: missingDays,
     coverage_ratio:
-      expectedDates.length > 0 ? round2(completeDays / expectedDates.length) : 0,
+      expectedDates.length > 0
+        ? round2(completeDays / expectedDates.length)
+        : 0,
     current_streak_days: currentStreakDays,
     expected_live_strategy_rows: expectedLiveStrategyCount,
     expected_live_strategy_count: expectedLiveStrategyCount,
     first_expected_snapshot_date: expectedDates[0] ?? null,
-    last_expected_snapshot_date: expectedDates[expectedDates.length - 1] ?? null,
+    last_expected_snapshot_date:
+      expectedDates[expectedDates.length - 1] ?? null,
     days_remaining_to_30: Math.max(0, REQUIRED_PROOF_DAYS - completeDays),
     days,
   };
 }
 
-function latestSnapshotDate(snapshots: PaperTradingSnapshotRow[]): string | null {
-  return snapshots
-    .map((snapshot) => snapshot.snapshot_date)
-    .filter((date) => snapshotDateToUtcDate(date))
-    .sort((a, b) => b.localeCompare(a))[0] ?? null;
+function latestSnapshotDate(
+  snapshots: PaperTradingSnapshotRow[],
+): string | null {
+  return (
+    snapshots
+      .map((snapshot) => snapshot.snapshot_date)
+      .filter((date) => snapshotDateToUtcDate(date))
+      .sort((a, b) => b.localeCompare(a))[0] ?? null
+  );
 }
 
 export function buildPaperTradingStrategyRegistrySync(
   currentStrategies: StrategyVariantSummary[],
-  persistedSnapshots: PaperTradingSnapshotRow[]
+  persistedSnapshots: PaperTradingSnapshotRow[],
 ): PaperTradingStrategyRegistrySync {
   const currentLiveStrategies = currentStrategies.filter(
-    (strategy) => strategy.sample === "live_only" && !strategy.is_custom
+    (strategy) => strategy.sample === "live_only" && !strategy.is_custom,
   );
   const latestDate = latestSnapshotDate(persistedSnapshots);
 
@@ -1008,38 +1045,44 @@ export function buildPaperTradingStrategyRegistrySync(
     return {
       status: "pending_capture",
       status_label: "Pending capture",
-      message: "No persisted proof day has captured the current strategy registry yet.",
+      message:
+        "No persisted proof day has captured the current strategy registry yet.",
       latest_snapshot_date: null,
       latest_captured_at: null,
       current_live_strategy_count: currentLiveStrategies.length,
       persisted_latest_live_strategy_count: 0,
       missing_live_strategy_count: currentLiveStrategies.length,
       extra_persisted_live_strategy_count: 0,
-      missing_live_strategy_ids: currentLiveStrategies.map((strategy) => strategy.id),
+      missing_live_strategy_ids: currentLiveStrategies.map(
+        (strategy) => strategy.id,
+      ),
       missing_live_strategy_labels: currentLiveStrategies.map(
-        (strategy) => strategy.label
+        (strategy) => strategy.label,
       ),
       extra_persisted_strategy_ids: [],
     };
   }
 
   const latestRows = persistedSnapshots.filter(
-    (snapshot) => snapshot.snapshot_date === latestDate
+    (snapshot) => snapshot.snapshot_date === latestDate,
   );
   const latestLiveRows = latestRows.filter(
-    (snapshot) => snapshot.sample === "live_only"
+    (snapshot) => snapshot.sample === "live_only",
   );
   const currentByFingerprint = new Map(
     currentLiveStrategies.map((strategy) => [
       strategyRuleFingerprint(strategy),
       strategy,
-    ])
+    ]),
   );
   const persistedByFingerprint = new Map<string, PaperTradingSnapshotRow>();
   for (const row of latestLiveRows) {
     const fingerprint = strategyRuleFingerprint(row.strategy_summary);
     const existing = persistedByFingerprint.get(fingerprint);
-    if (!existing || Date.parse(row.captured_at) > Date.parse(existing.captured_at)) {
+    if (
+      !existing ||
+      Date.parse(row.captured_at) > Date.parse(existing.captured_at)
+    ) {
       persistedByFingerprint.set(fingerprint, row);
     }
   }
@@ -1075,18 +1118,23 @@ export function buildPaperTradingStrategyRegistrySync(
     extra_persisted_live_strategy_count: extraPersistedRows.length,
     missing_live_strategy_ids: missingStrategies.map((strategy) => strategy.id),
     missing_live_strategy_labels: missingStrategies.map(
-      (strategy) => strategy.label
+      (strategy) => strategy.label,
     ),
-    extra_persisted_strategy_ids: extraPersistedRows.map((row) => row.strategy_id),
+    extra_persisted_strategy_ids: extraPersistedRows.map(
+      (row) => row.strategy_id,
+    ),
   };
 }
 
 function strategySummaryValue(
   row: PaperTradingSnapshotRow | null,
-  key: keyof StrategyVariantSummary
+  key: keyof StrategyVariantSummary,
 ): number {
   if (!row) return 0;
-  const summary = row.strategy_summary as Partial<StrategyVariantSummary> | null | undefined;
+  const summary = row.strategy_summary as
+    | Partial<StrategyVariantSummary>
+    | null
+    | undefined;
   const value = summary?.[key];
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
@@ -1109,7 +1157,7 @@ function rowResolvedStake(row: PaperTradingSnapshotRow | null): number {
 
 function rowStrategyCount(
   row: PaperTradingSnapshotRow | null,
-  key: "wins" | "losses"
+  key: "wins" | "losses",
 ): number {
   return Math.max(0, Math.round(strategySummaryValue(row, key)));
 }
@@ -1138,7 +1186,7 @@ type PaperTradingProofWindowContext = {
 
 function buildProofWindowContext(
   latestRowsByDay: PaperTradingSnapshotRow[],
-  captureCoverage: PaperTradingCaptureCoverage
+  captureCoverage: PaperTradingCaptureCoverage,
 ): PaperTradingProofWindowContext {
   const windowStart = captureCoverage.first_expected_snapshot_date;
   const windowEnd = captureCoverage.last_expected_snapshot_date;
@@ -1148,15 +1196,18 @@ function buildProofWindowContext(
   const baseline =
     windowStart === null
       ? null
-      : latestRows
+      : (latestRows
           .slice()
           .reverse()
-          .find((row) => row.snapshot_date < windowStart) ?? null;
+          .find((row) => row.snapshot_date < windowStart) ?? null);
   const rowsInWindow = latestRows.filter((row) => {
     if (!windowStart || !windowEnd) return false;
     return row.snapshot_date >= windowStart && row.snapshot_date <= windowEnd;
   });
-  const latest = rowsInWindow[rowsInWindow.length - 1] ?? latestRows[latestRows.length - 1] ?? null;
+  const latest =
+    rowsInWindow[rowsInWindow.length - 1] ??
+    latestRows[latestRows.length - 1] ??
+    null;
 
   return {
     windowStart,
@@ -1168,14 +1219,20 @@ function buildProofWindowContext(
 }
 
 function buildProofWindow(
-  context: PaperTradingProofWindowContext
+  context: PaperTradingProofWindowContext,
 ): PaperTradingProofWindow {
   const { windowStart, windowEnd, rowsInWindow, baseline, latest } = context;
   const baselineTrades = rowResolvedTrades(baseline);
   const baselinePnl = rowResolvedPnl(baseline);
   const baselineStake = rowResolvedStake(baseline);
-  const resolvedTrades = Math.max(0, rowResolvedTrades(latest) - baselineTrades);
-  const resolvedStakeUsd = Math.max(0, rowResolvedStake(latest) - baselineStake);
+  const resolvedTrades = Math.max(
+    0,
+    rowResolvedTrades(latest) - baselineTrades,
+  );
+  const resolvedStakeUsd = Math.max(
+    0,
+    rowResolvedStake(latest) - baselineStake,
+  );
   const resolvedNetPnlUsd = rowResolvedPnl(latest) - baselinePnl;
 
   let peakPnl = 0;
@@ -1194,16 +1251,16 @@ function buildProofWindow(
     resolved_stake_usd: round2(resolvedStakeUsd),
     resolved_net_pnl_usd: round2(resolvedNetPnlUsd),
     resolved_roi_on_stake:
-      resolvedStakeUsd > 0 ? Math.round((resolvedNetPnlUsd / resolvedStakeUsd) * 10000) / 10000 : 0,
+      resolvedStakeUsd > 0
+        ? Math.round((resolvedNetPnlUsd / resolvedStakeUsd) * 10000) / 10000
+        : 0,
     max_drawdown_usd: round2(maxDrawdownUsd),
     latest_open_exposure_usd: round2(rowOpenExposure(latest)),
     latest_open_expected_pnl_usd: round2(rowOpenExpectedPnl(latest)),
   };
 }
 
-function proofQualityGradeLabel(
-  grade: PaperTradingProofQualityGrade
-): string {
+function proofQualityGradeLabel(grade: PaperTradingProofQualityGrade): string {
   if (grade === "reviewable") return "Reviewable";
   if (grade === "developing") return "Developing";
   if (grade === "thin") return "Thin sample";
@@ -1212,16 +1269,17 @@ function proofQualityGradeLabel(
 
 function proofWindowTradeCountDelta(
   context: PaperTradingProofWindowContext,
-  key: "wins" | "losses"
+  key: "wins" | "losses",
 ): number {
   return Math.max(
     0,
-    rowStrategyCount(context.latest, key) - rowStrategyCount(context.baseline, key)
+    rowStrategyCount(context.latest, key) -
+      rowStrategyCount(context.baseline, key),
   );
 }
 
 function proofWindowDailyPnlValues(
-  context: PaperTradingProofWindowContext
+  context: PaperTradingProofWindowContext,
 ): number[] {
   const windowStart = context.windowStart;
   const windowEnd = context.windowEnd;
@@ -1236,7 +1294,7 @@ function buildProofQuality(
   context: PaperTradingProofWindowContext,
   captureCoverage: PaperTradingCaptureCoverage,
   proofWindow: PaperTradingProofWindow,
-  durableGate: DurableProofGate
+  durableGate: DurableProofGate,
 ): PaperTradingProofQuality {
   const winningTrades = proofWindowTradeCountDelta(context, "wins");
   const losingTrades = proofWindowTradeCountDelta(context, "losses");
@@ -1246,9 +1304,7 @@ function buildProofQuality(
     .filter((pnl) => pnl > 0)
     .reduce((sum, pnl) => sum + pnl, 0);
   const grossNegativeDailyPnl = Math.abs(
-    dailyPnlValues
-      .filter((pnl) => pnl < 0)
-      .reduce((sum, pnl) => sum + pnl, 0)
+    dailyPnlValues.filter((pnl) => pnl < 0).reduce((sum, pnl) => sum + pnl, 0),
   );
   const winningDays = dailyPnlValues.filter((pnl) => pnl > 0).length;
   const losingDays = dailyPnlValues.filter((pnl) => pnl < 0).length;
@@ -1262,18 +1318,22 @@ function buildProofQuality(
     blockers.add("No resolved trades in proof window.");
   }
   if (captureCoverage.missing_days > 0) {
-    const label =
-      captureCoverage.missing_days === 1 ? "capture" : "captures";
+    const label = captureCoverage.missing_days === 1 ? "capture" : "captures";
     blockers.add(`${captureCoverage.missing_days} missed daily ${label}.`);
   }
-  if (captureCoverage.captured_days < PAPER_TRADING_PROOF_RULES.requiredLiveDays) {
+  if (
+    captureCoverage.captured_days < PAPER_TRADING_PROOF_RULES.requiredLiveDays
+  ) {
     blockers.add(
-      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - captureCoverage.captured_days} more capture days needed.`
+      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - captureCoverage.captured_days} more capture days needed.`,
     );
   }
-  if (proofWindow.resolved_trades < PAPER_TRADING_PROOF_RULES.requiredResolvedTrades) {
+  if (
+    proofWindow.resolved_trades <
+    PAPER_TRADING_PROOF_RULES.requiredResolvedTrades
+  ) {
     blockers.add(
-      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - proofWindow.resolved_trades} more resolved trades needed.`
+      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - proofWindow.resolved_trades} more resolved trades needed.`,
     );
   }
   if (dailyPnlValues.length === 0) {
@@ -1318,7 +1378,7 @@ function buildProofQuality(
       dailyPnlValues.length > 0
         ? round2(
             dailyPnlValues.reduce((sum, pnl) => sum + pnl, 0) /
-              dailyPnlValues.length
+              dailyPnlValues.length,
           )
         : 0,
     daily_profit_factor:
@@ -1347,7 +1407,7 @@ function proofStatusRank(status: DurableProofStatus): number {
 
 function compareStrategyRollups(
   a: PaperTradingStrategyProofRollup,
-  b: PaperTradingStrategyProofRollup
+  b: PaperTradingStrategyProofRollup,
 ): number {
   const aLive = a.sample === "live_only";
   const bLive = b.sample === "live_only";
@@ -1364,24 +1424,33 @@ function compareStrategyRollups(
   if (a.capture_coverage.missing_days !== b.capture_coverage.missing_days) {
     return a.capture_coverage.missing_days - b.capture_coverage.missing_days;
   }
-  if (b.proof_window.resolved_net_pnl_usd !== a.proof_window.resolved_net_pnl_usd) {
-    return b.proof_window.resolved_net_pnl_usd - a.proof_window.resolved_net_pnl_usd;
+  if (
+    b.proof_window.resolved_net_pnl_usd !== a.proof_window.resolved_net_pnl_usd
+  ) {
+    return (
+      b.proof_window.resolved_net_pnl_usd - a.proof_window.resolved_net_pnl_usd
+    );
   }
-  if (b.proof_window.resolved_roi_on_stake !== a.proof_window.resolved_roi_on_stake) {
-    return b.proof_window.resolved_roi_on_stake - a.proof_window.resolved_roi_on_stake;
+  if (
+    b.proof_window.resolved_roi_on_stake !==
+    a.proof_window.resolved_roi_on_stake
+  ) {
+    return (
+      b.proof_window.resolved_roi_on_stake -
+      a.proof_window.resolved_roi_on_stake
+    );
   }
   return a.strategy_label.localeCompare(b.strategy_label);
 }
 
 function emptyPaperTradingProofSummary(
   status: PaperTradingProofSummary["status"],
-  statusLabel: string
+  statusLabel: string,
 ): PaperTradingProofSummary {
   return {
     status,
     status_label: statusLabel,
-    capital_review_status:
-      status === "unavailable" ? "unavailable" : "blocked",
+    capital_review_status: status === "unavailable" ? "unavailable" : "blocked",
     capital_review_status_label:
       status === "unavailable" ? "Unavailable" : "Blocked",
     real_money_execution_allowed: false,
@@ -1409,7 +1478,7 @@ function emptyPaperTradingProofSummary(
 }
 
 export function buildPaperTradingProofSummary(
-  rollups: PaperTradingStrategyProofRollup[]
+  rollups: PaperTradingStrategyProofRollup[],
 ): PaperTradingProofSummary {
   if (rollups.length === 0) {
     return emptyPaperTradingProofSummary("unavailable", "No proof log");
@@ -1417,19 +1486,19 @@ export function buildPaperTradingProofSummary(
 
   const liveRollups = rollups.filter((rollup) => rollup.sample === "live_only");
   const candidates = liveRollups.filter(
-    (rollup) => rollup.durable_proof_gate.status === "candidate"
+    (rollup) => rollup.durable_proof_gate.status === "candidate",
   );
   const collecting = liveRollups.filter(
-    (rollup) => rollup.durable_proof_gate.status === "collecting"
+    (rollup) => rollup.durable_proof_gate.status === "collecting",
   );
   const notQualified = liveRollups.filter(
-    (rollup) => rollup.durable_proof_gate.status === "not_qualified"
+    (rollup) => rollup.durable_proof_gate.status === "not_qualified",
   );
   const stale = liveRollups.filter(
-    (rollup) => rollup.durable_proof_gate.status === "stale"
+    (rollup) => rollup.durable_proof_gate.status === "stale",
   );
   const controlCount = rollups.filter(
-    (rollup) => rollup.durable_proof_gate.status === "control_only"
+    (rollup) => rollup.durable_proof_gate.status === "control_only",
   ).length;
 
   if (liveRollups.length === 0) {
@@ -1492,7 +1561,7 @@ function buildDurableProofGate(
   latest: PaperTradingSnapshotRow,
   captureCoverage: PaperTradingCaptureCoverage,
   proofWindow: PaperTradingProofWindow,
-  captureHealth: PaperTradingCaptureHealth
+  captureHealth: PaperTradingCaptureHealth,
 ): DurableProofGate {
   const blockers: string[] = [];
 
@@ -1505,7 +1574,8 @@ function buildDurableProofGate(
       required_captured_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
       missing_capture_days: captureCoverage.missing_days,
       resolved_trades: proofWindow.resolved_trades,
-      required_resolved_trades: PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
+      required_resolved_trades:
+        PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
       resolved_net_pnl_usd: proofWindow.resolved_net_pnl_usd,
       min_resolved_net_pnl_usd: PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd,
       resolved_roi_on_stake: proofWindow.resolved_roi_on_stake,
@@ -1522,29 +1592,35 @@ function buildDurableProofGate(
   }
 
   if (captureCoverage.missing_days > 0) {
-    const label =
-      captureCoverage.missing_days === 1 ? "capture" : "captures";
+    const label = captureCoverage.missing_days === 1 ? "capture" : "captures";
     blockers.push(
-      `${captureCoverage.missing_days} missed daily ${label} in proof window.`
+      `${captureCoverage.missing_days} missed daily ${label} in proof window.`,
     );
   }
 
-  if (captureCoverage.captured_days < PAPER_TRADING_PROOF_RULES.requiredLiveDays) {
+  if (
+    captureCoverage.captured_days < PAPER_TRADING_PROOF_RULES.requiredLiveDays
+  ) {
     blockers.push(
-      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - captureCoverage.captured_days} more persisted capture days needed.`
+      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - captureCoverage.captured_days} more persisted capture days needed.`,
     );
   }
 
-  if (proofWindow.resolved_trades < PAPER_TRADING_PROOF_RULES.requiredResolvedTrades) {
+  if (
+    proofWindow.resolved_trades <
+    PAPER_TRADING_PROOF_RULES.requiredResolvedTrades
+  ) {
     blockers.push(
-      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - proofWindow.resolved_trades} more resolved live trades needed.`
+      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - proofWindow.resolved_trades} more resolved live trades needed.`,
     );
   }
 
   const enoughEvidence =
-    captureCoverage.captured_days >= PAPER_TRADING_PROOF_RULES.requiredLiveDays &&
+    captureCoverage.captured_days >=
+      PAPER_TRADING_PROOF_RULES.requiredLiveDays &&
     captureCoverage.missing_days === 0 &&
-    proofWindow.resolved_trades >= PAPER_TRADING_PROOF_RULES.requiredResolvedTrades;
+    proofWindow.resolved_trades >=
+      PAPER_TRADING_PROOF_RULES.requiredResolvedTrades;
 
   if (enoughEvidence) {
     if (
@@ -1553,10 +1629,15 @@ function buildDurableProofGate(
     ) {
       blockers.push("Resolved paper P&L is not positive.");
     }
-    if (proofWindow.resolved_roi_on_stake <= PAPER_TRADING_PROOF_RULES.minRoiOnStake) {
+    if (
+      proofWindow.resolved_roi_on_stake <=
+      PAPER_TRADING_PROOF_RULES.minRoiOnStake
+    ) {
       blockers.push("Resolved ROI is not positive.");
     }
-    if (proofWindow.max_drawdown_usd > PAPER_TRADING_PROOF_RULES.maxDrawdownUsd) {
+    if (
+      proofWindow.max_drawdown_usd > PAPER_TRADING_PROOF_RULES.maxDrawdownUsd
+    ) {
       blockers.push("Drawdown exceeds proof limit.");
     }
   }
@@ -1591,7 +1672,7 @@ function buildDurableProofGate(
 
 export function buildPaperTradingStrategyRollups(
   snapshots: PaperTradingSnapshotRow[],
-  captureHealth = buildPaperTradingCaptureHealth(latestCapturedAt(snapshots))
+  captureHealth = buildPaperTradingCaptureHealth(latestCapturedAt(snapshots)),
 ): PaperTradingStrategyProofRollup[] {
   const byStrategy = new Map<string, PaperTradingSnapshotRow[]>();
   for (const snapshot of snapshots) {
@@ -1615,28 +1696,30 @@ export function buildPaperTradingStrategyRollups(
         .sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
       const latest = latestRowsByDay
         .slice()
-        .sort((a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at))[0];
+        .sort(
+          (a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at),
+        )[0];
       const firstDate = latestRowsByDay[0]?.snapshot_date ?? null;
       const captureCoverage = buildCaptureCoverage(
         latestRowsByDay,
-        captureHealth
+        captureHealth,
       );
       const proofWindowContext = buildProofWindowContext(
         latestRowsByDay,
-        captureCoverage
+        captureCoverage,
       );
       const proofWindow = buildProofWindow(proofWindowContext);
       const durableProofGate = buildDurableProofGate(
         latest,
         captureCoverage,
         proofWindow,
-        captureHealth
+        captureHealth,
       );
       const proofQuality = buildProofQuality(
         proofWindowContext,
         captureCoverage,
         proofWindow,
-        durableProofGate
+        durableProofGate,
       );
 
       return {
@@ -1649,7 +1732,7 @@ export function buildPaperTradingStrategyRollups(
         captured_days: latestRowsByDay.length,
         days_remaining_to_30: Math.max(
           0,
-          REQUIRED_PROOF_DAYS - latestRowsByDay.length
+          REQUIRED_PROOF_DAYS - latestRowsByDay.length,
         ),
         first_snapshot_date: firstDate,
         latest_snapshot_date: latest.snapshot_date,
@@ -1676,7 +1759,7 @@ export function buildPaperTradingStrategyRollups(
 const AGENT_EDGE_GATE_SET = new Set<number>(AGENT_EDGE_GATES);
 
 function isPersistedAgentEdgeRollup(
-  rollup: PaperTradingStrategyProofRollup
+  rollup: PaperTradingStrategyProofRollup,
 ): boolean {
   const summary = rollup.latest_snapshot.strategy_summary;
   return (
@@ -1691,7 +1774,7 @@ function isPersistedAgentEdgeRollup(
 }
 
 export function buildPaperTradingAgentEdgeProofMatrix(
-  rollups: PaperTradingStrategyProofRollup[]
+  rollups: PaperTradingStrategyProofRollup[],
 ): PaperTradingAgentEdgeProofRow[] {
   const agentRank = new Map(AGENTS.map((agent, index) => [agent.id, index]));
 
@@ -1743,7 +1826,9 @@ export function buildPaperTradingAgentEdgeProofMatrix(
     });
 }
 
-function readinessStatusLabel(status: PaperTradingProofReadinessStatus): string {
+function readinessStatusLabel(
+  status: PaperTradingProofReadinessStatus,
+): string {
   if (status === "pass") return "Pass";
   if (status === "blocked") return "Blocked";
   if (status === "unavailable") return "Unavailable";
@@ -1757,7 +1842,7 @@ function readinessItem(
   current: string,
   target: string,
   detail: string,
-  evidence: PaperTradingProofReadinessEvidence[] = []
+  evidence: PaperTradingProofReadinessEvidence[] = [],
 ): PaperTradingProofReadinessItem {
   return {
     id,
@@ -1772,13 +1857,16 @@ function readinessItem(
 }
 
 function resolutionSignalEvidence(
-  signal: ResolutionWatchSignal
+  signal: ResolutionWatchSignal,
 ): PaperTradingProofReadinessEvidence {
   return {
     kind: "resolution_signal",
     prediction_id: signal.prediction_id,
     market_id: signal.market_id,
     market_question: signal.market_question,
+    market_source: signal.market_source,
+    market_url: signal.market_url,
+    market_status: signal.market_status,
     agent_id: signal.agent_id,
     agent_name: signal.agent_name,
     side: signal.side,
@@ -1812,7 +1900,7 @@ function addDaysAtSameTime(date: Date, days: number): Date {
 function daysUntil(date: Date, now = new Date()): number {
   return Math.max(
     0,
-    Math.ceil((date.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+    Math.ceil((date.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
   );
 }
 
@@ -1823,7 +1911,7 @@ function buildRunwayMilestone(
   current: string,
   target: string,
   etaAt: string | null,
-  detail: string
+  detail: string,
 ): PaperTradingProofRunwayMilestone {
   return {
     id,
@@ -1839,7 +1927,7 @@ function buildRunwayMilestone(
 
 function earliestCaptureCompletionAt(
   captureCalendar: PaperTradingCaptureCalendar,
-  captureHealth: PaperTradingCaptureHealth
+  captureHealth: PaperTradingCaptureHealth,
 ): string | null {
   if (captureCalendar.days_remaining_to_30 <= 0) {
     return captureHealth.latest_captured_at;
@@ -1850,7 +1938,7 @@ function earliestCaptureCompletionAt(
 
   return addDaysAtSameTime(
     nextCapture,
-    Math.max(0, captureCalendar.days_remaining_to_30 - 1)
+    Math.max(0, captureCalendar.days_remaining_to_30 - 1),
   ).toISOString();
 }
 
@@ -1864,41 +1952,41 @@ export function buildPaperTradingProofRunway(args: {
   const now = args.now ?? new Date();
   const captureDaysRemaining = Math.max(
     0,
-    REQUIRED_PROOF_DAYS - args.captureCalendar.complete_days
+    REQUIRED_PROOF_DAYS - args.captureCalendar.complete_days,
   );
   const resolvedTradesRemaining = Math.max(
     0,
     PAPER_TRADING_PROOF_RULES.requiredResolvedTrades -
-      args.proofSummary.best_live_resolved_trades
+      args.proofSummary.best_live_resolved_trades,
   );
   const captureEta = earliestCaptureCompletionAt(
     args.captureCalendar,
-    args.captureHealth
+    args.captureHealth,
   );
   const resolvedCapacity =
     args.resolutionWatch === undefined
       ? null
-      : args.resolutionWatch?.open_live_signals ?? 0;
+      : (args.resolutionWatch?.open_live_signals ?? 0);
   const openLiveSignals =
     args.resolutionWatch === undefined
       ? null
-      : args.resolutionWatch?.open_live_signals ?? 0;
+      : (args.resolutionWatch?.open_live_signals ?? 0);
   const overdueLiveSignals =
     args.resolutionWatch === undefined
       ? null
-      : args.resolutionWatch?.overdue_live_signals ?? 0;
+      : (args.resolutionWatch?.overdue_live_signals ?? 0);
   const reviewRequiredLiveSignals =
     args.resolutionWatch === undefined
       ? null
-      : args.resolutionWatch?.review_required_live_signals ?? 0;
+      : (args.resolutionWatch?.review_required_live_signals ?? 0);
   const closingNext7dSignals =
     args.resolutionWatch === undefined
       ? null
-      : args.resolutionWatch?.closing_next_7d_signals ?? 0;
+      : (args.resolutionWatch?.closing_next_7d_signals ?? 0);
   const unknownCloseLiveSignals =
     args.resolutionWatch === undefined
       ? null
-      : args.resolutionWatch?.unknown_close_live_signals ?? 0;
+      : (args.resolutionWatch?.unknown_close_live_signals ?? 0);
   const captureBlocked =
     args.captureHealth.status === "stale" ||
     args.captureHealth.status === "unavailable" ||
@@ -1927,13 +2015,13 @@ export function buildPaperTradingProofRunway(args: {
         ? "Repair capture freshness or missing daily proof rows before review."
         : resolutionUnchecked
           ? "Check the current live resolution backlog before capital review."
-        : captureDaysRemaining > 0 || resolvedTradesRemaining > 0
-          ? `Collect ${captureDaysRemaining} more proof day${
-              captureDaysRemaining === 1 ? "" : "s"
-            } and ${resolvedTradesRemaining} more resolved live paper trade${
-              resolvedTradesRemaining === 1 ? "" : "s"
-            }.`
-          : "A durable live candidate can be reviewed; execution remains disabled.";
+          : captureDaysRemaining > 0 || resolvedTradesRemaining > 0
+            ? `Collect ${captureDaysRemaining} more proof day${
+                captureDaysRemaining === 1 ? "" : "s"
+              } and ${resolvedTradesRemaining} more resolved live paper trade${
+                resolvedTradesRemaining === 1 ? "" : "s"
+              }.`
+            : "A durable live candidate can be reviewed; execution remains disabled.";
   const earliestReviewAt =
     status === "reviewable"
       ? args.captureHealth.latest_captured_at
@@ -1993,7 +2081,7 @@ export function buildPaperTradingProofRunway(args: {
         captureEta,
         captureBlocked
           ? "Daily capture quality must be repaired before the runway is meaningful."
-          : "Earliest date assumes the daily snapshot keeps landing on schedule."
+          : "Earliest date assumes the daily snapshot keeps landing on schedule.",
       ),
       buildRunwayMilestone(
         "resolved_trades",
@@ -2004,7 +2092,7 @@ export function buildPaperTradingProofRunway(args: {
         null,
         resolvedCapacity === null
           ? "Current open live resolution capacity is only available from /api/trading.json."
-          : `${resolvedCapacity} open live paper tickets can become realized evidence when markets resolve.`
+          : `${resolvedCapacity} open live paper tickets can become realized evidence when markets resolve.`,
       ),
       buildRunwayMilestone(
         "resolution_hygiene",
@@ -2017,7 +2105,7 @@ export function buildPaperTradingProofRunway(args: {
         args.resolutionWatch?.next_close_at ?? null,
         args.resolutionWatch
           ? "Overdue or unknown-close markets must be investigated before their EV is treated as actionable."
-          : "Live resolution status is available only when paired with the current trading snapshot."
+          : "Live resolution status is available only when paired with the current trading snapshot.",
       ),
       buildRunwayMilestone(
         "capital_review",
@@ -2027,7 +2115,7 @@ export function buildPaperTradingProofRunway(args: {
         "reviewable candidate, execution still disabled",
         earliestReviewAt,
         args.proofSummary.capital_review_blockers[0] ??
-          "The lab can become reviewable, but it never enables real-money execution."
+          "The lab can become reviewable, but it never enables real-money execution.",
       ),
     ],
   };
@@ -2042,7 +2130,7 @@ function proofReadinessNextAction(
     registrySync?: PaperTradingStrategyRegistrySync | null;
     resolutionWatch?: TradingResolutionWatch | null;
   },
-  evidenceWindowReady: boolean
+  evidenceWindowReady: boolean,
 ): string {
   if (args.persistenceStatus !== "available") {
     return "Restore persisted paper snapshot storage before reading proof metrics.";
@@ -2053,7 +2141,10 @@ function proofReadinessNextAction(
   if (args.registrySync && args.registrySync.status === "pending_capture") {
     return "Wait for the next daily snapshot to capture the current strategy registry.";
   }
-  if (args.resolutionWatch && args.resolutionWatch.review_required_live_signals > 0) {
+  if (
+    args.resolutionWatch &&
+    args.resolutionWatch.review_required_live_signals > 0
+  ) {
     const label =
       args.resolutionWatch.review_required_live_signals === 1
         ? "market"
@@ -2163,7 +2254,7 @@ export function buildPaperTradingProofReadiness(args: {
               : args.resolutionWatch.open_live_signals > 0
                 ? "Open live tickets are waiting for market resolution; they are not realized profit."
                 : "No open live paper tickets are waiting for resolution.",
-          reviewRequiredResolutionEvidence
+          reviewRequiredResolutionEvidence,
         );
 
   const items = [
@@ -2173,17 +2264,20 @@ export function buildPaperTradingProofReadiness(args: {
       args.persistenceStatus === "available" ? "pass" : "unavailable",
       args.persistenceStatus.replace("_", " "),
       "available",
-      "Stored snapshots must be readable before the lab can prove anything."
+      "Stored snapshots must be readable before the lab can prove anything.",
     ),
     readinessItem(
       "paper_only",
       "Paper-only lock",
-      args.proofSummary.paper_only && !args.proofSummary.real_money_execution_allowed
+      args.proofSummary.paper_only &&
+        !args.proofSummary.real_money_execution_allowed
         ? "pass"
         : "blocked",
-      args.proofSummary.real_money_execution_allowed ? "execution enabled" : "execution disabled",
+      args.proofSummary.real_money_execution_allowed
+        ? "execution enabled"
+        : "execution disabled",
       "execution disabled",
-      "The proof lab must never enable orders, wallets, leverage, or live capital."
+      "The proof lab must never enable orders, wallets, leverage, or live capital.",
     ),
     readinessItem(
       "capture_freshness",
@@ -2197,7 +2291,7 @@ export function buildPaperTradingProofReadiness(args: {
             : "unavailable",
       args.captureHealth.status_label,
       "fresh",
-      args.captureHealth.message
+      args.captureHealth.message,
     ),
     readinessItem(
       "registry_sync",
@@ -2207,7 +2301,8 @@ export function buildPaperTradingProofReadiness(args: {
         ? `${args.registrySync.persisted_latest_live_strategy_count}/${args.registrySync.current_live_strategy_count} live`
         : "not checked",
       "current live registry captured",
-      args.registrySync?.message ?? "Only /api/trading.json can compare current and persisted registries."
+      args.registrySync?.message ??
+        "Only /api/trading.json can compare current and persisted registries.",
     ),
     readinessItem(
       "capture_window",
@@ -2215,7 +2310,7 @@ export function buildPaperTradingProofReadiness(args: {
       captureWindowStatus,
       `${args.captureCalendar.complete_days}/${REQUIRED_PROOF_DAYS} complete days`,
       `${REQUIRED_PROOF_DAYS} complete days, 0 missing`,
-      `${args.captureCalendar.missing_days} missing, ${args.captureCalendar.partial_days} partial.`
+      `${args.captureCalendar.missing_days} missing, ${args.captureCalendar.partial_days} partial.`,
     ),
     readinessItem(
       "resolved_trades",
@@ -2225,7 +2320,7 @@ export function buildPaperTradingProofReadiness(args: {
       `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades} resolved live paper trades`,
       args.proofSummary.best_live_strategy_label
         ? `Best live rollup: ${args.proofSummary.best_live_strategy_label}.`
-        : "No live rollup is available yet."
+        : "No live rollup is available yet.",
     ),
     readinessItem(
       "window_pnl",
@@ -2240,7 +2335,7 @@ export function buildPaperTradingProofReadiness(args: {
       `>= $${PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd.toFixed(2)}`,
       evidenceWindowReady
         ? "Measured on the durable rolling proof window."
-        : "Waiting for enough captured days and resolved trades."
+        : "Waiting for enough captured days and resolved trades.",
     ),
     readinessItem(
       "window_roi",
@@ -2255,14 +2350,14 @@ export function buildPaperTradingProofReadiness(args: {
       `> ${(PAPER_TRADING_PROOF_RULES.minRoiOnStake * 100).toFixed(1)}%`,
       evidenceWindowReady
         ? "Measured only after the proof window has enough evidence."
-        : "ROI is not judged until the proof window is complete."
+        : "ROI is not judged until the proof window is complete.",
     ),
     readinessItem(
       "drawdown",
       "Drawdown limit",
       evidenceWindowReady
         ? args.proofSummary.best_live_blockers.some((blocker) =>
-            blocker.toLowerCase().includes("drawdown")
+            blocker.toLowerCase().includes("drawdown"),
           )
           ? "blocked"
           : "pass"
@@ -2271,7 +2366,7 @@ export function buildPaperTradingProofReadiness(args: {
       `<= $${PAPER_TRADING_PROOF_RULES.maxDrawdownUsd.toFixed(0)}`,
       evidenceWindowReady
         ? "Drawdown blockers come from durable proof gates."
-        : "Drawdown is not final until the proof window is complete."
+        : "Drawdown is not final until the proof window is complete.",
     ),
     readinessItem(
       "capital_review",
@@ -2280,7 +2375,7 @@ export function buildPaperTradingProofReadiness(args: {
       args.proofSummary.capital_review_status_label,
       "reviewable candidate, execution still disabled",
       args.proofSummary.capital_review_blockers[0] ??
-        "A candidate can become reviewable, but this app never enables execution."
+        "A candidate can become reviewable, but this app never enables execution.",
     ),
   ];
   if (resolutionItem) {
@@ -2288,7 +2383,8 @@ export function buildPaperTradingProofReadiness(args: {
   }
 
   const overallStatus: PaperTradingProofReadinessStatus =
-    args.persistenceStatus !== "available" || args.proofSummary.status === "unavailable"
+    args.persistenceStatus !== "available" ||
+    args.proofSummary.status === "unavailable"
       ? "unavailable"
       : items.some((item) => item.status === "blocked")
         ? "blocked"
@@ -2314,15 +2410,16 @@ export function buildPaperTradingProofReadiness(args: {
     collecting_item_count: items.filter((item) => item.status === "collecting")
       .length,
     blocked_item_count: blockedItemIds.length,
-    unavailable_item_count: items.filter((item) => item.status === "unavailable")
-      .length,
+    unavailable_item_count: items.filter(
+      (item) => item.status === "unavailable",
+    ).length,
     blocked_item_ids: blockedItemIds,
     items,
   };
 }
 
 function evidenceSourceStatusLabel(
-  status: PaperTradingProofEvidenceSourceStatus
+  status: PaperTradingProofEvidenceSourceStatus,
 ): string {
   if (status === "active") return "Active";
   if (status === "available") return "Available";
@@ -2333,7 +2430,7 @@ function evidenceSourceStatusLabel(
 }
 
 function proofEvidenceSource(
-  source: Omit<PaperTradingProofEvidenceSource, "status_label">
+  source: Omit<PaperTradingProofEvidenceSource, "status_label">,
 ): PaperTradingProofEvidenceSource {
   return {
     ...source,
@@ -2342,7 +2439,7 @@ function proofEvidenceSource(
 }
 
 function capitalEvidenceStatus(
-  proofReadiness: PaperTradingProofReadiness
+  proofReadiness: PaperTradingProofReadiness,
 ): PaperTradingProofEvidenceSourceStatus {
   if (proofReadiness.ready_for_capital_review) return "reviewable";
   if (proofReadiness.status === "blocked") return "blocked";
@@ -2486,22 +2583,23 @@ export function buildPaperTradingProofEvidenceSources(args: {
 }
 
 export async function loadPaperTradingSnapshotHistory(
-  limit = DEFAULT_HISTORY_LIMIT
+  limit = DEFAULT_HISTORY_LIMIT,
 ): Promise<PaperTradingPersistenceRead> {
   const env = getSupabaseEnv();
   if (!env) {
     const captureHealth = unavailableCaptureHealth(
       "Unconfigured",
-      "Supabase env is not configured for persisted paper-trading snapshots."
+      "Supabase env is not configured for persisted paper-trading snapshots.",
     );
     const captureCalendar = emptyCaptureCalendar("Unconfigured");
     const proofSummary = emptyPaperTradingProofSummary(
       "unavailable",
-      "Unconfigured"
+      "Unconfigured",
     );
     return {
       status: "unconfigured",
-      message: "Supabase env is not configured for persisted paper-trading snapshots.",
+      message:
+        "Supabase env is not configured for persisted paper-trading snapshots.",
       latest_captured_at: null,
       capture_health: captureHealth,
       capture_calendar: captureCalendar,
@@ -2537,7 +2635,7 @@ export async function loadPaperTradingSnapshotHistory(
     const captureCalendar = emptyCaptureCalendar(statusLabel);
     const proofSummary = emptyPaperTradingProofSummary(
       "unavailable",
-      statusLabel
+      statusLabel,
     );
     return {
       status,
@@ -2565,13 +2663,16 @@ export async function loadPaperTradingSnapshotHistory(
 
   const snapshots = (data ?? []) as unknown as PaperTradingSnapshotRow[];
   const captureHealth = buildPaperTradingCaptureHealth(
-    snapshots[0]?.captured_at ?? null
+    snapshots[0]?.captured_at ?? null,
   );
   const captureCalendar = buildPaperTradingCaptureCalendar(
     snapshots,
-    captureHealth
+    captureHealth,
   );
-  const strategyRollups = buildPaperTradingStrategyRollups(snapshots, captureHealth);
+  const strategyRollups = buildPaperTradingStrategyRollups(
+    snapshots,
+    captureHealth,
+  );
   const agentEdgeProofMatrix =
     buildPaperTradingAgentEdgeProofMatrix(strategyRollups);
   const proofSummary = buildPaperTradingProofSummary(strategyRollups);
@@ -2600,7 +2701,7 @@ export async function loadPaperTradingSnapshotHistory(
 }
 
 export async function persistPaperTradingSnapshot(
-  snapshot: TradingSnapshot
+  snapshot: TradingSnapshot,
 ): Promise<PaperTradingPersistenceWrite> {
   const env = getServiceSupabaseEnv();
   const rows = buildPaperTradingSnapshotRows(snapshot);
@@ -2618,7 +2719,10 @@ export async function persistPaperTradingSnapshot(
   }
 
   const sb = createSupabaseClient(env);
-  const { data, error } = await sb.from(SNAPSHOT_TABLE).insert(rows).select("strategy_id");
+  const { data, error } = await sb
+    .from(SNAPSHOT_TABLE)
+    .insert(rows)
+    .select("strategy_id");
 
   if (error) {
     return {
@@ -2630,9 +2734,9 @@ export async function persistPaperTradingSnapshot(
     };
   }
 
-  const capturedStrategyIds = ((data ?? []) as Array<{ strategy_id: string }>).map(
-    (row) => row.strategy_id
-  );
+  const capturedStrategyIds = (
+    (data ?? []) as Array<{ strategy_id: string }>
+  ).map((row) => row.strategy_id);
 
   return {
     status: "written",
