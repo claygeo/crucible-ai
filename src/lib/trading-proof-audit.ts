@@ -97,6 +97,20 @@ export type PaperTradingProofAudit = {
     paper_only: true;
     real_money_execution_allowed: false;
   };
+  published_artifact_provenance: {
+    status: PaperTradingProofAuditStatus;
+    status_label: string;
+    workflow_run_id: string | null;
+    workflow_event: string | null;
+    workflow_ref: string | null;
+    requested_dry_run: boolean | null;
+    effective_dry_run: boolean | null;
+    write_enabled: boolean | null;
+    mode_reason: string | null;
+    artifact_fallback_used: boolean;
+    paper_only: true;
+    real_money_execution_allowed: false;
+  };
   readiness: PaperTradingProofReadiness;
   runway: PaperTradingProofRunway;
   failed_checks: string[];
@@ -141,6 +155,26 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function finiteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function stringField(
+  record: Record<string, unknown> | null,
+  key: string,
+): string | null {
+  const value = record?.[key];
+  if (typeof value === "string" && value.trim().length > 0) return value;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  return null;
+}
+
+function booleanField(
+  record: Record<string, unknown> | null,
+  key: string,
+): boolean | null {
+  const value = record?.[key];
+  return typeof value === "boolean" ? value : null;
 }
 
 function invalidPublishedOutcomeRows(rows: unknown[]): string[] {
@@ -200,6 +234,25 @@ export function buildPaperTradingProofAudit(args: {
   const publishedOutcomeRows = args.publishedArtifactProof.agent_edge_matrix;
   const invalidPublishedRows =
     invalidPublishedOutcomeRows(publishedOutcomeRows);
+  const workflowRun = isRecord(args.publishedArtifactProof.workflow_run)
+    ? args.publishedArtifactProof.workflow_run
+    : null;
+  const workflowMode = isRecord(args.publishedArtifactProof.workflow_mode)
+    ? args.publishedArtifactProof.workflow_mode
+    : null;
+  const workflowRunId = stringField(workflowRun, "id");
+  const workflowEvent = stringField(workflowRun, "event");
+  const workflowRef = stringField(workflowRun, "ref");
+  const requestedDryRun = booleanField(workflowMode, "requested_dry_run");
+  const effectiveDryRun = booleanField(workflowMode, "effective_dry_run");
+  const writeEnabled = booleanField(workflowMode, "write_enabled");
+  const modeReason = stringField(workflowMode, "mode_reason");
+  const artifactFallbackUsed =
+    args.agentEdgeProof.source === "published_artifact";
+  const artifactFallbackWriteReady =
+    requestedDryRun === false &&
+    effectiveDryRun === false &&
+    writeEnabled === true;
   const expectedPublishedOutcomeRows = args.agentEdgeProof.rule_count;
   const missingPublishedOutcomeRows =
     expectedPublishedOutcomeRows > 0 &&
@@ -227,6 +280,28 @@ export function buildPaperTradingProofAudit(args: {
             : args.publishedArtifactProof.status === "available"
               ? "Published proof preserves open-ticket downside/upside context without enabling execution."
               : args.publishedArtifactProof.message;
+  const provenanceStatus: PaperTradingProofAuditStatus =
+    args.publishedArtifactProof.status === "unavailable"
+      ? "unavailable"
+      : args.publishedArtifactProof.status === "blocked" ||
+          !workflowRunId ||
+          !workflowMode
+        ? "blocked"
+        : artifactFallbackUsed && !artifactFallbackWriteReady
+          ? "collecting"
+          : "pass";
+  const provenanceDetail =
+    args.publishedArtifactProof.status === "unavailable"
+      ? args.publishedArtifactProof.message
+      : !workflowRunId
+        ? "Published proof is missing the workflow run id."
+        : !workflowMode
+          ? "Published proof is missing workflow-mode provenance."
+          : artifactFallbackUsed && !artifactFallbackWriteReady
+            ? `Agent-edge proof is using the published artifact fallback, but that artifact was ${modeReason || "captured without explicit write-enabled provenance"}.`
+            : artifactFallbackUsed
+              ? "Published artifact fallback has workflow provenance and is not marked as dry-run/write-disabled."
+              : "Primary agent-edge proof is coming from Supabase rows; published artifact provenance remains visible but is not the capital-review source.";
   const evidenceWindowReady =
     args.persisted.capture_calendar.complete_days >=
       PAPER_TRADING_PROOF_RULES.requiredLiveDays &&
@@ -361,6 +436,18 @@ export function buildPaperTradingProofAudit(args: {
       `${publishedOutcomeRows.length} rows / risk ${args.publishedArtifactProof.selected_bankroll_risk ? "yes" : "no"} / scenarios ${args.publishedArtifactProof.selected_open_outcome_scenarios ? "yes" : "no"}`,
       "latest published artifact archives every agent-edge outcome row with pending P&L excluded from proof",
       publishedOutcomeDetail,
+    ),
+    check(
+      "published_artifact_provenance",
+      "Published proof provenance",
+      provenanceStatus,
+      `${workflowRunId ?? "no run"} / ${
+        effectiveDryRun === null
+          ? "dry-run unknown"
+          : `dry-run ${effectiveDryRun}`
+      } / ${writeEnabled === null ? "write unknown" : `write ${writeEnabled}`}`,
+      "published fallback proof is tied to a workflow run and not treated as capital-ready when dry-run or write-disabled",
+      provenanceDetail,
     ),
     check(
       "window_pnl",
@@ -512,17 +599,27 @@ export function buildPaperTradingProofAudit(args: {
       status: args.publishedArtifactProof.status,
       status_label: args.publishedArtifactProof.status_label,
       generated_at: args.publishedArtifactProof.generated_at,
-      workflow_run_id: isRecord(args.publishedArtifactProof.workflow_run)
-        ? typeof args.publishedArtifactProof.workflow_run.id === "string"
-          ? args.publishedArtifactProof.workflow_run.id
-          : null
-        : null,
+      workflow_run_id: workflowRunId,
       agent_edge_matrix_rows: publishedOutcomeRows.length,
       selected_bankroll_risk_available:
         args.publishedArtifactProof.selected_bankroll_risk !== null,
       selected_open_outcome_scenarios_available:
         args.publishedArtifactProof.selected_open_outcome_scenarios !== null,
       invalid_agent_edge_outcome_rows: invalidPublishedRows,
+      paper_only: true,
+      real_money_execution_allowed: false,
+    },
+    published_artifact_provenance: {
+      status: provenanceStatus,
+      status_label: statusLabel(provenanceStatus),
+      workflow_run_id: workflowRunId,
+      workflow_event: workflowEvent,
+      workflow_ref: workflowRef,
+      requested_dry_run: requestedDryRun,
+      effective_dry_run: effectiveDryRun,
+      write_enabled: writeEnabled,
+      mode_reason: modeReason,
+      artifact_fallback_used: artifactFallbackUsed,
       paper_only: true,
       real_money_execution_allowed: false,
     },
