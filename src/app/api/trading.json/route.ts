@@ -15,6 +15,7 @@ import {
   buildResolutionReviewQueue,
   enrichResolutionReviewQueueWithProviderResolution,
 } from "@/lib/trading-resolution-review";
+import { buildPaperTradingProofAudit } from "@/lib/trading-proof-audit";
 import {
   buildPaperTradingCapitalReviewPacket,
   buildPaperTradingProofEvidenceSources,
@@ -84,6 +85,17 @@ export async function GET(request: Request) {
     proofRunway,
     resolutionWatch: snapshot.resolution_watch,
   });
+  const proofAudit = buildPaperTradingProofAudit({
+    snapshot,
+    persisted,
+    agentEdgeProof,
+    publishedArtifactProof,
+    registrySync,
+    readiness: proofReadiness,
+    runway: proofRunway,
+    controls,
+    soft: true,
+  });
   const resolutionReviewQueue =
     await enrichResolutionReviewQueueWithProviderResolution(
       buildResolutionReviewQueue({
@@ -113,6 +125,7 @@ export async function GET(request: Request) {
       paper_lab_status: labStatus,
       resolution_review_queue: resolutionReviewQueue,
       resolution_catchup_preview: resolutionCatchupPreview,
+      paper_proof_audit: proofAudit,
       proof_evidence_sources: proofEvidenceSources,
       persisted_daily_snapshots: persisted.snapshots,
       persisted_strategy_rollups: persisted.strategy_rollups,
@@ -144,6 +157,7 @@ export async function GET(request: Request) {
         proof_evidence_sources: proofEvidenceSources,
         resolution_review_queue: resolutionReviewQueue,
         resolution_catchup_preview: resolutionCatchupPreview,
+        proof_audit: proofAudit,
         github_artifact_workflow: artifactWorkflow,
         published_artifact_proof: publishedArtifactProof,
         artifact_history: artifactHistory,
