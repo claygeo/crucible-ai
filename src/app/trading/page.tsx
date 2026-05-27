@@ -3,7 +3,10 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
-import { loadPaperTradingArtifactWorkflowStatus } from "@/lib/trading-artifacts";
+import {
+  loadPaperTradingArtifactWorkflowStatus,
+  loadPublishedPaperTradingArtifactProof,
+} from "@/lib/trading-artifacts";
 import { dollars, int, pct, prob, relativeTime, signed } from "@/lib/format";
 import {
   TRADING_CATEGORY_OPTIONS,
@@ -180,11 +183,13 @@ export default async function TradingPage({
   searchParams: TradingPageSearchParams;
 }) {
   const controls = parseTradingControls(await searchParams);
-  const [snapshot, persisted, artifactWorkflow] = await Promise.all([
-    getTradingSnapshot(controls),
-    loadPaperTradingSnapshotHistory(1000),
-    loadPaperTradingArtifactWorkflowStatus(5),
-  ]);
+  const [snapshot, persisted, artifactWorkflow, publishedArtifactProof] =
+    await Promise.all([
+      getTradingSnapshot(controls),
+      loadPaperTradingSnapshotHistory(1000),
+      loadPaperTradingArtifactWorkflowStatus(5),
+      loadPublishedPaperTradingArtifactProof(),
+    ]);
   const leader = snapshot.agent_summaries[0];
   const liveResolved =
     snapshot.totals.live_resolved_trades > 0
@@ -209,6 +214,7 @@ export default async function TradingPage({
   const snapshotJsonHref = "/api/trading-snapshots?limit=1000";
   const auditJsonHref = `/api/trading-proof-audit?${selectedQuery}`;
   const artifactJsonHref = "/api/trading-artifacts";
+  const publishedProofHref = "/paper-trading/latest-artifact-proof.json";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
   ).sort((a, b) => a - b);
@@ -246,6 +252,20 @@ export default async function TradingPage({
   });
   const latestArtifactRun = artifactWorkflow.latest_successful_artifact_run;
   const latestWorkflowRun = artifactWorkflow.latest_run;
+  const publishedAudit = publishedArtifactProof.artifact_audit;
+  const publishedReadiness = publishedArtifactProof.proof_readiness;
+  const publishedSnapshotDate =
+    typeof publishedAudit?.latest_snapshot_date === "string"
+      ? publishedAudit.latest_snapshot_date
+      : "-";
+  const publishedLiveRows =
+    typeof publishedAudit?.live_row_count === "number"
+      ? int(publishedAudit.live_row_count)
+      : "-";
+  const publishedReadinessStatus =
+    typeof publishedReadiness?.status === "string"
+      ? publishedReadiness.status
+      : "unavailable";
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -645,6 +665,12 @@ export default async function TradingPage({
                 artifact json
               </Link>
               <Link
+                href={publishedProofHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                published proof
+              </Link>
+              <Link
                 href={snapshotJsonHref}
                 className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
               >
@@ -901,6 +927,31 @@ export default async function TradingPage({
                   {latestArtifactRun?.artifact.expires_at
                     ? `expires ${relativeTime(latestArtifactRun.artifact.expires_at)}`
                     : "no artifact"}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Published proof
+                </div>
+                <div className="mt-1">
+                  <span
+                    className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofEvidenceSourceStatusClass(
+                      publishedArtifactProof.status
+                    )}`}
+                  >
+                    {publishedArtifactProof.status_label}
+                  </span>
+                </div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted mt-2">
+                  {publishedSnapshotDate} / {publishedLiveRows} live rows /{" "}
+                  {publishedArtifactProof.agent_edge_proof_matrix.length} rules
+                </div>
+                <div
+                  className={`mono text-[10px] uppercase tracking-wider mt-1 ${proofSummaryClass(
+                    publishedReadinessStatus
+                  )}`}
+                >
+                  readiness {publishedReadinessStatus}
                 </div>
               </div>
               <div>

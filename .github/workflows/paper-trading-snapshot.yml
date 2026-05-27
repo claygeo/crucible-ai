@@ -17,7 +17,7 @@ on:
         default: "0.1"
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -136,6 +136,45 @@ jobs:
             --json \
             | tee paper-artifact-audit-result.json
 
+      - name: Publish latest public proof JSON
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f paper-artifact-audit-result.json ]]; then
+            printf '::warning title=Missing artifact audit::paper-artifact-audit-result.json was not produced; skipping public proof publish.\n'
+            exit 0
+          fi
+
+          npx tsx scripts/paper-trading-publish-artifact-proof.ts \
+            --artifact-audit paper-artifact-audit-result.json \
+            --workflow paper-snapshot-workflow.json \
+            --output public/paper-trading/latest-artifact-proof.json
+
+      - name: Commit latest public proof JSON
+        if: always() && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f public/paper-trading/latest-artifact-proof.json ]]; then
+            echo "No public proof JSON to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/paper-trading/latest-artifact-proof.json
+
+          if git diff --cached --quiet; then
+            echo "Latest public proof JSON is unchanged."
+            exit 0
+          fi
+
+          git commit -m "chore: publish latest paper proof"
+          git push
+
       - name: Upload proof artifacts
         if: always()
         uses: actions/upload-artifact@v7
@@ -147,5 +186,6 @@ jobs:
             paper-snapshot-rows.json
             paper-audit-result.json
             paper-artifact-audit-result.json
+            public/paper-trading/latest-artifact-proof.json
           if-no-files-found: ignore
           retention-days: 30

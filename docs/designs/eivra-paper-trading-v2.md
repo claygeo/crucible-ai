@@ -180,6 +180,13 @@ The 30-day proof window now has a durable audit surface:
   and the dashboard include the same `github_artifact_workflow` status so the
   artifact fallback is backed by actual run metadata, not only a documented
   contract.
+- The workflow also publishes
+  `/paper-trading/latest-artifact-proof.json` back into the app from
+  `paper-artifact-audit-result.json`. The public JSON contains the sanitized
+  artifact proof rollup, proof readiness/runway, agent-edge proof matrix, and
+  top strategy rollups with `paper_only: true` and
+  `real_money_execution_allowed: false`; raw snapshot rows stay in the GitHub
+  artifact bundle.
 - `persistence.capture_health` reports the daily recorder status, latest capture
   age, next expected capture, cron expression, and stale threshold.
 - `persistence.capture_calendar` reports the proof window day by day, including

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
-import { loadPaperTradingArtifactWorkflowStatus } from "@/lib/trading-artifacts";
+import {
+  loadPaperTradingArtifactWorkflowStatus,
+  loadPublishedPaperTradingArtifactProof,
+} from "@/lib/trading-artifacts";
 import {
   buildPaperTradingProofEvidenceSources,
   loadPaperTradingSnapshotHistory,
@@ -29,10 +32,13 @@ function authorized(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const [history, artifactWorkflow] = await Promise.all([
-    loadPaperTradingSnapshotHistory(parseLimit(request)),
-    loadPaperTradingArtifactWorkflowStatus(5),
-  ]);
+  const [history, artifactWorkflow, publishedArtifactProof] = await Promise.all(
+    [
+      loadPaperTradingSnapshotHistory(parseLimit(request)),
+      loadPaperTradingArtifactWorkflowStatus(5),
+      loadPublishedPaperTradingArtifactProof(),
+    ],
+  );
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: history,
     proofReadiness: history.proof_readiness,
@@ -56,6 +62,7 @@ export async function GET(request: NextRequest) {
         proof_runway: history.proof_runway,
         proof_evidence_sources: proofEvidenceSources,
         github_artifact_workflow: artifactWorkflow,
+        published_artifact_proof: publishedArtifactProof,
         agent_edge_proof_matrix: history.agent_edge_proof_matrix,
       },
       proof_summary: history.proof_summary,
@@ -63,6 +70,7 @@ export async function GET(request: NextRequest) {
       proof_runway: history.proof_runway,
       proof_evidence_sources: proofEvidenceSources,
       github_artifact_workflow: artifactWorkflow,
+      published_artifact_proof: publishedArtifactProof,
       capture_calendar: history.capture_calendar,
       agent_edge_proof_matrix: history.agent_edge_proof_matrix,
       count: history.snapshots.length,

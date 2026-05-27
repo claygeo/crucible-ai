@@ -1,0 +1,42 @@
+{
+  "schema_version": "1",
+  "generated_at": null,
+  "source": "placeholder",
+  "paper_only": true,
+  "real_money_execution_allowed": false,
+  "repository": "claygeo/eivra",
+  "workflow_path": ".github/workflows/paper-trading-snapshot.yml",
+  "workflow_run": null,
+  "artifact_contract": null,
+  "workflow_mode": null,
+  "artifact_audit": {
+    "verdict": "unavailable",
+    "checked_at": null,
+    "exit_code": null,
+    "artifact_count": 0,
+    "latest_snapshot_date": null,
+    "row_count": 0,
+    "live_row_count": 0,
+    "control_row_count": 0,
+    "selected_query_row_count": 0,
+    "sources": [],
+    "schema_versions": [],
+    "failed_checks": [],
+    "snapshot_summaries": []
+  },
+  "artifact_proof": {
+    "status": "unavailable",
+    "message": "No published artifact proof has been generated yet.",
+    "paper_only": true,
+    "real_money_execution_allowed": false,
+    "latest_captured_at": null,
+    "proof_summary": null,
+    "proof_readiness": null,
+    "proof_runway": null,
+    "capture_health": null,
+    "capture_calendar": null,
+    "resolution_watch": null,
+    "agent_edge_proof_matrix": [],
+    "top_strategy_rollups": []
+  }
+}
