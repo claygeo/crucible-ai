@@ -144,6 +144,11 @@ strategies, and control rows. The summary's best-live strategy is ranked by the
 same rolling-window proof metrics as the durable gate, so backfill controls stay
 auditable without leading the live proof table.
 
+`proof_summary` also carries the capital-review boundary: `paper_only: true`,
+`real_money_execution_allowed: false`, and `capital_review_status`. A durable
+candidate can make the strategy reviewable by the operator, but it never enables
+execution in this app.
+
 The dashboard and public JSON feed load a 500-row persisted history window. That
 is intentionally larger than 30 days because the daily writer stores multiple
 strategy rows per capture, same-day manual probes can add duplicate rows, and
