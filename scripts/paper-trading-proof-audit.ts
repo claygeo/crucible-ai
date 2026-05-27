@@ -39,7 +39,9 @@ function loadEnvFile(path: string): boolean {
   for (const rawLine of contents.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith("#")) continue;
-    const withoutExport = line.startsWith("export ") ? line.slice(7).trim() : line;
+    const withoutExport = line.startsWith("export ")
+      ? line.slice(7).trim()
+      : line;
     const equals = withoutExport.indexOf("=");
     if (equals <= 0) continue;
     const key = withoutExport.slice(0, equals).trim();
@@ -128,12 +130,14 @@ Options:
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const loadedEnvFiles = options.envFiles.filter((file) => loadEnvFile(file));
-  const { getTradingSnapshot, parseTradingControls } = await import(
-    "../src/lib/trading"
-  );
-  const { buildPaperTradingProofAudit } = await import(
-    "../src/lib/trading-proof-audit"
-  );
+  const { getTradingSnapshot, parseTradingControls } =
+    await import("../src/lib/trading");
+  const { buildPaperTradingProofAudit } =
+    await import("../src/lib/trading-proof-audit");
+  const { buildPaperTradingAgentEdgeProof } =
+    await import("../src/lib/trading-agent-edge-proof");
+  const { loadPublishedPaperTradingArtifactProof } =
+    await import("../src/lib/trading-artifacts");
   const {
     buildPaperTradingProofReadiness,
     buildPaperTradingProofRunway,
@@ -142,13 +146,14 @@ async function main() {
   } = await import("../src/lib/trading-snapshots");
 
   const controls = parseTradingControls(options.params);
-  const [snapshot, persisted] = await Promise.all([
+  const [snapshot, persisted, publishedArtifactProof] = await Promise.all([
     getTradingSnapshot(controls),
     loadPaperTradingSnapshotHistory(1000),
+    loadPublishedPaperTradingArtifactProof(),
   ]);
   const registrySync = buildPaperTradingStrategyRegistrySync(
     snapshot.strategy_variants,
-    persisted.snapshots
+    persisted.snapshots,
   );
   const readiness = buildPaperTradingProofReadiness({
     persistenceStatus: persisted.status,
@@ -164,9 +169,14 @@ async function main() {
     captureCalendar: persisted.capture_calendar,
     resolutionWatch: snapshot.resolution_watch,
   });
+  const agentEdgeProof = buildPaperTradingAgentEdgeProof({
+    persistedRows: persisted.agent_edge_proof_matrix,
+    publishedArtifactProof,
+  });
   const report = buildPaperTradingProofAudit({
     snapshot,
     persisted,
+    agentEdgeProof,
     registrySync,
     readiness,
     runway,

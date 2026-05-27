@@ -347,17 +347,6 @@ export default async function TradingPage({
     captureCalendar,
     resolutionWatch,
   });
-  const proofAudit = buildPaperTradingProofAudit({
-    snapshot,
-    persisted,
-    registrySync,
-    readiness: proofReadiness,
-    runway: proofRunway,
-    controls: snapshot.controls,
-  });
-  const failedAuditChecks = proofAudit.checks.filter(
-    (item) => item.status !== "pass",
-  );
   const capitalReviewPacket = buildPaperTradingCapitalReviewPacket({
     proofSummary,
     proofReadiness,
@@ -381,6 +370,18 @@ export default async function TradingPage({
     persistedRows: persisted.agent_edge_proof_matrix,
     publishedArtifactProof,
   });
+  const proofAudit = buildPaperTradingProofAudit({
+    snapshot,
+    persisted,
+    agentEdgeProof,
+    registrySync,
+    readiness: proofReadiness,
+    runway: proofRunway,
+    controls: snapshot.controls,
+  });
+  const failedAuditChecks = proofAudit.checks.filter(
+    (item) => item.status !== "pass",
+  );
   const profitabilityGuard = agentEdgeProof.profitability_guard;
   const durableCapacityLeakage = agentEdgeProof.capacity_leakage;
   const agentEdgeWatchlist = snapshot.agent_edge_watchlist;
@@ -1338,6 +1339,53 @@ export default async function TradingPage({
               >
                 {proofAudit.verdict_label}
               </span>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              <div className="border border-border-subtle rounded px-3 py-2 min-w-0">
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Agent-edge audit
+                </div>
+                <div className={`heading text-sm mt-1 ${proofSummaryClass(proofAudit.agent_edge_proof.guard_status)}`}>
+                  {proofAudit.agent_edge_proof.guard_status_label}
+                </div>
+                <div className="text-xs text-text-muted mt-1 truncate">
+                  {proofAudit.agent_edge_proof.source_label}
+                </div>
+              </div>
+              <div className="border border-border-subtle rounded px-3 py-2 min-w-0">
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Proven rules
+                </div>
+                <div className="heading text-sm text-text-primary mt-1">
+                  {int(proofAudit.agent_edge_proof.rules_with_profitability_proven)}/
+                  {int(proofAudit.agent_edge_proof.rule_count)}
+                </div>
+                <div className="text-xs text-text-muted mt-1">
+                  {int(proofAudit.agent_edge_proof.rules_with_minimum_sample)} minimum sample
+                </div>
+              </div>
+              <div className="border border-border-subtle rounded px-3 py-2 min-w-0">
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Positive thin
+                </div>
+                <div className="heading text-sm text-warn mt-1">
+                  {int(proofAudit.agent_edge_proof.positive_unproven_rule_count)}
+                </div>
+                <div className="text-xs text-text-muted mt-1">
+                  cannot count as proof yet
+                </div>
+              </div>
+              <div className="border border-border-subtle rounded px-3 py-2 min-w-0">
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Missed P&amp;L
+                </div>
+                <div className={`heading text-sm mt-1 ${pnlClass(proofAudit.agent_edge_proof.capacity_leakage_missed_pnl_usd)}`}>
+                  {dollars(proofAudit.agent_edge_proof.capacity_leakage_missed_pnl_usd, 0)}
+                </div>
+                <div className="text-xs text-text-muted mt-1">
+                  not counted as proof
+                </div>
+              </div>
             </div>
             {failedAuditChecks.length === 0 ? (
               <div className="text-sm text-positive mono">
