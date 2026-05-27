@@ -92,6 +92,7 @@ export type DurableProofGate = {
   status_label: string;
   captured_days: number;
   required_captured_days: number;
+  missing_capture_days: number;
   resolved_trades: number;
   required_resolved_trades: number;
   resolved_net_pnl_usd: number;
@@ -102,6 +103,20 @@ export type DurableProofGate = {
   max_allowed_drawdown_usd: number;
   capture_health_status: PaperTradingCaptureHealth["status"];
   blockers: string[];
+};
+
+export type PaperTradingCaptureCoverage = {
+  status: "complete" | "missing";
+  status_label: string;
+  expected_days: number;
+  captured_days: number;
+  missing_days: number;
+  coverage_ratio: number;
+  current_streak_days: number;
+  first_expected_snapshot_date: string | null;
+  last_expected_snapshot_date: string | null;
+  captured_snapshot_dates: string[];
+  missing_snapshot_dates: string[];
 };
 
 export type PaperTradingStrategyProofRollup = {
@@ -125,6 +140,7 @@ export type PaperTradingStrategyProofRollup = {
   latest_resolved_roi_on_stake: number;
   latest_open_exposure_usd: number;
   latest_open_expected_pnl_usd: number;
+  capture_coverage: PaperTradingCaptureCoverage;
   durable_proof_gate: DurableProofGate;
   latest_snapshot: PaperTradingSnapshotRow;
 };
@@ -365,6 +381,103 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+function snapshotDateToUtcDate(snapshotDate: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(snapshotDate)) return null;
+  const date = new Date(`${snapshotDate}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function addUtcDays(date: Date, days: number): Date {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate() + days,
+      0,
+      0,
+      0,
+      0
+    )
+  );
+}
+
+function utcSnapshotDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function snapshotDateRange(startDate: string, endDate: string): string[] {
+  const start = snapshotDateToUtcDate(startDate);
+  const end = snapshotDateToUtcDate(endDate);
+  if (!start || !end || start.getTime() > end.getTime()) return [];
+
+  const dates: string[] = [];
+  for (
+    let cursor = start;
+    cursor.getTime() <= end.getTime();
+    cursor = addUtcDays(cursor, 1)
+  ) {
+    dates.push(utcSnapshotDate(cursor));
+  }
+  return dates;
+}
+
+function buildCaptureCoverage(
+  latestRowsByDay: PaperTradingSnapshotRow[],
+  captureHealth: PaperTradingCaptureHealth
+): PaperTradingCaptureCoverage {
+  const allCapturedDates = latestRowsByDay
+    .map((row) => row.snapshot_date)
+    .filter((date) => snapshotDateToUtcDate(date))
+    .sort((a, b) => a.localeCompare(b));
+  const capturedSet = new Set(allCapturedDates);
+  const firstCapturedDate = allCapturedDates[0] ?? null;
+  const previousExpectedDate = captureHealth.previous_expected_capture_at.slice(0, 10);
+  const previousExpectedUtc = snapshotDateToUtcDate(previousExpectedDate);
+  const windowStartDate = previousExpectedUtc
+    ? utcSnapshotDate(addUtcDays(previousExpectedUtc, -(REQUIRED_PROOF_DAYS - 1)))
+    : null;
+  const firstExpectedDate =
+    firstCapturedDate && windowStartDate
+      ? firstCapturedDate > windowStartDate
+        ? firstCapturedDate
+        : windowStartDate
+      : firstCapturedDate;
+  const lastExpectedDate =
+    firstExpectedDate && firstExpectedDate <= previousExpectedDate
+      ? previousExpectedDate
+      : firstExpectedDate;
+  const expectedDates =
+    firstExpectedDate && lastExpectedDate
+      ? snapshotDateRange(firstExpectedDate, lastExpectedDate)
+      : [];
+  const capturedDates = expectedDates.filter((date) => capturedSet.has(date));
+  const missingDates = expectedDates.filter((date) => !capturedSet.has(date));
+
+  let currentStreakDays = 0;
+  for (let i = expectedDates.length - 1; i >= 0; i -= 1) {
+    if (!capturedSet.has(expectedDates[i])) break;
+    currentStreakDays += 1;
+  }
+
+  return {
+    status: missingDates.length > 0 ? "missing" : "complete",
+    status_label: missingDates.length > 0 ? "Missing captures" : "Complete",
+    expected_days: expectedDates.length,
+    captured_days: capturedDates.length,
+    missing_days: missingDates.length,
+    coverage_ratio:
+      expectedDates.length > 0
+        ? round2(capturedDates.length / expectedDates.length)
+        : 0,
+    current_streak_days: currentStreakDays,
+    first_expected_snapshot_date: firstExpectedDate,
+    last_expected_snapshot_date: lastExpectedDate,
+    captured_snapshot_dates: capturedDates,
+    missing_snapshot_dates: missingDates,
+  };
+}
+
 function durableProofLabel(status: DurableProofStatus): string {
   if (status === "candidate") return "Candidate";
   if (status === "not_qualified") return "Not qualified";
@@ -375,7 +488,7 @@ function durableProofLabel(status: DurableProofStatus): string {
 
 function buildDurableProofGate(
   latest: PaperTradingSnapshotRow,
-  capturedDays: number,
+  captureCoverage: PaperTradingCaptureCoverage,
   captureHealth: PaperTradingCaptureHealth
 ): DurableProofGate {
   const blockers: string[] = [];
@@ -393,8 +506,9 @@ function buildDurableProofGate(
     return {
       status: "control_only",
       status_label: durableProofLabel("control_only"),
-      captured_days: capturedDays,
+      captured_days: captureCoverage.captured_days,
       required_captured_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+      missing_capture_days: captureCoverage.missing_days,
       resolved_trades: latest.resolved_trades,
       required_resolved_trades: PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
       resolved_net_pnl_usd: round2(latest.resolved_net_pnl_usd),
@@ -412,9 +526,17 @@ function buildDurableProofGate(
     blockers.push("Daily capture is not fresh.");
   }
 
-  if (capturedDays < PAPER_TRADING_PROOF_RULES.requiredLiveDays) {
+  if (captureCoverage.missing_days > 0) {
+    const label =
+      captureCoverage.missing_days === 1 ? "capture" : "captures";
     blockers.push(
-      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - capturedDays} more persisted capture days needed.`
+      `${captureCoverage.missing_days} missed daily ${label} in proof window.`
+    );
+  }
+
+  if (captureCoverage.captured_days < PAPER_TRADING_PROOF_RULES.requiredLiveDays) {
+    blockers.push(
+      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - captureCoverage.captured_days} more persisted capture days needed.`
     );
   }
 
@@ -425,7 +547,8 @@ function buildDurableProofGate(
   }
 
   const enoughEvidence =
-    capturedDays >= PAPER_TRADING_PROOF_RULES.requiredLiveDays &&
+    captureCoverage.captured_days >= PAPER_TRADING_PROOF_RULES.requiredLiveDays &&
+    captureCoverage.missing_days === 0 &&
     latest.resolved_trades >= PAPER_TRADING_PROOF_RULES.requiredResolvedTrades;
 
   if (enoughEvidence) {
@@ -455,8 +578,9 @@ function buildDurableProofGate(
   return {
     status,
     status_label: durableProofLabel(status),
-    captured_days: capturedDays,
+    captured_days: captureCoverage.captured_days,
     required_captured_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+    missing_capture_days: captureCoverage.missing_days,
     resolved_trades: latest.resolved_trades,
     required_resolved_trades: PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
     resolved_net_pnl_usd: round2(latest.resolved_net_pnl_usd),
@@ -497,6 +621,10 @@ export function buildPaperTradingStrategyRollups(
         .slice()
         .sort((a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at))[0];
       const firstDate = latestRowsByDay[0]?.snapshot_date ?? null;
+      const captureCoverage = buildCaptureCoverage(
+        latestRowsByDay,
+        captureHealth
+      );
 
       return {
         strategy_id: strategyId,
@@ -522,9 +650,10 @@ export function buildPaperTradingStrategyRollups(
         latest_resolved_roi_on_stake: latest.resolved_roi_on_stake,
         latest_open_exposure_usd: latest.open_exposure_usd,
         latest_open_expected_pnl_usd: latest.open_expected_pnl_usd,
+        capture_coverage: captureCoverage,
         durable_proof_gate: buildDurableProofGate(
           latest,
-          latestRowsByDay.length,
+          captureCoverage,
           captureHealth
         ),
         latest_snapshot: latest,

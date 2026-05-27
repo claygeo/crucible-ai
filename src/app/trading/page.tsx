@@ -611,6 +611,7 @@ export default async function TradingPage({
                   <tbody className="divide-y divide-border-subtle/60">
                     {persistedRollups.map((rollup) => {
                       const durableGate = rollup.durable_proof_gate;
+                      const coverage = rollup.capture_coverage;
                       return (
                         <tr key={rollup.strategy_id}>
                           <td className="py-3 pr-3">
@@ -631,6 +632,17 @@ export default async function TradingPage({
                                 ({int(rollup.days_remaining_to_30)} left)
                               </span>
                             ) : null}
+                            <div
+                              className={`mt-1 text-[10px] ${
+                                coverage.missing_days > 0
+                                  ? "text-rose-400"
+                                  : "text-text-muted"
+                              }`}
+                            >
+                              {coverage.missing_days > 0
+                                ? `${int(coverage.missing_days)} missed`
+                                : `${pct(coverage.coverage_ratio, 0)} coverage`}
+                            </div>
                           </td>
                           <td className="py-3 px-3 mono text-right text-text-secondary">
                             {int(rollup.captured_rows)}
