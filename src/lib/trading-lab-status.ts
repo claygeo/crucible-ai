@@ -120,6 +120,7 @@ export type PaperTradingLabStatus = {
     missed_pnl_counts_as_proof: false;
     canonical_agent_edge_leakage: {
       rule_count: number;
+      source_label: string;
       rules_with_skipped_resolved: number;
       rules_with_profitable_skipped_resolved: number;
       top_missed_strategy_id: string | null;
@@ -127,6 +128,7 @@ export type PaperTradingLabStatus = {
       top_missed_agent_name: string | null;
       top_missed_pnl_usd: number;
       top_missed_resolved_trades: number;
+      total_missed_pnl_usd: number;
       missed_pnl_counts_as_proof: false;
     };
   };
@@ -312,15 +314,8 @@ export function buildPaperTradingLabStatus(args: {
 }): PaperTradingLabStatus {
   const selectedStrategy = args.snapshot.selected_strategy;
   const exposureLedger = args.snapshot.selected_exposure_ledger;
-  const topMissedAgentEdgeRule =
-    args.snapshot.agent_edge_matrix
-      .filter((rule) => rule.skipped_resolved_trades > 0)
-      .slice()
-      .sort(
-        (a, b) =>
-          b.skipped_resolved_net_pnl_usd - a.skipped_resolved_net_pnl_usd ||
-          b.skipped_resolved_trades - a.skipped_resolved_trades,
-      )[0] ?? null;
+  const durableCapacityLeakage = args.agentEdgeProof.capacity_leakage;
+  const topMissedAgentEdgeRule = durableCapacityLeakage.top_missed_rule;
   const leakageStatus = capacityLeakageStatus(
     exposureLedger.skipped_open_signals,
     exposureLedger.skipped_resolved_trades,
@@ -530,14 +525,12 @@ export function buildPaperTradingLabStatus(args: {
       capacity_leakage_status: leakageStatus,
       missed_pnl_counts_as_proof: false,
       canonical_agent_edge_leakage: {
-        rule_count: args.snapshot.agent_edge_matrix.length,
-        rules_with_skipped_resolved: args.snapshot.agent_edge_matrix.filter(
-          (rule) => rule.skipped_resolved_trades > 0,
-        ).length,
+        rule_count: args.agentEdgeProof.rule_count,
+        source_label: args.agentEdgeProof.source_label,
+        rules_with_skipped_resolved:
+          durableCapacityLeakage.rules_with_skipped_resolved,
         rules_with_profitable_skipped_resolved:
-          args.snapshot.agent_edge_matrix.filter(
-            (rule) => rule.skipped_profitable_resolved_trades > 0,
-          ).length,
+          durableCapacityLeakage.rules_with_profitable_skipped_resolved,
         top_missed_strategy_id: topMissedAgentEdgeRule?.strategy_id ?? null,
         top_missed_strategy_label:
           topMissedAgentEdgeRule?.strategy_label ?? null,
@@ -547,6 +540,9 @@ export function buildPaperTradingLabStatus(args: {
         ),
         top_missed_resolved_trades:
           topMissedAgentEdgeRule?.skipped_resolved_trades ?? 0,
+        total_missed_pnl_usd: round2(
+          durableCapacityLeakage.skipped_resolved_net_pnl_usd,
+        ),
         missed_pnl_counts_as_proof: false,
       },
     },

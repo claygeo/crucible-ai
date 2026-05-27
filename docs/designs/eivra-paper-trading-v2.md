@@ -201,7 +201,10 @@ The 30-day proof window now has a durable audit surface:
   agent/edge rules have resolved profit versus unresolved open EV. The
   leaderboard includes a profitability guard that keeps positive-but-thin rows
   separate from proven profitable rows until the full 30-day, 30-resolved-ticket,
-  positive P&L/ROI, and drawdown gates pass.
+  positive P&L/ROI, and drawdown gates pass. It also carries skipped-resolved
+  capacity leakage fields, a top missed rule, and marks
+  `missed_pnl_counts_as_proof` as `false` so profitable missed signals remain
+  visible without becoming proof P&L.
   Scheduled artifact audits publish the same `agent_edge_proof` packet into
   `artifact_proof`, so daily evidence bundles remain self-contained.
 - `GET /api/trading-agent-edge-trades` exposes the paper-only resolved-ticket
@@ -244,7 +247,8 @@ The 30-day proof window now has a durable audit surface:
   `reviewable`, `collecting`, `degraded`, `blocked`, or `unavailable`. It keeps
   accepted proof P&L separate from skipped resolved P&L, reports
   `missed_pnl_counts_as_proof: false`, summarizes the top canonical agent-edge
-  capacity leak, and always carries `real_money_execution_allowed: false`.
+  capacity leak from the durable agent-edge proof source, and always carries
+  `real_money_execution_allowed: false`.
 - `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
   the latest paper-proof workflow run, matching artifact bundle, expiry, run
   URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,
