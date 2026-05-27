@@ -184,6 +184,7 @@ export default async function TradingPage({
   const selectedQuery = tradingControlsToQuery(snapshot.controls);
   const jsonHref = `/api/trading.json?${selectedQuery}`;
   const snapshotJsonHref = "/api/trading-snapshots?limit=1000";
+  const auditJsonHref = `/api/trading-proof-audit?${selectedQuery}`;
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
   ).sort((a, b) => a - b);
@@ -598,12 +599,20 @@ export default async function TradingPage({
         <section className="panel px-5 py-5 flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="heading text-base text-text-primary">Persisted proof log</h2>
-            <Link
-              href={snapshotJsonHref}
-              className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
-            >
-              json feed
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href={auditJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                audit json
+              </Link>
+              <Link
+                href={snapshotJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                json feed
+              </Link>
+            </div>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-3">
             <div>
