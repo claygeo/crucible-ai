@@ -132,6 +132,9 @@ The 30-day proof window now has a durable audit surface:
   capture, resolution, P&L, ROI, drawdown, and readiness invariant, and exits
   nonzero until all gates pass. Use `npm run paper:audit:soft` when a report is
   needed without failing the shell.
+- `GET /api/trading-proof-audit` exposes the same read-only audit contract for
+  API consumers. The CLI and route share `buildPaperTradingProofAudit`, so the
+  local gate and public JSON cannot drift.
 - A Netlify scheduled function runs the writer once per day on published deploys.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
