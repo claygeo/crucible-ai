@@ -17,6 +17,7 @@ import {
   buildResolutionReviewQueue,
   enrichResolutionReviewQueueWithProviderResolution,
 } from "@/lib/trading-resolution-review";
+import { buildPaperTradingProofAudit } from "@/lib/trading-proof-audit";
 import { dollars, int, pct, prob, relativeTime, signed } from "@/lib/format";
 import {
   TRADING_CATEGORY_OPTIONS,
@@ -346,6 +347,17 @@ export default async function TradingPage({
     captureCalendar,
     resolutionWatch,
   });
+  const proofAudit = buildPaperTradingProofAudit({
+    snapshot,
+    persisted,
+    registrySync,
+    readiness: proofReadiness,
+    runway: proofRunway,
+    controls: snapshot.controls,
+  });
+  const failedAuditChecks = proofAudit.checks.filter(
+    (item) => item.status !== "pass",
+  );
   const capitalReviewPacket = buildPaperTradingCapitalReviewPacket({
     proofSummary,
     proofReadiness,
@@ -1210,11 +1222,26 @@ export default async function TradingPage({
         <section className="panel px-5 py-5 flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="heading text-base text-text-primary">30-day proof gate</h2>
-            <span
-              className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofStatusClass(selectedProof.status)}`}
-            >
-              {selectedProof.status_label}
-            </span>
+            <div className="flex items-center gap-2">
+              <Link
+                href={auditJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                audit json
+              </Link>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${readinessStatusClass(
+                  proofAudit.verdict
+                )}`}
+              >
+                audit {proofAudit.verdict_label}
+              </span>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofStatusClass(selectedProof.status)}`}
+              >
+                {selectedProof.status_label}
+              </span>
+            </div>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
@@ -1291,6 +1318,60 @@ export default async function TradingPage({
                 </div>
               )}
             </div>
+          </div>
+          <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="heading text-sm text-text-primary">
+                  Audit blockers
+                </h3>
+                <p className="text-xs text-text-muted mt-1">
+                  {proofAudit.ready_for_capital_review
+                    ? "The read-only proof audit is clear; execution remains disabled."
+                    : `${int(failedAuditChecks.length)} checks still block capital review.`}
+                </p>
+              </div>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${readinessStatusClass(
+                  proofAudit.verdict
+                )}`}
+              >
+                {proofAudit.verdict_label}
+              </span>
+            </div>
+            {failedAuditChecks.length === 0 ? (
+              <div className="text-sm text-positive mono">
+                [audit clear on paper]
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-2">
+                {failedAuditChecks.slice(0, 6).map((item) => (
+                  <div
+                    key={item.id}
+                    className="border border-border-subtle rounded px-3 py-2 min-w-0"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="mono text-[10px] uppercase tracking-wider text-text-muted truncate">
+                        {item.label}
+                      </div>
+                      <span
+                        className={`mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shrink-0 ${readinessStatusClass(
+                          item.status
+                        )}`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-text-secondary mt-2 line-clamp-2">
+                      {item.current}
+                    </div>
+                    <div className="text-xs text-text-muted mt-1 line-clamp-2">
+                      {item.detail}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

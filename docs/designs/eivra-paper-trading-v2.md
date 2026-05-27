@@ -150,7 +150,9 @@ The 30-day proof window now has a durable audit surface:
   needed without failing the shell.
 - `GET /api/trading-proof-audit` exposes the same read-only audit contract for
   API consumers. The CLI and route share `buildPaperTradingProofAudit`, so the
-  local gate and public JSON cannot drift.
+  local gate and public JSON cannot drift. The trading dashboard also renders
+  the same audit verdict and top failed checks beside the 30-day proof gate, so
+  the operator can see the actual blockers without opening raw JSON.
 - A Netlify scheduled function runs the writer once per day on published deploys.
 - `.github/workflows/paper-trading-snapshot.yml` is the deploy-independent
   fallback recorder. It runs the same local snapshot builder daily at 05:22 UTC,
