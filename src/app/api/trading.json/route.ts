@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const controls = parseTradingControls(new URL(request.url).searchParams);
   const [snapshot, persisted] = await Promise.all([
     getTradingSnapshot(controls),
-    loadPaperTradingSnapshotHistory(96),
+    loadPaperTradingSnapshotHistory(360),
   ]);
 
   return NextResponse.json(

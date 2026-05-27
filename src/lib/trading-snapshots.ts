@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { PAPER_TRADING_PROOF_RULES } from "@/lib/trading";
 import type {
   StrategyDailyEvidenceSeries,
   StrategyVariantSummary,
@@ -10,8 +11,8 @@ import type {
 } from "@/lib/trading";
 
 const SNAPSHOT_TABLE = "paper_trading_snapshots";
-const DEFAULT_HISTORY_LIMIT = 96;
-const REQUIRED_PROOF_DAYS = 30;
+const DEFAULT_HISTORY_LIMIT = 360;
+const REQUIRED_PROOF_DAYS = PAPER_TRADING_PROOF_RULES.requiredLiveDays;
 const SNAPSHOT_CRON_UTC_HOUR = 5;
 const SNAPSHOT_CRON_UTC_MINUTE = 12;
 const STALE_AFTER_HOURS = 36;
@@ -79,6 +80,30 @@ export type PaperTradingCaptureHealth = {
   next_expected_capture_at: string;
 };
 
+export type DurableProofStatus =
+  | "collecting"
+  | "candidate"
+  | "not_qualified"
+  | "control_only"
+  | "stale";
+
+export type DurableProofGate = {
+  status: DurableProofStatus;
+  status_label: string;
+  captured_days: number;
+  required_captured_days: number;
+  resolved_trades: number;
+  required_resolved_trades: number;
+  resolved_net_pnl_usd: number;
+  min_resolved_net_pnl_usd: number;
+  resolved_roi_on_stake: number;
+  min_roi_on_stake: number;
+  max_drawdown_usd: number;
+  max_allowed_drawdown_usd: number;
+  capture_health_status: PaperTradingCaptureHealth["status"];
+  blockers: string[];
+};
+
 export type PaperTradingStrategyProofRollup = {
   strategy_id: string;
   strategy_label: string;
@@ -100,6 +125,7 @@ export type PaperTradingStrategyProofRollup = {
   latest_resolved_roi_on_stake: number;
   latest_open_exposure_usd: number;
   latest_open_expected_pnl_usd: number;
+  durable_proof_gate: DurableProofGate;
   latest_snapshot: PaperTradingSnapshotRow;
 };
 
@@ -328,8 +354,125 @@ function latestRowForDay(rows: PaperTradingSnapshotRow[]): PaperTradingSnapshotR
     .sort((a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at))[0];
 }
 
+function latestCapturedAt(snapshots: PaperTradingSnapshotRow[]): string | null {
+  const latest = snapshots
+    .slice()
+    .sort((a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at))[0];
+  return latest?.captured_at ?? null;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function durableProofLabel(status: DurableProofStatus): string {
+  if (status === "candidate") return "Candidate";
+  if (status === "not_qualified") return "Not qualified";
+  if (status === "control_only") return "Control only";
+  if (status === "stale") return "Stale";
+  return "Collecting";
+}
+
+function buildDurableProofGate(
+  latest: PaperTradingSnapshotRow,
+  capturedDays: number,
+  captureHealth: PaperTradingCaptureHealth
+): DurableProofGate {
+  const blockers: string[] = [];
+  const strategySummary =
+    latest.strategy_summary as Partial<StrategyVariantSummary> | null | undefined;
+  const proofGate =
+    latest.proof_gate as Partial<
+      StrategyVariantSummary["proof_gate"]
+    > | null | undefined;
+  const maxDrawdownUsd =
+    strategySummary?.max_drawdown_usd ?? proofGate?.max_drawdown_usd ?? 0;
+
+  if (latest.sample !== "live_only") {
+    blockers.push("Not live-only evidence.");
+    return {
+      status: "control_only",
+      status_label: durableProofLabel("control_only"),
+      captured_days: capturedDays,
+      required_captured_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+      resolved_trades: latest.resolved_trades,
+      required_resolved_trades: PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
+      resolved_net_pnl_usd: round2(latest.resolved_net_pnl_usd),
+      min_resolved_net_pnl_usd: PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd,
+      resolved_roi_on_stake: round2(latest.resolved_roi_on_stake),
+      min_roi_on_stake: PAPER_TRADING_PROOF_RULES.minRoiOnStake,
+      max_drawdown_usd: round2(maxDrawdownUsd),
+      max_allowed_drawdown_usd: PAPER_TRADING_PROOF_RULES.maxDrawdownUsd,
+      capture_health_status: captureHealth.status,
+      blockers,
+    };
+  }
+
+  if (captureHealth.status !== "fresh") {
+    blockers.push("Daily capture is not fresh.");
+  }
+
+  if (capturedDays < PAPER_TRADING_PROOF_RULES.requiredLiveDays) {
+    blockers.push(
+      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - capturedDays} more persisted capture days needed.`
+    );
+  }
+
+  if (latest.resolved_trades < PAPER_TRADING_PROOF_RULES.requiredResolvedTrades) {
+    blockers.push(
+      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - latest.resolved_trades} more resolved live trades needed.`
+    );
+  }
+
+  const enoughEvidence =
+    capturedDays >= PAPER_TRADING_PROOF_RULES.requiredLiveDays &&
+    latest.resolved_trades >= PAPER_TRADING_PROOF_RULES.requiredResolvedTrades;
+
+  if (enoughEvidence) {
+    if (
+      latest.resolved_net_pnl_usd <
+      PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd
+    ) {
+      blockers.push("Resolved paper P&L is not positive.");
+    }
+    if (latest.resolved_roi_on_stake <= PAPER_TRADING_PROOF_RULES.minRoiOnStake) {
+      blockers.push("Resolved ROI is not positive.");
+    }
+    if (maxDrawdownUsd > PAPER_TRADING_PROOF_RULES.maxDrawdownUsd) {
+      blockers.push("Drawdown exceeds proof limit.");
+    }
+  }
+
+  const status: DurableProofStatus =
+    captureHealth.status !== "fresh"
+      ? "stale"
+      : enoughEvidence
+        ? blockers.length === 0
+          ? "candidate"
+          : "not_qualified"
+        : "collecting";
+
+  return {
+    status,
+    status_label: durableProofLabel(status),
+    captured_days: capturedDays,
+    required_captured_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+    resolved_trades: latest.resolved_trades,
+    required_resolved_trades: PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
+    resolved_net_pnl_usd: round2(latest.resolved_net_pnl_usd),
+    min_resolved_net_pnl_usd: PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd,
+    resolved_roi_on_stake: round2(latest.resolved_roi_on_stake),
+    min_roi_on_stake: PAPER_TRADING_PROOF_RULES.minRoiOnStake,
+    max_drawdown_usd: round2(maxDrawdownUsd),
+    max_allowed_drawdown_usd: PAPER_TRADING_PROOF_RULES.maxDrawdownUsd,
+    capture_health_status: captureHealth.status,
+    blockers,
+  };
+}
+
 export function buildPaperTradingStrategyRollups(
-  snapshots: PaperTradingSnapshotRow[]
+  snapshots: PaperTradingSnapshotRow[],
+  captureHealth = buildPaperTradingCaptureHealth(latestCapturedAt(snapshots))
 ): PaperTradingStrategyProofRollup[] {
   const byStrategy = new Map<string, PaperTradingSnapshotRow[]>();
   for (const snapshot of snapshots) {
@@ -379,6 +522,11 @@ export function buildPaperTradingStrategyRollups(
         latest_resolved_roi_on_stake: latest.resolved_roi_on_stake,
         latest_open_exposure_usd: latest.open_exposure_usd,
         latest_open_expected_pnl_usd: latest.open_expected_pnl_usd,
+        durable_proof_gate: buildDurableProofGate(
+          latest,
+          latestRowsByDay.length,
+          captureHealth
+        ),
         latest_snapshot: latest,
       };
     })
@@ -430,15 +578,16 @@ export async function loadPaperTradingSnapshotHistory(
   }
 
   const snapshots = (data ?? []) as unknown as PaperTradingSnapshotRow[];
+  const captureHealth = buildPaperTradingCaptureHealth(
+    snapshots[0]?.captured_at ?? null
+  );
   return {
     status: "available",
     message: "Persisted paper-trading snapshots loaded.",
     latest_captured_at: snapshots[0]?.captured_at ?? null,
-    capture_health: buildPaperTradingCaptureHealth(
-      snapshots[0]?.captured_at ?? null
-    ),
+    capture_health: captureHealth,
     snapshots,
-    strategy_rollups: buildPaperTradingStrategyRollups(snapshots),
+    strategy_rollups: buildPaperTradingStrategyRollups(snapshots, captureHealth),
   };
 }
 

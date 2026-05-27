@@ -117,6 +117,15 @@ latest row for each `(strategy_id, snapshot_date)` pair. The 30-day proof count
 is therefore `captured_days`, not raw row count. Raw rows remain in the feed for
 auditability.
 
+Each persisted rollup also carries `durable_proof_gate`. This is the
+authoritative readiness gate for the 30-day lab because it uses stored capture
+days, latest resolved live-trade stats, drawdown, and capture freshness instead
+of the current request's URL filters.
+
+The dashboard and public JSON feed load a 360-row persisted history window. That
+is intentionally larger than 30 days because the daily writer stores multiple
+strategy rows per capture, and same-day manual probes can add duplicate rows.
+
 Capture health is `fresh` while the latest persisted row is less than 36 hours
 old. It becomes `stale` after that window, which makes a missed daily snapshot
 visible before anyone trusts the proof gate.
@@ -132,13 +141,14 @@ required_resolved_trades: 30
 min_resolved_net_pnl_usd: 1
 min_roi_on_stake: positive
 max_drawdown_usd: 500
-statuses: collecting | candidate | not_qualified | control_only
+statuses: collecting | candidate | not_qualified | control_only | stale
 ```
 
 Backfill strategies are always `control_only`. Live strategies remain
 `collecting` until the 30-day window and resolved-trade minimum are both met.
-Only then can the gate classify them as `candidate` or `not_qualified`. This
-label is evidence hygiene, not an execution signal.
+Only then can the gate classify them as `candidate` or `not_qualified`. If the
+daily capture is not fresh, persisted live rollups become `stale` regardless of
+P&L. This label is evidence hygiene, not an execution signal.
 
 ## Later Phases
 
