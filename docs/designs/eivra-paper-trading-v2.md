@@ -244,6 +244,10 @@ The 30-day proof window now has a durable audit surface:
   capacity leakage fields, a top missed rule, and marks
   `missed_pnl_counts_as_proof` as `false` so profitable missed signals remain
   visible without becoming proof P&L.
+  The endpoint also exposes `current_agent_edge_matrix`,
+  `published_agent_edge_matrix`, `published_selected_bankroll_risk`, and
+  `published_selected_open_outcome_scenarios`, making current open-ticket
+  scenario math directly comparable with the latest retained artifact proof.
   Scheduled artifact audits publish the same `agent_edge_proof` packet into
   `artifact_proof`, so daily evidence bundles remain self-contained.
 - `GET /api/trading-agent-edge-evidence` builds a per-rule daily evidence
