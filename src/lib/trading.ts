@@ -499,6 +499,54 @@ export type AgentEdgeRuleSummary = {
   open_expected_pnl_usd: number;
 };
 
+export type AgentEdgeOpenSignalWatchlistRule = {
+  strategy_id: string;
+  strategy_label: string;
+  agent_id: string;
+  agent_name: string;
+  min_edge: number;
+  stake_mode: StakeMode;
+  proof_status: ProofGateStatus;
+  proof_status_label: string;
+  open_signals: number;
+  tradable_signals: number;
+  review_required_signals: number;
+  open_exposure_usd: number;
+  tradable_open_exposure_usd: number;
+  open_expected_pnl_usd: number;
+  tradable_open_expected_pnl_usd: number;
+  avg_abs_edge: number;
+  next_close_at: string | null;
+  oldest_opened_at: string | null;
+  top_open_signals: PaperTradingWouldTradeSignal[];
+};
+
+export type AgentEdgeOpenSignalWatchlist = {
+  schema_version: "1";
+  generated_at: string;
+  status: "watching" | "blocked" | "no_open_signals" | "unavailable";
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  execution_recommendation: "paper_watch_only";
+  rule_count: number;
+  rules_with_open_signals: number;
+  rules_with_tradable_signals: number;
+  rules_needing_review: number;
+  total_open_signals: number;
+  total_tradable_signals: number;
+  total_review_required_signals: number;
+  total_open_exposure_usd: number;
+  total_tradable_open_exposure_usd: number;
+  total_open_expected_pnl_usd: number;
+  total_tradable_open_expected_pnl_usd: number;
+  next_close_at: string | null;
+  oldest_opened_at: string | null;
+  rules: AgentEdgeOpenSignalWatchlistRule[];
+};
+
 export type AgentEdgeResolvedTradeLedgerEntry = {
   prediction_id: string;
   market_id: string;
@@ -661,6 +709,7 @@ export type TradingSnapshot = {
   live_agent_summaries: AgentTradingSummary[];
   scenario_summaries: ScenarioSummary[];
   agent_edge_matrix: AgentEdgeRuleSummary[];
+  agent_edge_watchlist: AgentEdgeOpenSignalWatchlist;
   agent_edge_trade_ledger: AgentEdgeResolvedTradeLedger;
   strategy_variants: StrategyVariantSummary[];
   strategy_daily_series: StrategyDailyEvidenceSeries[];
@@ -2120,6 +2169,187 @@ function buildAgentEdgeMatrix(
     );
 }
 
+function earliestNullableDate(values: Array<string | null>): string | null {
+  return (
+    values
+      .filter((value): value is string => Boolean(value))
+      .sort((a, b) => Date.parse(a) - Date.parse(b))[0] ?? null
+  );
+}
+
+function buildAgentEdgeOpenSignalWatchlist(
+  evaluations: StrategyEvaluation[],
+  generatedAt: string,
+): AgentEdgeOpenSignalWatchlist {
+  const now = new Date(generatedAt);
+  const rules = evaluations
+    .filter(({ summary }) => isAgentEdgeVariant(summary))
+    .map(({ summary, acceptedTrades }) => {
+      const agentId = summary.agent_ids[0] ?? "unknown";
+      const agent = AGENTS.find((item) => item.id === agentId);
+      const signals = acceptedTrades
+        .filter((trade) => !trade.is_backfill && trade.pnl_usd === null)
+        .map((trade) => buildWouldTradeSignal(trade, now))
+        .sort(wouldTradeSignalSort);
+      const tradableSignals = signals.filter(
+        (signal) => signal.tradability_status === "tradable",
+      );
+      const reviewRequiredSignals = signals.filter(
+        (signal) => signal.tradability_status === "needs_review",
+      );
+      const openExposureUsd = signals.reduce(
+        (sum, signal) => sum + signal.stake_usd,
+        0,
+      );
+      const tradableOpenExposureUsd = tradableSignals.reduce(
+        (sum, signal) => sum + signal.stake_usd,
+        0,
+      );
+      const openExpectedPnlUsd = signals.reduce(
+        (sum, signal) => sum + signal.expected_pnl_usd,
+        0,
+      );
+      const tradableOpenExpectedPnlUsd = tradableSignals.reduce(
+        (sum, signal) => sum + signal.expected_pnl_usd,
+        0,
+      );
+
+      return {
+        strategy_id: summary.id,
+        strategy_label: summary.label,
+        agent_id: agentId,
+        agent_name: signals[0]?.agent_name ?? agent?.name ?? agentId,
+        min_edge: summary.min_edge,
+        stake_mode: summary.stake_mode,
+        proof_status: summary.proof_gate.status,
+        proof_status_label: summary.proof_gate.status_label,
+        open_signals: signals.length,
+        tradable_signals: tradableSignals.length,
+        review_required_signals: reviewRequiredSignals.length,
+        open_exposure_usd: round2(openExposureUsd),
+        tradable_open_exposure_usd: round2(tradableOpenExposureUsd),
+        open_expected_pnl_usd: round2(openExpectedPnlUsd),
+        tradable_open_expected_pnl_usd: round2(tradableOpenExpectedPnlUsd),
+        avg_abs_edge:
+          signals.length > 0
+            ? round4(
+                signals.reduce((sum, signal) => sum + signal.abs_edge, 0) /
+                  signals.length,
+              )
+            : 0,
+        next_close_at: earliestNullableDate(
+          signals.map((signal) => signal.market_closes_at),
+        ),
+        oldest_opened_at: earliestNullableDate(
+          signals.map((signal) => signal.created_at),
+        ),
+        top_open_signals: signals.slice(0, 8),
+      };
+    })
+    .sort((a, b) => {
+      if (
+        b.tradable_open_expected_pnl_usd !== a.tradable_open_expected_pnl_usd
+      ) {
+        return (
+          b.tradable_open_expected_pnl_usd - a.tradable_open_expected_pnl_usd
+        );
+      }
+      if (b.tradable_signals !== a.tradable_signals) {
+        return b.tradable_signals - a.tradable_signals;
+      }
+      if (b.open_expected_pnl_usd !== a.open_expected_pnl_usd) {
+        return b.open_expected_pnl_usd - a.open_expected_pnl_usd;
+      }
+      return `${a.agent_id}-${a.min_edge}`.localeCompare(
+        `${b.agent_id}-${b.min_edge}`,
+      );
+    });
+  const totalOpenSignals = rules.reduce(
+    (sum, rule) => sum + rule.open_signals,
+    0,
+  );
+  const totalTradableSignals = rules.reduce(
+    (sum, rule) => sum + rule.tradable_signals,
+    0,
+  );
+  const totalReviewRequiredSignals = rules.reduce(
+    (sum, rule) => sum + rule.review_required_signals,
+    0,
+  );
+  const status: AgentEdgeOpenSignalWatchlist["status"] =
+    rules.length === 0
+      ? "unavailable"
+      : totalOpenSignals === 0
+        ? "no_open_signals"
+        : totalReviewRequiredSignals > 0
+          ? "blocked"
+          : "watching";
+
+  return {
+    schema_version: "1",
+    generated_at: generatedAt,
+    status,
+    status_label:
+      status === "watching"
+        ? "Watching"
+        : status === "blocked"
+          ? "Needs review"
+          : status === "no_open_signals"
+            ? "No open signals"
+            : "Unavailable",
+    message:
+      status === "watching"
+        ? "Canonical agent-edge live signals are being tracked for paper-only tradability."
+        : status === "blocked"
+          ? "At least one canonical agent-edge live signal needs resolution review before open EV is trusted."
+          : status === "no_open_signals"
+            ? "No canonical agent-edge live paper signals are currently open."
+            : "No canonical agent-edge watchlist is available.",
+    next_required_action:
+      status === "watching"
+        ? "Keep observing open signals until markets resolve into the proof ledger."
+        : status === "blocked"
+          ? "Review overdue or unknown-close live paper markets before trusting open EV."
+          : status === "no_open_signals"
+            ? "Wait for live forecasts to exceed an agent-edge threshold."
+            : "Capture the canonical agent-edge strategy registry before auditing open signals.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    execution_recommendation: "paper_watch_only",
+    rule_count: rules.length,
+    rules_with_open_signals: rules.filter((rule) => rule.open_signals > 0)
+      .length,
+    rules_with_tradable_signals: rules.filter(
+      (rule) => rule.tradable_signals > 0,
+    ).length,
+    rules_needing_review: rules.filter(
+      (rule) => rule.review_required_signals > 0,
+    ).length,
+    total_open_signals: totalOpenSignals,
+    total_tradable_signals: totalTradableSignals,
+    total_review_required_signals: totalReviewRequiredSignals,
+    total_open_exposure_usd: round2(
+      rules.reduce((sum, rule) => sum + rule.open_exposure_usd, 0),
+    ),
+    total_tradable_open_exposure_usd: round2(
+      rules.reduce((sum, rule) => sum + rule.tradable_open_exposure_usd, 0),
+    ),
+    total_open_expected_pnl_usd: round2(
+      rules.reduce((sum, rule) => sum + rule.open_expected_pnl_usd, 0),
+    ),
+    total_tradable_open_expected_pnl_usd: round2(
+      rules.reduce((sum, rule) => sum + rule.tradable_open_expected_pnl_usd, 0),
+    ),
+    next_close_at: earliestNullableDate(
+      rules.map((rule) => rule.next_close_at),
+    ),
+    oldest_opened_at: earliestNullableDate(
+      rules.map((rule) => rule.oldest_opened_at),
+    ),
+    rules,
+  };
+}
+
 function resolvedAtForLedger(
   trade: PaperTrade | null | undefined,
 ): string | null {
@@ -2774,6 +3004,10 @@ export async function getTradingSnapshot(
     live_agent_summaries: liveAgentSummaries,
     scenario_summaries: scenarioSummaries,
     agent_edge_matrix: buildAgentEdgeMatrix(strategyVariants),
+    agent_edge_watchlist: buildAgentEdgeOpenSignalWatchlist(
+      evaluatedStrategies,
+      generatedAt,
+    ),
     agent_edge_trade_ledger: buildAgentEdgeTradeLedger(
       evaluatedStrategies,
       generatedAt,

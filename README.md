@@ -218,7 +218,9 @@ Agent-edge proof separates positive-but-thin rows from proven profitable rows:
 `profitable` only appears after the full live-day, resolved-ticket, positive
 P&L/ROI, and drawdown gates pass. The resolved-ticket ledger also reports each
 rule's payoff ratio, break-even win rate, realized win-rate edge, and average
-P&L per ticket.
+P&L per ticket. The companion agent-edge watchlist records open live paper
+signals by canonical rule before they resolve, including tradable/review counts,
+open exposure, and open EV.
 When `paper-snapshot-result.json` is present beside the rows, the artifact proof
 also carries live resolution-hygiene context.
 

@@ -328,6 +328,7 @@ export default async function TradingPage({
     publishedArtifactProof,
   });
   const profitabilityGuard = agentEdgeProof.profitability_guard;
+  const agentEdgeWatchlist = snapshot.agent_edge_watchlist;
   const agentEdgeTradeLedger = snapshot.agent_edge_trade_ledger;
   const agentEdgeLedgerByRule = new Map(
     agentEdgeTradeLedger.rules.map((rule) => [
@@ -367,6 +368,7 @@ export default async function TradingPage({
   const evidenceSlaJsonHref = `/api/trading-evidence-sla?${selectedQuery}`;
   const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
   const agentEdgeTradesJsonHref = `/api/trading-agent-edge-trades?${selectedQuery}`;
+  const agentEdgeWatchlistJsonHref = `/api/trading-agent-edge-watchlist?${selectedQuery}`;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -1282,6 +1284,14 @@ export default async function TradingPage({
               {int(agentEdgeTradeLedger.total_resolved_trades)} trades /{" "}
               {dollars(agentEdgeTradeLedger.total_net_pnl_usd, 0)} / above BE{" "}
               {int(agentEdgeTradeLedger.above_break_even_rule_count)}
+            </Link>
+            <Link
+              href={agentEdgeWatchlistJsonHref}
+              className="text-accent hover:text-text-primary transition-colors"
+            >
+              agent edge watchlist {agentEdgeWatchlist.status_label.toLowerCase()} /{" "}
+              {int(agentEdgeWatchlist.total_tradable_signals)} tradable /{" "}
+              {int(agentEdgeWatchlist.total_review_required_signals)} review
             </Link>
             <span className={registrySyncClass(registrySync.status)}>
               registry {registrySync.status_label.toLowerCase()}{" "}
