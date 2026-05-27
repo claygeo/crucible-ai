@@ -156,6 +156,12 @@ complete live-strategy snapshot set, a partial set, or no capture at all. The
 calendar does not replace per-strategy proof gates; it makes recorder quality
 auditable before anyone reads P&L.
 
+`/api/trading.json` also carries `persistence.registry_sync` and the top-level
+alias `persisted_registry_sync`. This compares the current live strategy
+registry against the latest persisted proof day by strategy-rule fingerprint.
+When new canonical rules ship, the dashboard shows `pending_capture` until the
+next daily snapshot records those rules in the durable log.
+
 Each rollup also carries `proof_window`, a rolling-window delta from the row
 before the proof window into the latest captured row. The durable gate uses this
 window's resolved trades, resolved P&L, ROI, and drawdown instead of all-time
