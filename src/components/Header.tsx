@@ -30,6 +30,12 @@ export function Header() {
             Benchmark
           </Link>
           <Link
+            href="/trading"
+            className="hover:text-text-primary transition-colors shrink-0"
+          >
+            Trading
+          </Link>
+          <Link
             href="/leaderboard"
             className="hover:text-text-primary transition-colors shrink-0"
           >
