@@ -322,6 +322,14 @@ export default async function TradingPage({
   const evidenceRows = snapshot.selected_daily_snapshots;
   const selectedStrategy = snapshot.selected_strategy;
   const selectedBankrollRisk = snapshot.selected_bankroll_risk;
+  const selectedOpenOutcomeScenarios =
+    snapshot.selected_open_outcome_scenarios;
+  const selectedBestCase = selectedOpenOutcomeScenarios.scenarios.find(
+    (scenario) => scenario.id === "best_case"
+  );
+  const selectedExpectedCase = selectedOpenOutcomeScenarios.scenarios.find(
+    (scenario) => scenario.id === "model_expected"
+  );
   const selectedProof = selectedStrategy.proof_gate;
   const exposureLedger = snapshot.selected_exposure_ledger;
   const skippedExposureEntries = exposureLedger.recent_entries.filter(
@@ -1151,6 +1159,36 @@ export default async function TradingPage({
             Open exposure is {pct(selectedBankrollRisk.open_exposure_pct_of_bankroll, 1)} of selected bankroll;
             remaining paper capacity is {dollars(selectedBankrollRisk.remaining_open_capacity_usd, 0)}.
             This is analytics only; real-money execution remains disabled.
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3 border-t border-border-subtle pt-4">
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Break-even open wins
+              </div>
+              <div className="heading text-xl text-text-primary mt-1">
+                {selectedOpenOutcomeScenarios.open_ticket_count === 0
+                  ? "none open"
+                  : selectedOpenOutcomeScenarios.break_even_open_wins_required === null
+                  ? "unreachable"
+                  : `${int(selectedOpenOutcomeScenarios.break_even_open_wins_required)} / ${int(selectedOpenOutcomeScenarios.open_ticket_count)}`}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Expected after open
+              </div>
+              <div className={`heading text-xl mt-1 ${pnlClass(selectedExpectedCase?.total_pnl_usd ?? 0)}`}>
+                {dollars(selectedExpectedCase?.total_pnl_usd ?? 0, 0)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Best after open
+              </div>
+              <div className={`heading text-xl mt-1 ${pnlClass(selectedBestCase?.total_pnl_usd ?? 0)}`}>
+                {dollars(selectedBestCase?.total_pnl_usd ?? 0, 0)}
+              </div>
+            </div>
           </div>
         </section>
 
