@@ -1,19 +1,19 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-05-27T08:56:25.333Z",
+  "generated_at": "2026-05-27T09:15:03.635Z",
   "source": "github_actions_artifact_audit",
   "paper_only": true,
   "real_money_execution_allowed": false,
   "repository": "claygeo/eivra",
   "workflow_path": ".github/workflows/paper-trading-snapshot.yml",
   "workflow_run": {
-    "id": "26501344942",
-    "url": "https://github.com/claygeo/eivra/actions/runs/26501344942",
+    "id": "26502259113",
+    "url": "https://github.com/claygeo/eivra/actions/runs/26502259113",
     "event": "workflow_dispatch",
     "ref": "main",
-    "head_sha": "5861d005009e4156dfe293d6bf3fb0719d7e9cbf",
-    "artifact_name": "paper-trading-proof-26501344942",
-    "download_command": "gh run download 26501344942 --repo claygeo/eivra --dir ./paper-artifacts"
+    "head_sha": "e4140cf027c6b043b282165046f540d7cd3e36ae",
+    "artifact_name": "paper-trading-proof-26502259113",
+    "download_command": "gh run download 26502259113 --repo claygeo/eivra --dir ./paper-artifacts"
   },
   "artifact_contract": {
     "repository": "claygeo/eivra",
@@ -42,7 +42,7 @@
   },
   "artifact_audit": {
     "verdict": "pass",
-    "checked_at": "2026-05-27T08:56:24.587Z",
+    "checked_at": "2026-05-27T09:15:02.894Z",
     "exit_code": 0,
     "artifact_count": 1,
     "latest_snapshot_date": "2026-05-27",
@@ -61,7 +61,7 @@
       {
         "path": "/home/runner/work/eivra/eivra/paper-snapshot-result.json",
         "source": "live",
-        "generated_at": "2026-05-27T08:56:22.838Z",
+        "generated_at": "2026-05-27T09:15:01.113Z",
         "snapshot_date": "2026-05-27",
         "resolution_watch": {
           "status": "overdue_resolution",
@@ -85,6 +85,9 @@
               "prediction_id": "777708e1-69a0-42d8-8fd2-10d7a91f76be",
               "market_id": "38aab025-d0b0-4545-9d15-fe0964214db9",
               "market_question": "Will manifold continue M6 trader bonus after May 25th?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/2ndPairofBoots/will-manifold-continue-m6-trader-bo",
+              "market_status": "open",
               "agent_id": "hawk",
               "agent_name": "Hawk",
               "side": "YES",
@@ -94,13 +97,16 @@
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
               "tradability_status": "needs_review",
-              "days_until_close": -0.37,
-              "age_days": 1.86
+              "days_until_close": -0.39,
+              "age_days": 1.87
             },
             {
               "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
               "market_id": "f91a18fb-840b-4776-a179-c793d2895d21",
               "market_question": "Will the WTI Crude Oil Spot Price be above $98.50 on May 28, 2026?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/ShaneBo/will-the-wti-crude-oil-spot-price-b-Cqgnq2tICg",
+              "market_status": "open",
               "agent_id": "sage",
               "agent_name": "Sage",
               "side": "NO",
@@ -110,13 +116,16 @@
               "created_at": "2026-05-26T00:19:14.77882+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.63,
-              "age_days": 1.36
+              "days_until_close": 0.61,
+              "age_days": 1.37
             },
             {
               "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
               "market_id": "f91a18fb-840b-4776-a179-c793d2895d21",
               "market_question": "Will the WTI Crude Oil Spot Price be above $98.50 on May 28, 2026?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/ShaneBo/will-the-wti-crude-oil-spot-price-b-Cqgnq2tICg",
+              "market_status": "open",
               "agent_id": "hawk",
               "agent_name": "Hawk",
               "side": "NO",
@@ -126,13 +135,16 @@
               "created_at": "2026-05-26T00:19:23.812179+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.63,
-              "age_days": 1.36
+              "days_until_close": 0.61,
+              "age_days": 1.37
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
               "market_id": "f91a18fb-840b-4776-a179-c793d2895d21",
               "market_question": "Will the WTI Crude Oil Spot Price be above $98.50 on May 28, 2026?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/ShaneBo/will-the-wti-crude-oil-spot-price-b-Cqgnq2tICg",
+              "market_status": "open",
               "agent_id": "magpie",
               "agent_name": "Magpie",
               "side": "NO",
@@ -142,13 +154,16 @@
               "created_at": "2026-05-26T00:19:36.083882+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.63,
-              "age_days": 1.36
+              "days_until_close": 0.61,
+              "age_days": 1.37
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
               "market_id": "f91a18fb-840b-4776-a179-c793d2895d21",
               "market_question": "Will the WTI Crude Oil Spot Price be above $98.50 on May 28, 2026?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/ShaneBo/will-the-wti-crude-oil-spot-price-b-Cqgnq2tICg",
+              "market_status": "open",
               "agent_id": "mirror",
               "agent_name": "Mirror",
               "side": "NO",
@@ -158,13 +173,16 @@
               "created_at": "2026-05-26T00:20:04.586579+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.63,
-              "age_days": 1.36
+              "days_until_close": 0.61,
+              "age_days": 1.37
             },
             {
               "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
               "market_id": "abd1457d-e6e8-4691-ae5b-4dcf04908ebb",
               "market_question": "This Market will Resolve at number of Traders%",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/OnlySlides/this-market-will-resolve-at-number",
+              "market_status": "open",
               "agent_id": "hawk",
               "agent_name": "Hawk",
               "side": "NO",
@@ -174,13 +192,16 @@
               "created_at": "2026-05-24T12:19:25.197698+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 1.79,
-              "age_days": 2.86
+              "days_until_close": 1.78,
+              "age_days": 2.87
             },
             {
               "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
               "market_id": "d7c7fa66-75d1-4285-b8a3-5a4b1e4c2f35",
               "market_question": "UEFA Champions league, PSG beat Arsenal in regular time?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/Mochi/uefa-champions-league-psg-beat-arse",
+              "market_status": "open",
               "agent_id": "hawk",
               "agent_name": "Hawk",
               "side": "NO",
@@ -190,13 +211,16 @@
               "created_at": "2026-05-26T00:20:32.626001+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 3.29,
-              "age_days": 1.36
+              "days_until_close": 3.28,
+              "age_days": 1.37
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
               "market_id": "d305fc2d-c707-480d-976c-086e36d4997c",
               "market_question": "Will Abelardo de la Espriella be the next president in Colombia?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/EmanuelNunez/who-will-be-the-new-presindent-in-c",
+              "market_status": "open",
               "agent_id": "sage",
               "agent_name": "Sage",
               "side": "NO",
@@ -206,13 +230,16 @@
               "created_at": "2026-05-25T12:20:09.746582+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.39,
-              "age_days": 1.86
+              "days_until_close": 4.37,
+              "age_days": 1.87
             },
             {
               "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
               "market_id": "d305fc2d-c707-480d-976c-086e36d4997c",
               "market_question": "Will Abelardo de la Espriella be the next president in Colombia?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/EmanuelNunez/who-will-be-the-new-presindent-in-c",
+              "market_status": "open",
               "agent_id": "hawk",
               "agent_name": "Hawk",
               "side": "NO",
@@ -222,13 +249,16 @@
               "created_at": "2026-05-25T12:20:20.681026+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.39,
-              "age_days": 1.86
+              "days_until_close": 4.37,
+              "age_days": 1.87
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
               "market_id": "fef68ec5-118f-4cbd-bb80-fa3d0e168f02",
               "market_question": "Bitcoin $85K in May?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/predyx_markets/bitcoin-85k-in-may",
+              "market_status": "open",
               "agent_id": "sage",
               "agent_name": "Sage",
               "side": "NO",
@@ -238,13 +268,16 @@
               "created_at": "2026-05-21T00:45:32.748096+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.63,
-              "age_days": 6.34
+              "days_until_close": 4.61,
+              "age_days": 6.35
             },
             {
               "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
               "market_id": "fef68ec5-118f-4cbd-bb80-fa3d0e168f02",
               "market_question": "Bitcoin $85K in May?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/predyx_markets/bitcoin-85k-in-may",
+              "market_status": "open",
               "agent_id": "hawk",
               "agent_name": "Hawk",
               "side": "NO",
@@ -254,13 +287,16 @@
               "created_at": "2026-05-21T00:45:42.837675+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.63,
-              "age_days": 6.34
+              "days_until_close": 4.61,
+              "age_days": 6.35
             },
             {
               "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
               "market_id": "346be6f1-b37d-4b51-92e8-2c9c884214a9",
               "market_question": "Will Bitcoin reach $90K USD in May 2026?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/100Anonymous/will-bitcoin-reach-90k-usd-in-may-2",
+              "market_status": "open",
               "agent_id": "sage",
               "agent_name": "Sage",
               "side": "YES",
@@ -270,8 +306,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.63,
-              "age_days": 6.34
+              "days_until_close": 4.61,
+              "age_days": 6.35
             }
           ]
         },
@@ -285,7 +321,7 @@
     "message": "Artifact rows were rolled up with the same paper-only proof logic used for persisted snapshots.",
     "paper_only": true,
     "real_money_execution_allowed": false,
-    "latest_captured_at": "2026-05-27T08:56:22.838Z",
+    "latest_captured_at": "2026-05-27T09:15:01.113Z",
     "proof_summary": {
       "status": "collecting",
       "status_label": "Collecting",
@@ -385,6 +421,9 @@
               "prediction_id": "777708e1-69a0-42d8-8fd2-10d7a91f76be",
               "market_id": "38aab025-d0b0-4545-9d15-fe0964214db9",
               "market_question": "Will manifold continue M6 trader bonus after May 25th?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/2ndPairofBoots/will-manifold-continue-m6-trader-bo",
+              "market_status": "open",
               "agent_id": "hawk",
               "agent_name": "Hawk",
               "side": "YES",
@@ -393,8 +432,8 @@
               "market_closes_at": "2026-05-26T23:59:00+00:00",
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
-              "days_until_close": -0.37,
-              "age_days": 1.86
+              "days_until_close": -0.39,
+              "age_days": 1.87
             }
           ]
         },
@@ -524,7 +563,7 @@
       "cron": "22 5 * * *",
       "scheduled_time_utc": "05:22",
       "stale_after_hours": 36,
-      "latest_captured_at": "2026-05-27T08:56:22.838Z",
+      "latest_captured_at": "2026-05-27T09:15:01.113Z",
       "previous_expected_capture_at": "2026-05-27T05:22:00.000Z",
       "next_expected_capture_at": "2026-05-28T05:22:00.000Z",
       "status": "fresh",
@@ -594,7 +633,7 @@
             "sage-live-edge-10",
             "sports-live-edge-10"
           ],
-          "latest_captured_at": "2026-05-27T08:56:22.838Z"
+          "latest_captured_at": "2026-05-27T09:15:01.113Z"
         }
       ]
     },
@@ -620,6 +659,9 @@
           "prediction_id": "777708e1-69a0-42d8-8fd2-10d7a91f76be",
           "market_id": "38aab025-d0b0-4545-9d15-fe0964214db9",
           "market_question": "Will manifold continue M6 trader bonus after May 25th?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/2ndPairofBoots/will-manifold-continue-m6-trader-bo",
+          "market_status": "open",
           "agent_id": "hawk",
           "agent_name": "Hawk",
           "side": "YES",
@@ -629,13 +671,16 @@
           "created_at": "2026-05-25T12:19:22.529011+00:00",
           "close_status": "overdue",
           "tradability_status": "needs_review",
-          "days_until_close": -0.37,
-          "age_days": 1.86
+          "days_until_close": -0.39,
+          "age_days": 1.87
         },
         {
           "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
           "market_id": "f91a18fb-840b-4776-a179-c793d2895d21",
           "market_question": "Will the WTI Crude Oil Spot Price be above $98.50 on May 28, 2026?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/ShaneBo/will-the-wti-crude-oil-spot-price-b-Cqgnq2tICg",
+          "market_status": "open",
           "agent_id": "sage",
           "agent_name": "Sage",
           "side": "NO",
@@ -645,13 +690,16 @@
           "created_at": "2026-05-26T00:19:14.77882+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.63,
-          "age_days": 1.36
+          "days_until_close": 0.61,
+          "age_days": 1.37
         },
         {
           "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
           "market_id": "f91a18fb-840b-4776-a179-c793d2895d21",
           "market_question": "Will the WTI Crude Oil Spot Price be above $98.50 on May 28, 2026?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/ShaneBo/will-the-wti-crude-oil-spot-price-b-Cqgnq2tICg",
+          "market_status": "open",
           "agent_id": "hawk",
           "agent_name": "Hawk",
           "side": "NO",
@@ -661,13 +709,16 @@
           "created_at": "2026-05-26T00:19:23.812179+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.63,
-          "age_days": 1.36
+          "days_until_close": 0.61,
+          "age_days": 1.37
         },
         {
           "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
           "market_id": "f91a18fb-840b-4776-a179-c793d2895d21",
           "market_question": "Will the WTI Crude Oil Spot Price be above $98.50 on May 28, 2026?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/ShaneBo/will-the-wti-crude-oil-spot-price-b-Cqgnq2tICg",
+          "market_status": "open",
           "agent_id": "magpie",
           "agent_name": "Magpie",
           "side": "NO",
@@ -677,13 +728,16 @@
           "created_at": "2026-05-26T00:19:36.083882+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.63,
-          "age_days": 1.36
+          "days_until_close": 0.61,
+          "age_days": 1.37
         },
         {
           "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
           "market_id": "f91a18fb-840b-4776-a179-c793d2895d21",
           "market_question": "Will the WTI Crude Oil Spot Price be above $98.50 on May 28, 2026?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/ShaneBo/will-the-wti-crude-oil-spot-price-b-Cqgnq2tICg",
+          "market_status": "open",
           "agent_id": "mirror",
           "agent_name": "Mirror",
           "side": "NO",
@@ -693,13 +747,16 @@
           "created_at": "2026-05-26T00:20:04.586579+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.63,
-          "age_days": 1.36
+          "days_until_close": 0.61,
+          "age_days": 1.37
         },
         {
           "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
           "market_id": "abd1457d-e6e8-4691-ae5b-4dcf04908ebb",
           "market_question": "This Market will Resolve at number of Traders%",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/OnlySlides/this-market-will-resolve-at-number",
+          "market_status": "open",
           "agent_id": "hawk",
           "agent_name": "Hawk",
           "side": "NO",
@@ -709,13 +766,16 @@
           "created_at": "2026-05-24T12:19:25.197698+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 1.79,
-          "age_days": 2.86
+          "days_until_close": 1.78,
+          "age_days": 2.87
         },
         {
           "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
           "market_id": "d7c7fa66-75d1-4285-b8a3-5a4b1e4c2f35",
           "market_question": "UEFA Champions league, PSG beat Arsenal in regular time?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/Mochi/uefa-champions-league-psg-beat-arse",
+          "market_status": "open",
           "agent_id": "hawk",
           "agent_name": "Hawk",
           "side": "NO",
@@ -725,13 +785,16 @@
           "created_at": "2026-05-26T00:20:32.626001+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 3.29,
-          "age_days": 1.36
+          "days_until_close": 3.28,
+          "age_days": 1.37
         },
         {
           "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
           "market_id": "d305fc2d-c707-480d-976c-086e36d4997c",
           "market_question": "Will Abelardo de la Espriella be the next president in Colombia?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/EmanuelNunez/who-will-be-the-new-presindent-in-c",
+          "market_status": "open",
           "agent_id": "sage",
           "agent_name": "Sage",
           "side": "NO",
@@ -741,13 +804,16 @@
           "created_at": "2026-05-25T12:20:09.746582+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.39,
-          "age_days": 1.86
+          "days_until_close": 4.37,
+          "age_days": 1.87
         },
         {
           "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
           "market_id": "d305fc2d-c707-480d-976c-086e36d4997c",
           "market_question": "Will Abelardo de la Espriella be the next president in Colombia?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/EmanuelNunez/who-will-be-the-new-presindent-in-c",
+          "market_status": "open",
           "agent_id": "hawk",
           "agent_name": "Hawk",
           "side": "NO",
@@ -757,13 +823,16 @@
           "created_at": "2026-05-25T12:20:20.681026+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.39,
-          "age_days": 1.86
+          "days_until_close": 4.37,
+          "age_days": 1.87
         },
         {
           "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
           "market_id": "fef68ec5-118f-4cbd-bb80-fa3d0e168f02",
           "market_question": "Bitcoin $85K in May?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/predyx_markets/bitcoin-85k-in-may",
+          "market_status": "open",
           "agent_id": "sage",
           "agent_name": "Sage",
           "side": "NO",
@@ -773,13 +842,16 @@
           "created_at": "2026-05-21T00:45:32.748096+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.63,
-          "age_days": 6.34
+          "days_until_close": 4.61,
+          "age_days": 6.35
         },
         {
           "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
           "market_id": "fef68ec5-118f-4cbd-bb80-fa3d0e168f02",
           "market_question": "Bitcoin $85K in May?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/predyx_markets/bitcoin-85k-in-may",
+          "market_status": "open",
           "agent_id": "hawk",
           "agent_name": "Hawk",
           "side": "NO",
@@ -789,13 +861,16 @@
           "created_at": "2026-05-21T00:45:42.837675+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.63,
-          "age_days": 6.34
+          "days_until_close": 4.61,
+          "age_days": 6.35
         },
         {
           "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
           "market_id": "346be6f1-b37d-4b51-92e8-2c9c884214a9",
           "market_question": "Will Bitcoin reach $90K USD in May 2026?",
+          "market_source": "manifold",
+          "market_url": "https://manifold.markets/100Anonymous/will-bitcoin-reach-90k-usd-in-may-2",
+          "market_status": "open",
           "agent_id": "sage",
           "agent_name": "Sage",
           "side": "YES",
@@ -805,8 +880,8 @@
           "created_at": "2026-05-21T00:51:06.72125+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.63,
-          "age_days": 6.34
+          "days_until_close": 4.61,
+          "age_days": 6.35
         }
       ]
     },
@@ -835,7 +910,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 551.42,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -888,7 +963,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -941,7 +1016,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 109.88,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -994,7 +1069,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 161.2,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1047,7 +1122,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 125.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1100,7 +1175,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 223.7,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1153,7 +1228,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1206,7 +1281,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1259,7 +1334,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 164.21,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1312,7 +1387,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 215.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1365,7 +1440,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1418,7 +1493,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T08:56:22.838Z",
+        "latest_captured_at": "2026-05-27T09:15:01.113Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
