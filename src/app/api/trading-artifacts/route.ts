@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  buildPaperTradingArtifactHistory,
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
@@ -16,10 +17,14 @@ export async function GET() {
   const resolutionReviewQueue = buildResolutionReviewQueue({
     publishedArtifactProof: publishedProof,
   });
+  const artifactHistory = buildPaperTradingArtifactHistory({
+    publishedArtifactProof: publishedProof,
+  });
 
   return NextResponse.json(
     {
       ...status,
+      artifact_history: artifactHistory,
       published_proof: publishedProof,
       resolution_review_queue: resolutionReviewQueue,
     },

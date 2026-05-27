@@ -123,6 +123,38 @@ export type PaperTradingWriteReadiness = {
   blockers: string[];
 };
 
+export type PaperTradingArtifactHistoryStatus =
+  | "complete"
+  | "collecting"
+  | "unavailable";
+
+export type PaperTradingArtifactHistory = {
+  schema_version: "1";
+  generated_at: string;
+  status: PaperTradingArtifactHistoryStatus;
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  proof_window_days: number;
+  retained_artifact_count: number;
+  selected_artifact_count: number;
+  ignored_duplicate_artifact_count: number;
+  coverage_days: number;
+  complete_artifact_days: number;
+  days_remaining_to_30: number;
+  coverage_ratio: number;
+  latest_snapshot_date: string | null;
+  latest_workflow_run_id: string | null;
+  latest_published_at: string | null;
+  selected_snapshot_dates: string[];
+  duplicate_snapshot_dates: string[];
+  selected_artifact_paths: string[];
+  ignored_duplicate_artifacts: unknown[];
+  blockers: string[];
+};
+
 export type PaperTradingEvidenceSlaStatus =
   | "on_track"
   | "collecting"
@@ -261,6 +293,105 @@ function objectOrNull(value: unknown): Record<string, unknown> | null {
 
 function arrayOrEmpty(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
+}
+
+function stringArray(value: unknown): string[] {
+  return arrayOrEmpty(value).filter(
+    (item): item is string => typeof item === "string",
+  );
+}
+
+function artifactHistoryStatusLabel(
+  status: PaperTradingArtifactHistoryStatus,
+): string {
+  if (status === "complete") return "Complete";
+  if (status === "collecting") return "Collecting";
+  return "Unavailable";
+}
+
+export function buildPaperTradingArtifactHistory(args: {
+  publishedArtifactProof: PublishedPaperTradingArtifactProof;
+  generatedAt?: string;
+}): PaperTradingArtifactHistory {
+  const audit = args.publishedArtifactProof.artifact_audit;
+  const proofWindowDays = PAPER_TRADING_PROOF_RULES.requiredLiveDays;
+  const selectedSnapshotDates = stringArray(audit?.snapshot_dates);
+  const duplicateSnapshotDates = stringArray(audit?.duplicate_snapshot_dates);
+  const ignoredDuplicateArtifacts = arrayOrEmpty(
+    audit?.ignored_duplicate_artifacts,
+  );
+  const selectedArtifactCount = numberValue(audit?.artifact_count);
+  const retainedArtifactCount =
+    nullableNumber(audit?.discovered_artifact_count) ?? selectedArtifactCount;
+  const coverageDays =
+    nullableNumber(audit?.coverage_days) ?? selectedSnapshotDates.length;
+  const completeArtifactDays =
+    nullableNumber(audit?.complete_artifact_days) ?? coverageDays;
+  const daysRemainingTo30 = Math.max(0, proofWindowDays - completeArtifactDays);
+  const hasUsableAudit =
+    args.publishedArtifactProof.status !== "unavailable" &&
+    audit !== null &&
+    selectedArtifactCount > 0;
+  const status: PaperTradingArtifactHistoryStatus = !hasUsableAudit
+    ? "unavailable"
+    : completeArtifactDays >= proofWindowDays
+      ? "complete"
+      : "collecting";
+  const blockers =
+    status === "unavailable"
+      ? [
+          args.publishedArtifactProof.message ||
+            "No published artifact audit is available.",
+        ]
+      : args.publishedArtifactProof.real_money_execution_allowed !== false
+        ? [
+            "Published artifact proof did not keep real-money execution disabled.",
+          ]
+        : [];
+
+  return {
+    schema_version: "1",
+    generated_at: args.generatedAt ?? new Date().toISOString(),
+    status,
+    status_label: artifactHistoryStatusLabel(status),
+    message:
+      status === "complete"
+        ? "The retained GitHub artifact trail covers the required paper proof window."
+        : status === "collecting"
+          ? "Retained GitHub artifacts are being accumulated into the paper proof window."
+          : "No usable retained GitHub artifact trail is available yet.",
+    next_required_action:
+      status === "complete"
+        ? "Review resolved P&L, ROI, drawdown, and capital-review blockers; execution remains disabled."
+        : status === "collecting"
+          ? `Collect ${daysRemainingTo30} more distinct daily artifact capture${
+              daysRemainingTo30 === 1 ? "" : "s"
+            }.`
+          : "Run the paper snapshot workflow until it publishes a valid artifact proof.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    proof_window_days: proofWindowDays,
+    retained_artifact_count: retainedArtifactCount,
+    selected_artifact_count: selectedArtifactCount,
+    ignored_duplicate_artifact_count: ignoredDuplicateArtifacts.length,
+    coverage_days: coverageDays,
+    complete_artifact_days: completeArtifactDays,
+    days_remaining_to_30: daysRemainingTo30,
+    coverage_ratio:
+      proofWindowDays > 0
+        ? Math.min(1, completeArtifactDays / proofWindowDays)
+        : 0,
+    latest_snapshot_date: nullableString(audit?.latest_snapshot_date),
+    latest_workflow_run_id: nullableString(
+      args.publishedArtifactProof.workflow_run?.id,
+    ),
+    latest_published_at: args.publishedArtifactProof.generated_at,
+    selected_snapshot_dates: selectedSnapshotDates,
+    duplicate_snapshot_dates: duplicateSnapshotDates,
+    selected_artifact_paths: stringArray(audit?.selected_artifact_paths),
+    ignored_duplicate_artifacts: ignoredDuplicateArtifacts,
+    blockers,
+  };
 }
 
 export function buildPaperTradingWriteReadiness(args: {
