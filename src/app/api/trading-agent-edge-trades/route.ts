@@ -24,7 +24,7 @@ export async function GET(request: Request) {
         publishedArtifactProof.agent_edge_trade_ledger,
       published_artifact_proof_status: publishedArtifactProof.status,
       description:
-        "Read-only resolved paper-ticket ledger for canonical Eivra agent-edge rules. It audits realized P&L only; it never creates orders or enables real-money execution.",
+        "Read-only resolved paper-ticket ledger for canonical Eivra agent-edge rules. It audits realized P&L, payoff ratio, break-even win rate, and win-rate edge only; it never creates orders or enables real-money execution.",
     },
     {
       headers: {
