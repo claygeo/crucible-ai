@@ -1,19 +1,19 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-05-27T09:15:03.635Z",
+  "generated_at": "2026-05-27T09:28:16.283Z",
   "source": "github_actions_artifact_audit",
   "paper_only": true,
   "real_money_execution_allowed": false,
   "repository": "claygeo/eivra",
   "workflow_path": ".github/workflows/paper-trading-snapshot.yml",
   "workflow_run": {
-    "id": "26502259113",
-    "url": "https://github.com/claygeo/eivra/actions/runs/26502259113",
+    "id": "26502881869",
+    "url": "https://github.com/claygeo/eivra/actions/runs/26502881869",
     "event": "workflow_dispatch",
     "ref": "main",
-    "head_sha": "e4140cf027c6b043b282165046f540d7cd3e36ae",
-    "artifact_name": "paper-trading-proof-26502259113",
-    "download_command": "gh run download 26502259113 --repo claygeo/eivra --dir ./paper-artifacts"
+    "head_sha": "0c7d5c317c32b0d7d936abc3b8fdda5d77c463fb",
+    "artifact_name": "paper-trading-proof-26502881869",
+    "download_command": "gh run download 26502881869 --repo claygeo/eivra --dir ./paper-artifacts"
   },
   "artifact_contract": {
     "repository": "claygeo/eivra",
@@ -42,7 +42,7 @@
   },
   "artifact_audit": {
     "verdict": "pass",
-    "checked_at": "2026-05-27T09:15:02.894Z",
+    "checked_at": "2026-05-27T09:28:15.529Z",
     "exit_code": 0,
     "artifact_count": 1,
     "latest_snapshot_date": "2026-05-27",
@@ -61,7 +61,7 @@
       {
         "path": "/home/runner/work/eivra/eivra/paper-snapshot-result.json",
         "source": "live",
-        "generated_at": "2026-05-27T09:15:01.113Z",
+        "generated_at": "2026-05-27T09:28:12.452Z",
         "snapshot_date": "2026-05-27",
         "resolution_watch": {
           "status": "overdue_resolution",
@@ -97,8 +97,8 @@
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
               "tradability_status": "needs_review",
-              "days_until_close": -0.39,
-              "age_days": 1.87
+              "days_until_close": -0.4,
+              "age_days": 1.88
             },
             {
               "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
@@ -117,7 +117,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.61,
-              "age_days": 1.37
+              "age_days": 1.38
             },
             {
               "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
@@ -136,7 +136,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.61,
-              "age_days": 1.37
+              "age_days": 1.38
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -155,7 +155,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.61,
-              "age_days": 1.37
+              "age_days": 1.38
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -174,7 +174,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.61,
-              "age_days": 1.37
+              "age_days": 1.38
             },
             {
               "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
@@ -192,8 +192,8 @@
               "created_at": "2026-05-24T12:19:25.197698+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 1.78,
-              "age_days": 2.87
+              "days_until_close": 1.77,
+              "age_days": 2.88
             },
             {
               "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
@@ -211,8 +211,8 @@
               "created_at": "2026-05-26T00:20:32.626001+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 3.28,
-              "age_days": 1.37
+              "days_until_close": 3.27,
+              "age_days": 1.38
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -231,7 +231,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.37,
-              "age_days": 1.87
+              "age_days": 1.88
             },
             {
               "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -250,7 +250,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.37,
-              "age_days": 1.87
+              "age_days": 1.88
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -268,8 +268,8 @@
               "created_at": "2026-05-21T00:45:32.748096+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.61,
-              "age_days": 6.35
+              "days_until_close": 4.6,
+              "age_days": 6.36
             },
             {
               "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -287,8 +287,8 @@
               "created_at": "2026-05-21T00:45:42.837675+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.61,
-              "age_days": 6.35
+              "days_until_close": 4.6,
+              "age_days": 6.36
             },
             {
               "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
@@ -306,8 +306,417 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.61,
-              "age_days": 6.35
+              "days_until_close": 4.6,
+              "age_days": 6.36
+            }
+          ]
+        },
+        "strategy_registry": {
+          "schema_version": "1",
+          "generated_at": "2026-05-27T09:28:12.452Z",
+          "paper_only": true,
+          "real_money_execution_allowed": false,
+          "config": {
+            "bankrollUsd": 5000,
+            "minEdge": 0.05,
+            "minEntryPrice": 0.02,
+            "maxEntryPrice": 0.98,
+            "kellyFraction": 0.25,
+            "maxStakeUsd": 100,
+            "maxOpenExposureUsd": 500,
+            "minStakeUsd": 5,
+            "flatStakeUsd": 25,
+            "maxRows": 5000,
+            "topOpenSignals": 16,
+            "dailyWindowDays": 30
+          },
+          "proof_rules": {
+            "requiredLiveDays": 30,
+            "requiredResolvedTrades": 30,
+            "minResolvedNetPnlUsd": 1,
+            "minRoiOnStake": 0,
+            "maxDrawdownUsd": 500
+          },
+          "agent_edge_gates": [
+            0.05,
+            0.1
+          ],
+          "strategy_count": 16,
+          "live_strategy_count": 15,
+          "control_strategy_count": 1,
+          "configurable_controls": {
+            "samples": [
+              "live_only",
+              "all",
+              "backfill"
+            ],
+            "stake_modes": [
+              "kelly_capped",
+              "flat"
+            ],
+            "sides": [
+              "all",
+              "YES",
+              "NO"
+            ],
+            "categories": [
+              "all",
+              "politics",
+              "sports",
+              "ai-tech",
+              "crypto",
+              "other"
+            ],
+            "min_edges": [
+              0.05,
+              0.1,
+              0.15,
+              0.2
+            ],
+            "default_controls": {
+              "sample": "live_only",
+              "agent_id": null,
+              "category": null,
+              "side": null,
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500
+            }
+          },
+          "selected_strategy": {
+            "id": "selected-query",
+            "label": "All agents live, edge >= 10pp",
+            "description": "URL-configured paper strategy. Changes analytics only; no orders are created.",
+            "is_custom": true,
+            "sample": "live_only",
+            "min_edge": 0.1,
+            "stake_mode": "kelly_capped",
+            "flat_stake_usd": 25,
+            "max_stake_usd": 100,
+            "max_open_exposure_usd": 500,
+            "agent_ids": [],
+            "category": null,
+            "side": null,
+            "proof_scope": "live_candidate",
+            "paper_only": true,
+            "real_money_execution_allowed": false
+          },
+          "entries": [
+            {
+              "id": "sage-live-edge-05",
+              "label": "Sage live, edge >= 5pp",
+              "description": "Sage only. Tests whether base-rate first · slow to update produces tradable live edge at 5pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.05,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "sage"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "sage-live-edge-10",
+              "label": "Sage live, edge >= 10pp",
+              "description": "Sage only. Tests whether base-rate first · slow to update produces tradable live edge at 10pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "sage"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "hawk-live-edge-05",
+              "label": "Hawk live, edge >= 5pp",
+              "description": "Hawk only. Tests whether contrarian · hunts mispricings produces tradable live edge at 5pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.05,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "hawk"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "hawk-live-edge-10",
+              "label": "Hawk live, edge >= 10pp",
+              "description": "Hawk only. Tests whether contrarian · hunts mispricings produces tradable live edge at 10pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "hawk"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "magpie-live-edge-05",
+              "label": "Magpie live, edge >= 5pp",
+              "description": "Magpie only. Tests whether snap forecaster · first instinct only produces tradable live edge at 5pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.05,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "magpie"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "magpie-live-edge-10",
+              "label": "Magpie live, edge >= 10pp",
+              "description": "Magpie only. Tests whether snap forecaster · first instinct only produces tradable live edge at 10pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "magpie"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "echo-live-edge-05",
+              "label": "Echo live, edge >= 5pp",
+              "description": "Echo only. Tests whether market-prior · small bayesian steps produces tradable live edge at 5pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.05,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "echo"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "echo-live-edge-10",
+              "label": "Echo live, edge >= 10pp",
+              "description": "Echo only. Tests whether market-prior · small bayesian steps produces tradable live edge at 10pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "echo"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "mirror-live-edge-05",
+              "label": "Mirror live, edge >= 5pp",
+              "description": "Mirror only. Tests whether cross-lab control · gpt-5 backbone produces tradable live edge at 5pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.05,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "mirror"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "mirror-live-edge-10",
+              "label": "Mirror live, edge >= 10pp",
+              "description": "Mirror only. Tests whether cross-lab control · gpt-5 backbone produces tradable live edge at 10pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "mirror"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "ensemble-live-edge-05",
+              "label": "Crowd live, edge >= 5pp",
+              "description": "Crowd only. Tests whether ensemble · uniform avg of all agents produces tradable live edge at 5pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.05,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "ensemble"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "ensemble-live-edge-10",
+              "label": "Crowd live, edge >= 10pp",
+              "description": "Crowd only. Tests whether ensemble · uniform avg of all agents produces tradable live edge at 10pp.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "ensemble"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "all-live-edge-10",
+              "label": "All agents live, edge >= 10pp",
+              "description": "Broad live strategy with a stricter edge gate across the house roster.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [],
+              "category": null,
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "crypto-live-edge-05",
+              "label": "Crypto live, edge >= 5pp",
+              "description": "Category-specific strategy for crypto markets.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.05,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [],
+              "category": "crypto",
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "sports-live-edge-10",
+              "label": "Sports live, edge >= 10pp",
+              "description": "Sports markets only. Keeps fast-resolving edge separate from politics.",
+              "is_custom": false,
+              "sample": "live_only",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [],
+              "category": "sports",
+              "side": null,
+              "proof_scope": "live_candidate",
+              "paper_only": true,
+              "real_money_execution_allowed": false
+            },
+            {
+              "id": "mirror-backfill-sanity",
+              "label": "Mirror backfill sanity",
+              "description": "Historical control. Useful for comparison, not a live-trading proof.",
+              "is_custom": false,
+              "sample": "backfill",
+              "min_edge": 0.1,
+              "stake_mode": "kelly_capped",
+              "flat_stake_usd": 25,
+              "max_stake_usd": 100,
+              "max_open_exposure_usd": 500,
+              "agent_ids": [
+                "mirror"
+              ],
+              "category": null,
+              "side": null,
+              "proof_scope": "control",
+              "paper_only": true,
+              "real_money_execution_allowed": false
             }
           ]
         },
@@ -321,7 +730,7 @@
     "message": "Artifact rows were rolled up with the same paper-only proof logic used for persisted snapshots.",
     "paper_only": true,
     "real_money_execution_allowed": false,
-    "latest_captured_at": "2026-05-27T09:15:01.113Z",
+    "latest_captured_at": "2026-05-27T09:28:12.452Z",
     "proof_summary": {
       "status": "collecting",
       "status_label": "Collecting",
@@ -432,8 +841,8 @@
               "market_closes_at": "2026-05-26T23:59:00+00:00",
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
-              "days_until_close": -0.39,
-              "age_days": 1.87
+              "days_until_close": -0.4,
+              "age_days": 1.88
             }
           ]
         },
@@ -563,7 +972,7 @@
       "cron": "22 5 * * *",
       "scheduled_time_utc": "05:22",
       "stale_after_hours": 36,
-      "latest_captured_at": "2026-05-27T09:15:01.113Z",
+      "latest_captured_at": "2026-05-27T09:28:12.452Z",
       "previous_expected_capture_at": "2026-05-27T05:22:00.000Z",
       "next_expected_capture_at": "2026-05-28T05:22:00.000Z",
       "status": "fresh",
@@ -633,7 +1042,7 @@
             "sage-live-edge-10",
             "sports-live-edge-10"
           ],
-          "latest_captured_at": "2026-05-27T09:15:01.113Z"
+          "latest_captured_at": "2026-05-27T09:28:12.452Z"
         }
       ]
     },
@@ -671,8 +1080,8 @@
           "created_at": "2026-05-25T12:19:22.529011+00:00",
           "close_status": "overdue",
           "tradability_status": "needs_review",
-          "days_until_close": -0.39,
-          "age_days": 1.87
+          "days_until_close": -0.4,
+          "age_days": 1.88
         },
         {
           "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
@@ -691,7 +1100,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 0.61,
-          "age_days": 1.37
+          "age_days": 1.38
         },
         {
           "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
@@ -710,7 +1119,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 0.61,
-          "age_days": 1.37
+          "age_days": 1.38
         },
         {
           "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -729,7 +1138,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 0.61,
-          "age_days": 1.37
+          "age_days": 1.38
         },
         {
           "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -748,7 +1157,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 0.61,
-          "age_days": 1.37
+          "age_days": 1.38
         },
         {
           "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
@@ -766,8 +1175,8 @@
           "created_at": "2026-05-24T12:19:25.197698+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 1.78,
-          "age_days": 2.87
+          "days_until_close": 1.77,
+          "age_days": 2.88
         },
         {
           "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
@@ -785,8 +1194,8 @@
           "created_at": "2026-05-26T00:20:32.626001+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 3.28,
-          "age_days": 1.37
+          "days_until_close": 3.27,
+          "age_days": 1.38
         },
         {
           "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -805,7 +1214,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.37,
-          "age_days": 1.87
+          "age_days": 1.88
         },
         {
           "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -824,7 +1233,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.37,
-          "age_days": 1.87
+          "age_days": 1.88
         },
         {
           "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -842,8 +1251,8 @@
           "created_at": "2026-05-21T00:45:32.748096+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.61,
-          "age_days": 6.35
+          "days_until_close": 4.6,
+          "age_days": 6.36
         },
         {
           "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -861,8 +1270,8 @@
           "created_at": "2026-05-21T00:45:42.837675+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.61,
-          "age_days": 6.35
+          "days_until_close": 4.6,
+          "age_days": 6.36
         },
         {
           "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
@@ -880,8 +1289,417 @@
           "created_at": "2026-05-21T00:51:06.72125+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.61,
-          "age_days": 6.35
+          "days_until_close": 4.6,
+          "age_days": 6.36
+        }
+      ]
+    },
+    "strategy_registry": {
+      "schema_version": "1",
+      "generated_at": "2026-05-27T09:28:12.452Z",
+      "paper_only": true,
+      "real_money_execution_allowed": false,
+      "config": {
+        "bankrollUsd": 5000,
+        "minEdge": 0.05,
+        "minEntryPrice": 0.02,
+        "maxEntryPrice": 0.98,
+        "kellyFraction": 0.25,
+        "maxStakeUsd": 100,
+        "maxOpenExposureUsd": 500,
+        "minStakeUsd": 5,
+        "flatStakeUsd": 25,
+        "maxRows": 5000,
+        "topOpenSignals": 16,
+        "dailyWindowDays": 30
+      },
+      "proof_rules": {
+        "requiredLiveDays": 30,
+        "requiredResolvedTrades": 30,
+        "minResolvedNetPnlUsd": 1,
+        "minRoiOnStake": 0,
+        "maxDrawdownUsd": 500
+      },
+      "agent_edge_gates": [
+        0.05,
+        0.1
+      ],
+      "strategy_count": 16,
+      "live_strategy_count": 15,
+      "control_strategy_count": 1,
+      "configurable_controls": {
+        "samples": [
+          "live_only",
+          "all",
+          "backfill"
+        ],
+        "stake_modes": [
+          "kelly_capped",
+          "flat"
+        ],
+        "sides": [
+          "all",
+          "YES",
+          "NO"
+        ],
+        "categories": [
+          "all",
+          "politics",
+          "sports",
+          "ai-tech",
+          "crypto",
+          "other"
+        ],
+        "min_edges": [
+          0.05,
+          0.1,
+          0.15,
+          0.2
+        ],
+        "default_controls": {
+          "sample": "live_only",
+          "agent_id": null,
+          "category": null,
+          "side": null,
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500
+        }
+      },
+      "selected_strategy": {
+        "id": "selected-query",
+        "label": "All agents live, edge >= 10pp",
+        "description": "URL-configured paper strategy. Changes analytics only; no orders are created.",
+        "is_custom": true,
+        "sample": "live_only",
+        "min_edge": 0.1,
+        "stake_mode": "kelly_capped",
+        "flat_stake_usd": 25,
+        "max_stake_usd": 100,
+        "max_open_exposure_usd": 500,
+        "agent_ids": [],
+        "category": null,
+        "side": null,
+        "proof_scope": "live_candidate",
+        "paper_only": true,
+        "real_money_execution_allowed": false
+      },
+      "entries": [
+        {
+          "id": "sage-live-edge-05",
+          "label": "Sage live, edge >= 5pp",
+          "description": "Sage only. Tests whether base-rate first · slow to update produces tradable live edge at 5pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.05,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "sage"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "sage-live-edge-10",
+          "label": "Sage live, edge >= 10pp",
+          "description": "Sage only. Tests whether base-rate first · slow to update produces tradable live edge at 10pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "sage"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "hawk-live-edge-05",
+          "label": "Hawk live, edge >= 5pp",
+          "description": "Hawk only. Tests whether contrarian · hunts mispricings produces tradable live edge at 5pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.05,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "hawk"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "hawk-live-edge-10",
+          "label": "Hawk live, edge >= 10pp",
+          "description": "Hawk only. Tests whether contrarian · hunts mispricings produces tradable live edge at 10pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "hawk"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "magpie-live-edge-05",
+          "label": "Magpie live, edge >= 5pp",
+          "description": "Magpie only. Tests whether snap forecaster · first instinct only produces tradable live edge at 5pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.05,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "magpie"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "magpie-live-edge-10",
+          "label": "Magpie live, edge >= 10pp",
+          "description": "Magpie only. Tests whether snap forecaster · first instinct only produces tradable live edge at 10pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "magpie"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "echo-live-edge-05",
+          "label": "Echo live, edge >= 5pp",
+          "description": "Echo only. Tests whether market-prior · small bayesian steps produces tradable live edge at 5pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.05,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "echo"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "echo-live-edge-10",
+          "label": "Echo live, edge >= 10pp",
+          "description": "Echo only. Tests whether market-prior · small bayesian steps produces tradable live edge at 10pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "echo"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "mirror-live-edge-05",
+          "label": "Mirror live, edge >= 5pp",
+          "description": "Mirror only. Tests whether cross-lab control · gpt-5 backbone produces tradable live edge at 5pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.05,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "mirror"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "mirror-live-edge-10",
+          "label": "Mirror live, edge >= 10pp",
+          "description": "Mirror only. Tests whether cross-lab control · gpt-5 backbone produces tradable live edge at 10pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "mirror"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "ensemble-live-edge-05",
+          "label": "Crowd live, edge >= 5pp",
+          "description": "Crowd only. Tests whether ensemble · uniform avg of all agents produces tradable live edge at 5pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.05,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "ensemble"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "ensemble-live-edge-10",
+          "label": "Crowd live, edge >= 10pp",
+          "description": "Crowd only. Tests whether ensemble · uniform avg of all agents produces tradable live edge at 10pp.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "ensemble"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "all-live-edge-10",
+          "label": "All agents live, edge >= 10pp",
+          "description": "Broad live strategy with a stricter edge gate across the house roster.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [],
+          "category": null,
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "crypto-live-edge-05",
+          "label": "Crypto live, edge >= 5pp",
+          "description": "Category-specific strategy for crypto markets.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.05,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [],
+          "category": "crypto",
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "sports-live-edge-10",
+          "label": "Sports live, edge >= 10pp",
+          "description": "Sports markets only. Keeps fast-resolving edge separate from politics.",
+          "is_custom": false,
+          "sample": "live_only",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [],
+          "category": "sports",
+          "side": null,
+          "proof_scope": "live_candidate",
+          "paper_only": true,
+          "real_money_execution_allowed": false
+        },
+        {
+          "id": "mirror-backfill-sanity",
+          "label": "Mirror backfill sanity",
+          "description": "Historical control. Useful for comparison, not a live-trading proof.",
+          "is_custom": false,
+          "sample": "backfill",
+          "min_edge": 0.1,
+          "stake_mode": "kelly_capped",
+          "flat_stake_usd": 25,
+          "max_stake_usd": 100,
+          "max_open_exposure_usd": 500,
+          "agent_ids": [
+            "mirror"
+          ],
+          "category": null,
+          "side": null,
+          "proof_scope": "control",
+          "paper_only": true,
+          "real_money_execution_allowed": false
         }
       ]
     },
@@ -910,7 +1728,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 551.42,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -963,7 +1781,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1016,7 +1834,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 109.88,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1069,7 +1887,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 161.2,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1122,7 +1940,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 125.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1175,7 +1993,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 223.7,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1228,7 +2046,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1281,7 +2099,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1334,7 +2152,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 164.21,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1387,7 +2205,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 215.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1440,7 +2258,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -1493,7 +2311,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:15:01.113Z",
+        "latest_captured_at": "2026-05-27T09:28:12.452Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
