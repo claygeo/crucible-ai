@@ -168,6 +168,21 @@ export type PaperTradingCaptureCalendar = {
   days: PaperTradingCaptureCalendarDay[];
 };
 
+export type PaperTradingStrategyRegistrySync = {
+  status: "synced" | "pending_capture" | "unavailable";
+  status_label: string;
+  message: string;
+  latest_snapshot_date: string | null;
+  latest_captured_at: string | null;
+  current_live_strategy_count: number;
+  persisted_latest_live_strategy_count: number;
+  missing_live_strategy_count: number;
+  extra_persisted_live_strategy_count: number;
+  missing_live_strategy_ids: string[];
+  missing_live_strategy_labels: string[];
+  extra_persisted_strategy_ids: string[];
+};
+
 export type PaperTradingStrategyProofRollup = {
   strategy_id: string;
   strategy_label: string;
@@ -745,6 +760,116 @@ export function buildPaperTradingCaptureCalendar(
     last_expected_snapshot_date: expectedDates[expectedDates.length - 1] ?? null,
     days_remaining_to_30: Math.max(0, REQUIRED_PROOF_DAYS - completeDays),
     days,
+  };
+}
+
+function latestSnapshotDate(snapshots: PaperTradingSnapshotRow[]): string | null {
+  return snapshots
+    .map((snapshot) => snapshot.snapshot_date)
+    .filter((date) => snapshotDateToUtcDate(date))
+    .sort((a, b) => b.localeCompare(a))[0] ?? null;
+}
+
+export function buildPaperTradingStrategyRegistrySync(
+  currentStrategies: StrategyVariantSummary[],
+  persistedSnapshots: PaperTradingSnapshotRow[]
+): PaperTradingStrategyRegistrySync {
+  const currentLiveStrategies = currentStrategies.filter(
+    (strategy) => strategy.sample === "live_only" && !strategy.is_custom
+  );
+  const latestDate = latestSnapshotDate(persistedSnapshots);
+
+  if (currentLiveStrategies.length === 0) {
+    return {
+      status: "unavailable",
+      status_label: "Unavailable",
+      message: "No current live strategy registry is available.",
+      latest_snapshot_date: latestDate,
+      latest_captured_at: null,
+      current_live_strategy_count: 0,
+      persisted_latest_live_strategy_count: 0,
+      missing_live_strategy_count: 0,
+      extra_persisted_live_strategy_count: 0,
+      missing_live_strategy_ids: [],
+      missing_live_strategy_labels: [],
+      extra_persisted_strategy_ids: [],
+    };
+  }
+
+  if (!latestDate) {
+    return {
+      status: "pending_capture",
+      status_label: "Pending capture",
+      message: "No persisted proof day has captured the current strategy registry yet.",
+      latest_snapshot_date: null,
+      latest_captured_at: null,
+      current_live_strategy_count: currentLiveStrategies.length,
+      persisted_latest_live_strategy_count: 0,
+      missing_live_strategy_count: currentLiveStrategies.length,
+      extra_persisted_live_strategy_count: 0,
+      missing_live_strategy_ids: currentLiveStrategies.map((strategy) => strategy.id),
+      missing_live_strategy_labels: currentLiveStrategies.map(
+        (strategy) => strategy.label
+      ),
+      extra_persisted_strategy_ids: [],
+    };
+  }
+
+  const latestRows = persistedSnapshots.filter(
+    (snapshot) => snapshot.snapshot_date === latestDate
+  );
+  const latestLiveRows = latestRows.filter(
+    (snapshot) => snapshot.sample === "live_only"
+  );
+  const currentByFingerprint = new Map(
+    currentLiveStrategies.map((strategy) => [
+      strategyRuleFingerprint(strategy),
+      strategy,
+    ])
+  );
+  const persistedByFingerprint = new Map<string, PaperTradingSnapshotRow>();
+  for (const row of latestLiveRows) {
+    const fingerprint = strategyRuleFingerprint(row.strategy_summary);
+    const existing = persistedByFingerprint.get(fingerprint);
+    if (!existing || Date.parse(row.captured_at) > Date.parse(existing.captured_at)) {
+      persistedByFingerprint.set(fingerprint, row);
+    }
+  }
+
+  const missingStrategies = Array.from(currentByFingerprint.entries())
+    .filter(([fingerprint]) => !persistedByFingerprint.has(fingerprint))
+    .map(([, strategy]) => strategy);
+  const extraPersistedRows = Array.from(persistedByFingerprint.entries())
+    .filter(([fingerprint]) => !currentByFingerprint.has(fingerprint))
+    .map(([, row]) => row);
+  const status: PaperTradingStrategyRegistrySync["status"] =
+    missingStrategies.length === 0 && extraPersistedRows.length === 0
+      ? "synced"
+      : "pending_capture";
+  const latestCapturedAt = latestCapturedAtForRows(latestRows);
+  const pendingMessage =
+    missingStrategies.length > 0
+      ? `${missingStrategies.length} current live strategies are waiting for the next persisted proof capture.`
+      : `${extraPersistedRows.length} persisted live strategies are no longer in the current registry.`;
+
+  return {
+    status,
+    status_label: status === "synced" ? "Synced" : "Pending capture",
+    message:
+      status === "synced"
+        ? "Latest persisted proof day matches the current live strategy registry."
+        : pendingMessage,
+    latest_snapshot_date: latestDate,
+    latest_captured_at: latestCapturedAt,
+    current_live_strategy_count: currentLiveStrategies.length,
+    persisted_latest_live_strategy_count: persistedByFingerprint.size,
+    missing_live_strategy_count: missingStrategies.length,
+    extra_persisted_live_strategy_count: extraPersistedRows.length,
+    missing_live_strategy_ids: missingStrategies.map((strategy) => strategy.id),
+    missing_live_strategy_labels: missingStrategies.map(
+      (strategy) => strategy.label
+    ),
+    extra_persisted_strategy_ids: extraPersistedRows.map((row) => row.strategy_id),
   };
 }
 

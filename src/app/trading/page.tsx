@@ -14,7 +14,10 @@ import {
   parseTradingControls,
   tradingControlsToQuery,
 } from "@/lib/trading";
-import { loadPaperTradingSnapshotHistory } from "@/lib/trading-snapshots";
+import {
+  buildPaperTradingStrategyRegistrySync,
+  loadPaperTradingSnapshotHistory,
+} from "@/lib/trading-snapshots";
 
 export const revalidate = 120;
 
@@ -80,6 +83,12 @@ function captureCalendarBadgeClass(status: string) {
   if (status === "complete") return "bg-positive/10 text-positive";
   if (status === "partial" || status === "missing") return "bg-warn/10 text-warn";
   return "bg-text-muted/10 text-text-muted";
+}
+
+function registrySyncClass(status: string) {
+  if (status === "synced") return "text-positive";
+  if (status === "pending_capture") return "text-warn";
+  return "text-text-muted";
 }
 
 function edgePoints(n: number) {
@@ -151,6 +160,10 @@ export default async function TradingPage({
   const captureCalendar = persisted.capture_calendar;
   const captureCalendarDays = captureCalendar.days.slice().reverse().slice(0, 30);
   const proofSummary = persisted.proof_summary;
+  const registrySync = buildPaperTradingStrategyRegistrySync(
+    snapshot.strategy_variants,
+    persisted.snapshots
+  );
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -543,7 +556,7 @@ export default async function TradingPage({
               json feed
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Capital review
@@ -554,6 +567,18 @@ export default async function TradingPage({
                 )}`}
               >
                 {proofSummary.capital_review_status_label}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Registry sync
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${registrySyncClass(
+                  registrySync.status
+                )}`}
+              >
+                {registrySync.status_label}
               </div>
             </div>
             <div>
@@ -620,6 +645,16 @@ export default async function TradingPage({
             <span className={proofSummaryClass(proofSummary.capital_review_status)}>
               real-money execution disabled
             </span>
+            <span className={registrySyncClass(registrySync.status)}>
+              registry {registrySync.status_label.toLowerCase()}{" "}
+              {int(registrySync.persisted_latest_live_strategy_count)}/
+              {int(registrySync.current_live_strategy_count)} live variants
+            </span>
+            {registrySync.missing_live_strategy_count > 0 ? (
+              <span className="text-warn">
+                pending capture {int(registrySync.missing_live_strategy_count)} variants
+              </span>
+            ) : null}
             {proofSummary.best_live_strategy_label ? (
               <span>
                 best live {proofSummary.best_live_strategy_label}:{" "}

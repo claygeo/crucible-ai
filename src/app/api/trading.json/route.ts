@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
-import { loadPaperTradingSnapshotHistory } from "@/lib/trading-snapshots";
+import {
+  buildPaperTradingStrategyRegistrySync,
+  loadPaperTradingSnapshotHistory,
+} from "@/lib/trading-snapshots";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -11,6 +14,10 @@ export async function GET(request: Request) {
     getTradingSnapshot(controls),
     loadPaperTradingSnapshotHistory(1000),
   ]);
+  const registrySync = buildPaperTradingStrategyRegistrySync(
+    snapshot.strategy_variants,
+    persisted.snapshots
+  );
 
   return NextResponse.json(
     {
@@ -25,8 +32,10 @@ export async function GET(request: Request) {
         latest_captured_at: persisted.latest_captured_at,
         capture_health: persisted.capture_health,
         capture_calendar: persisted.capture_calendar,
+        registry_sync: registrySync,
         proof_summary: persisted.proof_summary,
       },
+      persisted_registry_sync: registrySync,
       description:
         "Eivra paper-trading v2. Converts agent probability edges versus market prices into bounded paper tickets. Query params configure analytics only; no real money, no order execution, and no leverage.",
     },
