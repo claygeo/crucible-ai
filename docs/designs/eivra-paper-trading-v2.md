@@ -107,6 +107,14 @@ Every series is derived from the same exposure-capped replay as the matching
 strategy summary. Daily rows therefore reconcile with proof gates, skipped
 signals, open risk, and resolved P&L instead of using uncapped raw signals.
 
+## Resolution Watch
+
+`/api/trading.json` exposes `resolution_watch` for open live paper tickets. It
+tracks how many live signals are still awaiting market resolution, how many are
+past their market close time, how many close in the next seven days, the next
+known close time, and a compact watchlist of unresolved tickets. This keeps the
+proof gap explicit: open EV is not profit until the market resolves.
+
 ## Persisted Proof Log
 
 The 30-day proof window now has a durable audit surface:

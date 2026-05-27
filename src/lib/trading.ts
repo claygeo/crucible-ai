@@ -123,6 +123,7 @@ export type PaperTrade = {
   market_category: string;
   market_url: string | null;
   market_status: MarketStatus;
+  market_closes_at: string | null;
   side: TradeSide;
   probability: number;
   market_price: number;
@@ -188,6 +189,36 @@ export type TradingTotals = {
   open_expected_pnl_usd: number;
   live_resolved_trades: number;
   backfill_resolved_trades: number;
+};
+
+export type ResolutionWatchSignal = {
+  prediction_id: string;
+  market_id: string;
+  market_question: string;
+  agent_id: string;
+  agent_name: string;
+  side: TradeSide;
+  stake_usd: number;
+  expected_pnl_usd: number;
+  market_closes_at: string | null;
+  created_at: string;
+  close_status: "overdue" | "closing_next_7d" | "future" | "unknown_close";
+  days_until_close: number | null;
+  age_days: number;
+};
+
+export type TradingResolutionWatch = {
+  status: "waiting_resolution" | "overdue_resolution" | "no_open_live_signals";
+  status_label: string;
+  open_live_signals: number;
+  overdue_live_signals: number;
+  closing_next_7d_signals: number;
+  unknown_close_live_signals: number;
+  next_close_at: string | null;
+  oldest_opened_at: string | null;
+  total_open_exposure_usd: number;
+  total_open_expected_pnl_usd: number;
+  signals: ResolutionWatchSignal[];
 };
 
 export type ProofGateStatus =
@@ -335,6 +366,7 @@ export type TradingSnapshot = {
   totals: TradingTotals;
   live_totals: TradingTotals;
   backfill_totals: TradingTotals;
+  resolution_watch: TradingResolutionWatch;
   selected_strategy: StrategyVariantSummary;
   proof_gates: StrategyProofGate[];
   selected_exposure_ledger: ExposureLedgerSummary;
@@ -675,6 +707,7 @@ function buildTrade(
     market_category: row.market.category ?? "other",
     market_url: row.market.url,
     market_status: row.market.status,
+    market_closes_at: row.market.closes_at,
     side,
     probability: round4(probability),
     market_price: round4(marketPrice),
@@ -820,6 +853,126 @@ function summarizeTotals(trades: PaperTrade[]): TradingTotals {
     open_expected_pnl_usd: round2(openExpectedPnlUsd),
     live_resolved_trades: resolvedTrades.filter((t) => !t.is_backfill).length,
     backfill_resolved_trades: resolvedTrades.filter((t) => t.is_backfill).length,
+  };
+}
+
+function dayDelta(from: Date, toIso: string): number | null {
+  const fromTs = from.getTime();
+  const toTs = Date.parse(toIso);
+  if (!Number.isFinite(fromTs) || !Number.isFinite(toTs)) return null;
+  return round2((toTs - fromTs) / (24 * 60 * 60 * 1000));
+}
+
+function resolutionStatusRank(
+  status: ResolutionWatchSignal["close_status"]
+): number {
+  if (status === "overdue") return 0;
+  if (status === "closing_next_7d") return 1;
+  if (status === "unknown_close") return 2;
+  return 3;
+}
+
+function buildResolutionWatch(
+  liveTrades: PaperTrade[],
+  now = new Date()
+): TradingResolutionWatch {
+  const openLiveTrades = liveTrades.filter((trade) => trade.pnl_usd === null);
+  const nowTs = now.getTime();
+  const weekFromNowTs = nowTs + 7 * 24 * 60 * 60 * 1000;
+  const signals = openLiveTrades.map((trade): ResolutionWatchSignal => {
+    const closeTs = trade.market_closes_at ? Date.parse(trade.market_closes_at) : NaN;
+    const ageDays = dayDelta(new Date(trade.created_at), now.toISOString()) ?? 0;
+    const closeStatus: ResolutionWatchSignal["close_status"] =
+      !Number.isFinite(closeTs)
+        ? "unknown_close"
+        : closeTs < nowTs
+          ? "overdue"
+          : closeTs <= weekFromNowTs
+            ? "closing_next_7d"
+            : "future";
+
+    return {
+      prediction_id: trade.prediction_id,
+      market_id: trade.market_id,
+      market_question: trade.market_question,
+      agent_id: trade.agent_id,
+      agent_name: trade.agent_name,
+      side: trade.side,
+      stake_usd: trade.stake_usd,
+      expected_pnl_usd: trade.expected_pnl_usd,
+      market_closes_at: trade.market_closes_at,
+      created_at: trade.created_at,
+      close_status: closeStatus,
+      days_until_close: trade.market_closes_at
+        ? dayDelta(now, trade.market_closes_at)
+        : null,
+      age_days: Math.max(0, ageDays),
+    };
+  });
+
+  const overdueCount = signals.filter(
+    (signal) => signal.close_status === "overdue"
+  ).length;
+  const closingSoonCount = signals.filter(
+    (signal) => signal.close_status === "closing_next_7d"
+  ).length;
+  const unknownCloseCount = signals.filter(
+    (signal) => signal.close_status === "unknown_close"
+  ).length;
+  const futureCloseTimes = signals
+    .map((signal) =>
+      signal.market_closes_at ? Date.parse(signal.market_closes_at) : NaN
+    )
+    .filter((ts) => Number.isFinite(ts) && ts >= nowTs)
+    .sort((a, b) => a - b);
+  const openedTimes = signals
+    .map((signal) => Date.parse(signal.created_at))
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
+
+  const sortedSignals = signals
+    .slice()
+    .sort(
+      (a, b) =>
+        resolutionStatusRank(a.close_status) -
+          resolutionStatusRank(b.close_status) ||
+        (a.days_until_close ?? Number.POSITIVE_INFINITY) -
+          (b.days_until_close ?? Number.POSITIVE_INFINITY) ||
+        Date.parse(a.created_at) - Date.parse(b.created_at)
+    )
+    .slice(0, 12);
+  const status: TradingResolutionWatch["status"] =
+    signals.length === 0
+      ? "no_open_live_signals"
+      : overdueCount > 0
+        ? "overdue_resolution"
+        : "waiting_resolution";
+
+  return {
+    status,
+    status_label:
+      status === "no_open_live_signals"
+        ? "No open live signals"
+        : status === "overdue_resolution"
+          ? "Overdue"
+          : "Waiting",
+    open_live_signals: signals.length,
+    overdue_live_signals: overdueCount,
+    closing_next_7d_signals: closingSoonCount,
+    unknown_close_live_signals: unknownCloseCount,
+    next_close_at:
+      futureCloseTimes.length > 0
+        ? new Date(futureCloseTimes[0]).toISOString()
+        : null,
+    oldest_opened_at:
+      openedTimes.length > 0 ? new Date(openedTimes[0]).toISOString() : null,
+    total_open_exposure_usd: round2(
+      openLiveTrades.reduce((sum, trade) => sum + trade.stake_usd, 0)
+    ),
+    total_open_expected_pnl_usd: round2(
+      openLiveTrades.reduce((sum, trade) => sum + trade.expected_pnl_usd, 0)
+    ),
+    signals: sortedSignals,
   };
 }
 
@@ -1506,6 +1659,7 @@ export async function getTradingSnapshot(
     totals: summarizeTotals(allTrades),
     live_totals: summarizeTotals(liveTrades),
     backfill_totals: summarizeTotals(backfillTrades),
+    resolution_watch: buildResolutionWatch(liveTrades),
     selected_strategy: selectedStrategy,
     proof_gates: [selectedStrategy, ...strategyVariants].map(
       (strategy) => strategy.proof_gate

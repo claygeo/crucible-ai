@@ -91,6 +91,12 @@ function registrySyncClass(status: string) {
   return "text-text-muted";
 }
 
+function resolutionWatchClass(status: string) {
+  if (status === "overdue_resolution") return "text-warn";
+  if (status === "waiting_resolution") return "text-accent";
+  return "text-text-muted";
+}
+
 function edgePoints(n: number) {
   return `${Math.round(n * 100)}pp`;
 }
@@ -135,6 +141,7 @@ export default async function TradingPage({
       ? `${int(snapshot.totals.live_resolved_trades)} live`
       : "live pending";
   const livePnlPending = snapshot.totals.live_resolved_trades === 0;
+  const resolutionWatch = snapshot.resolution_watch;
   const liveLeader = snapshot.live_agent_summaries[0];
   const liveStrategyRows = snapshot.strategy_variants.filter(
     (strategy) => strategy.sample === "live_only"
@@ -1104,6 +1111,164 @@ export default async function TradingPage({
                 : "No resolved paper tickets yet."}
             </div>
           </div>
+        </section>
+
+        <section className="panel px-5 py-5 flex flex-col gap-5">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="heading text-base text-text-primary">Resolution watch</h2>
+            <span
+              className={`mono text-[10px] uppercase tracking-wider ${resolutionWatchClass(
+                resolutionWatch.status
+              )}`}
+            >
+              {resolutionWatch.status_label}
+            </span>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Open live
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(resolutionWatch.open_live_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Overdue
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${
+                  resolutionWatch.overdue_live_signals > 0
+                    ? "text-warn"
+                    : "text-text-primary"
+                }`}
+              >
+                {int(resolutionWatch.overdue_live_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Closing 7d
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(resolutionWatch.closing_next_7d_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Unknown close
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${
+                  resolutionWatch.unknown_close_live_signals > 0
+                    ? "text-warn"
+                    : "text-text-primary"
+                }`}
+              >
+                {int(resolutionWatch.unknown_close_live_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Next close
+              </div>
+              <div
+                suppressHydrationWarning
+                className="heading text-2xl text-text-primary mt-1"
+              >
+                {resolutionWatch.next_close_at
+                  ? relativeTime(resolutionWatch.next_close_at)
+                  : "-"}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Open EV
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${pnlClass(
+                  resolutionWatch.total_open_expected_pnl_usd
+                )}`}
+              >
+                {dollars(resolutionWatch.total_open_expected_pnl_usd, 0)}
+              </div>
+            </div>
+          </div>
+          {resolutionWatch.signals.length === 0 ? (
+            <div className="text-sm text-text-muted mono">
+              [no open live paper tickets awaiting resolution]
+            </div>
+          ) : (
+            <div className="overflow-x-auto border-t border-border-subtle pt-4">
+              <table className="w-full" aria-label="Live resolution watch">
+                <thead>
+                  <tr className="border-b border-border-subtle text-text-muted">
+                    <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Market</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Agent</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Side</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Stake</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">EV</th>
+                    <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Close</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle/60">
+                  {resolutionWatch.signals.map((signal) => (
+                    <tr key={signal.prediction_id}>
+                      <td className="py-3 pr-3">
+                        <Link
+                          href={`/markets/${signal.market_id}`}
+                          className="text-sm text-text-primary hover:text-accent transition-colors line-clamp-2"
+                        >
+                          {signal.market_question}
+                        </Link>
+                        <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                          {signal.close_status.replaceAll("_", " ")}
+                          {signal.age_days > 0
+                            ? ` / open ${signal.age_days.toFixed(1)}d`
+                            : ""}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {signal.agent_name}
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <span
+                          className={`mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${sideClass(
+                            signal.side
+                          )}`}
+                        >
+                          {signal.side}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {dollars(signal.stake_usd, 0)}
+                      </td>
+                      <td
+                        className={`py-3 px-3 mono text-right ${pnlClass(
+                          signal.expected_pnl_usd
+                        )}`}
+                      >
+                        {dollars(signal.expected_pnl_usd, 2)}
+                      </td>
+                      <td
+                        suppressHydrationWarning
+                        className={`py-3 pl-3 mono text-right ${
+                          signal.close_status === "overdue"
+                            ? "text-warn"
+                            : "text-text-secondary"
+                        }`}
+                      >
+                        {signal.market_closes_at
+                          ? relativeTime(signal.market_closes_at)
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <section className="grid lg:grid-cols-[0.9fr_1.1fr] gap-5">
