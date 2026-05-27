@@ -906,19 +906,21 @@ export default async function TradingPage({
                 </div>
                 <div
                   className={`heading text-xl mt-1 ${
-                    (proofRunway.overdue_live_signals ?? 0) > 0
+                    (proofRunway.review_required_live_signals ?? 0) > 0
                       ? "text-warn"
                       : "text-text-primary"
                   }`}
                 >
-                  {proofRunway.overdue_live_signals === null
+                  {proofRunway.review_required_live_signals === null
                     ? "-"
-                    : `${int(proofRunway.overdue_live_signals)} overdue`}
+                    : `${int(proofRunway.review_required_live_signals)} review`}
                 </div>
                 <div className="mono text-[10px] uppercase tracking-wider text-text-muted mt-1">
-                  {proofRunway.closing_next_7d_signals === null
+                  {proofRunway.overdue_live_signals === null
                     ? "closing unknown"
-                    : `${int(proofRunway.closing_next_7d_signals)} closing 7d`}
+                    : `${int(proofRunway.overdue_live_signals)} overdue / ${int(
+                        proofRunway.unknown_close_live_signals ?? 0
+                      )} unknown close`}
                 </div>
               </div>
             </div>

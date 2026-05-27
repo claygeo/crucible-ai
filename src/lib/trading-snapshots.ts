@@ -372,6 +372,7 @@ export type PaperTradingProofRunway = {
   resolved_trades_remaining: number;
   open_live_signals: number | null;
   overdue_live_signals: number | null;
+  review_required_live_signals: number | null;
   closing_next_7d_signals: number | null;
   unknown_close_live_signals: number | null;
   pending_resolution_capacity: number | null;
@@ -1828,6 +1829,10 @@ export function buildPaperTradingProofRunway(args: {
     args.resolutionWatch === undefined
       ? null
       : args.resolutionWatch?.overdue_live_signals ?? 0;
+  const reviewRequiredLiveSignals =
+    args.resolutionWatch === undefined
+      ? null
+      : args.resolutionWatch?.review_required_live_signals ?? 0;
   const closingNext7dSignals =
     args.resolutionWatch === undefined
       ? null
@@ -1842,7 +1847,7 @@ export function buildPaperTradingProofRunway(args: {
     args.captureCalendar.status === "missing" ||
     args.captureCalendar.status === "partial";
   const resolutionUnchecked = args.resolutionWatch === undefined;
-  const resolutionBlocked = (overdueLiveSignals ?? 0) > 0;
+  const resolutionBlocked = (reviewRequiredLiveSignals ?? 0) > 0;
   const unavailable =
     args.proofSummary.status === "unavailable" ||
     args.captureCalendar.status === "unavailable";
@@ -1857,9 +1862,9 @@ export function buildPaperTradingProofRunway(args: {
   const blockerSummary = unavailable
     ? "Persisted proof data is unavailable."
     : resolutionBlocked
-      ? `Resolve ${overdueLiveSignals} overdue live paper market${
-          overdueLiveSignals === 1 ? "" : "s"
-        } before trusting open EV.`
+      ? `Investigate ${reviewRequiredLiveSignals} live paper market${
+          reviewRequiredLiveSignals === 1 ? "" : "s"
+        } needing review before trusting open EV.`
       : captureBlocked
         ? "Repair capture freshness or missing daily proof rows before review."
         : resolutionUnchecked
@@ -1887,7 +1892,7 @@ export function buildPaperTradingProofRunway(args: {
   const resolutionMilestoneStatus: PaperTradingProofRunwayStatus =
     args.resolutionWatch === undefined || !args.resolutionWatch
       ? "unavailable"
-      : args.resolutionWatch.overdue_live_signals > 0
+      : args.resolutionWatch.review_required_live_signals > 0
         ? "blocked"
         : args.resolutionWatch.open_live_signals > 0
           ? "collecting"
@@ -1915,6 +1920,7 @@ export function buildPaperTradingProofRunway(args: {
     resolved_trades_remaining: resolvedTradesRemaining,
     open_live_signals: openLiveSignals,
     overdue_live_signals: overdueLiveSignals,
+    review_required_live_signals: reviewRequiredLiveSignals,
     closing_next_7d_signals: closingNext7dSignals,
     unknown_close_live_signals: unknownCloseLiveSignals,
     pending_resolution_capacity: resolvedCapacity,
@@ -1947,12 +1953,12 @@ export function buildPaperTradingProofRunway(args: {
         "Resolution hygiene",
         resolutionMilestoneStatus,
         args.resolutionWatch
-          ? `${args.resolutionWatch.overdue_live_signals} overdue / ${args.resolutionWatch.open_live_signals} open`
+          ? `${args.resolutionWatch.review_required_live_signals} needs review / ${args.resolutionWatch.open_live_signals} open`
           : "not checked",
-        "0 overdue live paper markets",
+        "0 review-required live paper markets",
         args.resolutionWatch?.next_close_at ?? null,
         args.resolutionWatch
-          ? "Open EV is not realized profit until the underlying market resolves."
+          ? "Overdue or unknown-close markets must be investigated before their EV is treated as actionable."
           : "Live resolution status is available only when paired with the current trading snapshot."
       ),
       buildRunwayMilestone(
@@ -1989,10 +1995,12 @@ function proofReadinessNextAction(
   if (args.registrySync && args.registrySync.status === "pending_capture") {
     return "Wait for the next daily snapshot to capture the current strategy registry.";
   }
-  if (args.resolutionWatch && args.resolutionWatch.overdue_live_signals > 0) {
+  if (args.resolutionWatch && args.resolutionWatch.review_required_live_signals > 0) {
     const label =
-      args.resolutionWatch.overdue_live_signals === 1 ? "market" : "markets";
-    return `Investigate ${args.resolutionWatch.overdue_live_signals} overdue live paper ${label} before trusting open EV.`;
+      args.resolutionWatch.review_required_live_signals === 1
+        ? "market"
+        : "markets";
+    return `Investigate ${args.resolutionWatch.review_required_live_signals} live paper ${label} needing resolution review before trusting open EV.`;
   }
   if (
     args.captureCalendar.missing_days > 0 ||
@@ -2068,9 +2076,9 @@ export function buildPaperTradingProofReadiness(args: {
             args.proofSummary.status === "stale"
           ? "blocked"
           : "collecting";
-  const overdueResolutionEvidence =
+  const reviewRequiredResolutionEvidence =
     args.resolutionWatch?.signals
-      .filter((signal) => signal.close_status === "overdue")
+      .filter((signal) => signal.tradability_status === "needs_review")
       .slice(0, 5)
       .map(resolutionSignalEvidence) ?? [];
   const resolutionItem =
@@ -2081,23 +2089,23 @@ export function buildPaperTradingProofReadiness(args: {
           "Resolution hygiene",
           !args.resolutionWatch
             ? "unavailable"
-            : args.resolutionWatch.overdue_live_signals > 0
+            : args.resolutionWatch.review_required_live_signals > 0
               ? "blocked"
               : args.resolutionWatch.open_live_signals > 0
                 ? "collecting"
                 : "pass",
           !args.resolutionWatch
             ? "not checked"
-            : `${args.resolutionWatch.overdue_live_signals} overdue / ${args.resolutionWatch.open_live_signals} open`,
-          "0 overdue live paper markets",
+            : `${args.resolutionWatch.review_required_live_signals} needs review (${args.resolutionWatch.overdue_live_signals} overdue, ${args.resolutionWatch.unknown_close_live_signals} unknown close) / ${args.resolutionWatch.open_live_signals} open`,
+          "0 review-required live paper markets",
           !args.resolutionWatch
             ? "Only /api/trading.json can inspect the current live resolution backlog."
-            : args.resolutionWatch.overdue_live_signals > 0
-              ? "Overdue open markets must be checked before treating open EV as credible."
+            : args.resolutionWatch.review_required_live_signals > 0
+              ? "Overdue or unknown-close open markets must be checked before treating open EV as credible."
               : args.resolutionWatch.open_live_signals > 0
                 ? "Open live tickets are waiting for market resolution; they are not realized profit."
                 : "No open live paper tickets are waiting for resolution.",
-          overdueResolutionEvidence
+          reviewRequiredResolutionEvidence
         );
 
   const items = [

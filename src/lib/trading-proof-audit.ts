@@ -45,6 +45,10 @@ export type PaperTradingProofAudit = {
     window_roi_on_stake: number;
     open_live_signals: number;
     overdue_live_signals: number;
+    review_required_live_signals: number;
+    tradable_open_live_signals: number;
+    tradable_open_expected_pnl_usd: number;
+    review_required_open_expected_pnl_usd: number;
     earliest_capital_review_at: string | null;
   };
   readiness: PaperTradingProofReadiness;
@@ -179,12 +183,12 @@ export function buildPaperTradingProofAudit(args: {
     check(
       "resolution_hygiene",
       "Resolution hygiene",
-      args.snapshot.resolution_watch.overdue_live_signals > 0
+      args.snapshot.resolution_watch.review_required_live_signals > 0
         ? "blocked"
         : "pass",
-      `${args.snapshot.resolution_watch.overdue_live_signals} overdue / ${args.snapshot.resolution_watch.open_live_signals} open`,
-      "0 overdue live paper markets",
-      "Open EV is not realized profit; overdue markets must be resolved or investigated."
+      `${args.snapshot.resolution_watch.review_required_live_signals} needs review (${args.snapshot.resolution_watch.overdue_live_signals} overdue, ${args.snapshot.resolution_watch.unknown_close_live_signals} unknown close) / ${args.snapshot.resolution_watch.open_live_signals} open`,
+      "0 review-required live paper markets",
+      "Open EV is not realized profit; overdue or unknown-close markets must be resolved or investigated."
     ),
     check(
       "capture_window",
@@ -307,6 +311,14 @@ export function buildPaperTradingProofAudit(args: {
       open_live_signals: args.snapshot.resolution_watch.open_live_signals,
       overdue_live_signals:
         args.snapshot.resolution_watch.overdue_live_signals,
+      review_required_live_signals:
+        args.snapshot.resolution_watch.review_required_live_signals,
+      tradable_open_live_signals:
+        args.snapshot.resolution_watch.tradable_open_live_signals,
+      tradable_open_expected_pnl_usd:
+        args.snapshot.resolution_watch.tradable_open_expected_pnl_usd,
+      review_required_open_expected_pnl_usd:
+        args.snapshot.resolution_watch.review_required_open_expected_pnl_usd,
       earliest_capital_review_at: args.runway.earliest_capital_review_at,
     },
     readiness: args.readiness,
