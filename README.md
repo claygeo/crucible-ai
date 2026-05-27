@@ -206,6 +206,11 @@ The GitHub workflow does not depend on the deployed frontend. It uses the public
 
 Manual `workflow_dispatch` dry runs are safe without service-role access and
 exercise the same snapshot and audit artifact path without inserting rows.
+Downloaded artifact directories can be checked offline with
+`npm run paper:artifact-audit -- ./paper-artifacts --json` after
+`gh run download <run_id> --repo claygeo/eivra --dir ./paper-artifacts`. The
+artifact audit fails non-v1, demo-sourced, malformed, duplicate-day, or
+under-covered proof rows before the files are counted as evidence.
 
 ## Stack
 

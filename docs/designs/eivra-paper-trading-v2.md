@@ -148,6 +148,11 @@ The 30-day proof window now has a durable audit surface:
   live artifact capture instead of failing before evidence is collected.
   Persisted writes still require `SUPABASE_SERVICE_ROLE_KEY`; manual dry runs
   remain safe and do not insert rows.
+- `npm run paper:artifact-audit -- <downloaded-artifacts> --json` audits
+  downloaded GitHub artifact directories offline. It scans for
+  `paper-snapshot-rows.json`, verifies live source, schema version, row-count
+  integrity, per-row proof fields, minimum live-strategy coverage, and duplicate
+  snapshot dates before artifact-only days are treated as usable evidence.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.

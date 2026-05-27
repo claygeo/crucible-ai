@@ -1,0 +1,633 @@
+import { existsSync, readFileSync, readdirSync, statSync } from "fs";
+import { basename, join, resolve } from "path";
+
+const ARTIFACT_FILE_NAME = "paper-snapshot-rows.json";
+const DEFAULT_MIN_LIVE_ROWS = 15;
+const VALID_SOURCES = new Set(["live", "demo"]);
+const VALID_SAMPLES = new Set(["live_only", "all", "backfill"]);
+const REQUIRED_ARTIFACT_FIELDS = [
+  "source",
+  "generated_at",
+  "controls",
+  "snapshot_date",
+  "schema_version",
+  "row_count",
+  "rows",
+] as const;
+const REQUIRED_ROW_FIELDS = [
+  "snapshot_date",
+  "source",
+  "schema_version",
+  "strategy_id",
+  "strategy_label",
+  "sample",
+  "controls_hash",
+  "controls",
+  "strategy_summary",
+  "proof_gate",
+  "exposure_ledger",
+  "daily_series",
+  "resolved_trades",
+  "open_signals",
+  "skipped_trades",
+  "resolved_net_pnl_usd",
+  "resolved_roi_on_stake",
+  "open_exposure_usd",
+  "open_expected_pnl_usd",
+  "proof_status",
+] as const;
+
+type CliOptions = {
+  allowDemo: boolean;
+  json: boolean;
+  soft: boolean;
+  minLiveRows: number;
+  inputs: string[];
+};
+
+type Check = {
+  code: string;
+  label: string;
+  status: "pass" | "fail";
+  detail: string;
+};
+
+type ArtifactAudit = {
+  path: string;
+  source: string | null;
+  generated_at: string | null;
+  snapshot_date: string | null;
+  schema_version: string | null;
+  declared_row_count: number | null;
+  actual_row_count: number;
+  live_row_count: number;
+  control_row_count: number;
+  selected_query_row_count: number;
+  strategy_ids: string[];
+  missing_fields: string[];
+  checks: Check[];
+};
+
+type FailedCheck = {
+  path: string | null;
+  code: string;
+  label: string;
+  detail: string;
+};
+
+function parseArgs(argv: string[]): CliOptions {
+  const inputs: string[] = [];
+  let allowDemo = false;
+  let json = process.env.npm_config_json === "true";
+  let soft = process.env.npm_config_soft === "true";
+  let minLiveRows = DEFAULT_MIN_LIVE_ROWS;
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    const [flag, inlineValue] = arg.split("=", 2);
+    const nextValue = () => {
+      if (inlineValue !== undefined) return inlineValue;
+      i += 1;
+      return argv[i] ?? "";
+    };
+
+    if (arg === "--allow-demo") {
+      allowDemo = true;
+    } else if (arg === "--json") {
+      json = true;
+    } else if (arg === "--soft") {
+      soft = true;
+    } else if (flag === "--min-live-rows") {
+      const parsed = Number(nextValue());
+      if (!Number.isInteger(parsed) || parsed < 1) {
+        throw new Error("--min-live-rows must be a positive integer.");
+      }
+      minLiveRows = parsed;
+    } else if (flag === "--dir" || flag === "--file") {
+      inputs.push(nextValue());
+    } else if (arg === "--help" || arg === "-h") {
+      printHelp();
+      process.exit(0);
+    } else {
+      inputs.push(arg);
+    }
+  }
+
+  return {
+    allowDemo,
+    json,
+    soft,
+    minLiveRows,
+    inputs: inputs.length > 0 ? inputs : ["."],
+  };
+}
+
+function printHelp() {
+  console.log(`Eivra paper-trading artifact audit
+
+Audit downloaded GitHub proof artifacts:
+  npm run paper:artifact-audit -- ./paper-artifacts --json
+
+Download then audit one run:
+  gh run download <run_id> --repo claygeo/eivra --dir ./paper-artifacts
+  npm run paper:artifact-audit -- ./paper-artifacts --json
+
+Options:
+  --dir <path>               Directory to scan recursively. Defaults to cwd.
+  --file <path>              Direct paper-snapshot-rows.json file to audit.
+  --json                     Print machine-readable JSON.
+  --soft                     Always exit 0 after printing the report.
+  --allow-demo               Do not fail demo-sourced artifacts.
+  --min-live-rows <number>   Minimum live strategy rows required per artifact. Default ${DEFAULT_MIN_LIVE_ROWS}.
+`);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function optionalString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function validDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === value
+  );
+}
+
+function validTimestamp(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  return !Number.isNaN(new Date(value).getTime());
+}
+
+function discoverArtifactFiles(inputs: string[]): string[] {
+  const found = new Set<string>();
+
+  const visit = (path: string) => {
+    const fullPath = resolve(process.cwd(), path);
+    if (!existsSync(fullPath)) {
+      throw new Error(`Artifact path does not exist: ${fullPath}`);
+    }
+
+    const stats = statSync(fullPath);
+    if (stats.isFile()) {
+      if (basename(fullPath) !== ARTIFACT_FILE_NAME) {
+        throw new Error(
+          `Expected ${ARTIFACT_FILE_NAME}, got file: ${fullPath}`,
+        );
+      }
+      found.add(fullPath);
+      return;
+    }
+
+    if (!stats.isDirectory()) return;
+    for (const entry of readdirSync(fullPath)) {
+      const child = join(fullPath, entry);
+      const childStats = statSync(child);
+      if (childStats.isDirectory()) {
+        visit(child);
+      } else if (
+        childStats.isFile() &&
+        basename(child) === ARTIFACT_FILE_NAME
+      ) {
+        found.add(child);
+      }
+    }
+  };
+
+  for (const input of inputs) visit(input);
+  return [...found].sort((a, b) => a.localeCompare(b));
+}
+
+function check(
+  checks: Check[],
+  code: string,
+  label: string,
+  passed: boolean,
+  detail: string,
+) {
+  checks.push({
+    code,
+    label,
+    status: passed ? "pass" : "fail",
+    detail,
+  });
+}
+
+function collectMissingFields(
+  value: Record<string, unknown>,
+  fields: readonly string[],
+  prefix: string,
+): string[] {
+  return fields
+    .filter((field) => !(field in value))
+    .map((field) => `${prefix}.${field}`);
+}
+
+function auditArtifact(path: string, options: CliOptions): ArtifactAudit {
+  const checks: Check[] = [];
+  const missingFields: string[] = [];
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(readFileSync(path, "utf8"));
+    check(checks, "json_parse", "JSON parses", true, "Artifact JSON parsed.");
+  } catch (error) {
+    check(
+      checks,
+      "json_parse",
+      "JSON parses",
+      false,
+      error instanceof Error ? error.message : String(error),
+    );
+    return emptyArtifactAudit(path, checks);
+  }
+
+  if (!isRecord(parsed)) {
+    check(
+      checks,
+      "artifact_object",
+      "Artifact is an object",
+      false,
+      "Top-level JSON is not an object.",
+    );
+    return emptyArtifactAudit(path, checks);
+  }
+
+  missingFields.push(
+    ...collectMissingFields(parsed, REQUIRED_ARTIFACT_FIELDS, "artifact"),
+  );
+
+  const rows = Array.isArray(parsed.rows) ? parsed.rows : [];
+  const source = optionalString(parsed.source);
+  const generatedAt = optionalString(parsed.generated_at);
+  const snapshotDate = optionalString(parsed.snapshot_date);
+  const schemaVersion = optionalString(parsed.schema_version);
+  const declaredRowCount = isFiniteNumber(parsed.row_count)
+    ? parsed.row_count
+    : null;
+
+  check(
+    checks,
+    "artifact_fields",
+    "Required artifact fields",
+    missingFields.length === 0,
+    missingFields.length === 0
+      ? "All required artifact fields are present."
+      : missingFields.join(", "),
+  );
+  check(
+    checks,
+    "source",
+    "Live source",
+    source === "live" || (options.allowDemo && source === "demo"),
+    source === "live"
+      ? "Artifact source is live."
+      : options.allowDemo && source === "demo"
+        ? "Demo artifact allowed by flag."
+        : `Artifact source is ${source ?? "missing"}.`,
+  );
+  check(
+    checks,
+    "known_source",
+    "Known source value",
+    typeof source === "string" && VALID_SOURCES.has(source),
+    source ? `Source: ${source}.` : "Source is missing.",
+  );
+  check(
+    checks,
+    "schema_version",
+    "Schema version",
+    schemaVersion === "1",
+    `Schema version: ${schemaVersion ?? "missing"}.`,
+  );
+  check(
+    checks,
+    "generated_at",
+    "Generated timestamp",
+    validTimestamp(generatedAt),
+    generatedAt ?? "generated_at is missing.",
+  );
+  check(
+    checks,
+    "snapshot_date",
+    "Snapshot date",
+    validDate(snapshotDate),
+    snapshotDate ?? "snapshot_date is missing.",
+  );
+  check(
+    checks,
+    "generated_date_matches",
+    "Generated timestamp matches snapshot date",
+    validTimestamp(generatedAt) &&
+      validDate(snapshotDate) &&
+      new Date(generatedAt).toISOString().slice(0, 10) === snapshotDate,
+    generatedAt && snapshotDate
+      ? `${new Date(generatedAt).toISOString().slice(0, 10)} vs ${snapshotDate}.`
+      : "Cannot compare missing generated_at/snapshot_date.",
+  );
+  check(
+    checks,
+    "row_count",
+    "Declared row count matches rows",
+    declaredRowCount === rows.length,
+    `${declaredRowCount ?? "missing"} declared / ${rows.length} actual.`,
+  );
+  check(
+    checks,
+    "rows_array",
+    "Rows array",
+    Array.isArray(parsed.rows) && rows.length > 0,
+    Array.isArray(parsed.rows)
+      ? `${rows.length} rows.`
+      : "rows is not an array.",
+  );
+
+  const strategyIds = new Set<string>();
+  const duplicateStrategyIds = new Set<string>();
+  let liveRowCount = 0;
+  let controlRowCount = 0;
+  let selectedQueryRowCount = 0;
+
+  rows.forEach((row, index) => {
+    const rowPrefix = `rows[${index}]`;
+    if (!isRecord(row)) {
+      missingFields.push(`${rowPrefix}.object`);
+      return;
+    }
+
+    missingFields.push(
+      ...collectMissingFields(row, REQUIRED_ROW_FIELDS, rowPrefix),
+    );
+
+    const strategyId =
+      optionalString(row.strategy_id) ?? `${rowPrefix}.unknown`;
+    if (strategyIds.has(strategyId)) duplicateStrategyIds.add(strategyId);
+    strategyIds.add(strategyId);
+    if (strategyId === "selected-query") selectedQueryRowCount += 1;
+
+    const sample = optionalString(row.sample);
+    if (sample === "live_only") liveRowCount += 1;
+    if (sample !== "live_only") controlRowCount += 1;
+
+    if (row.source !== source)
+      missingFields.push(`${rowPrefix}.source_mismatch`);
+    if (row.schema_version !== "1")
+      missingFields.push(`${rowPrefix}.schema_version`);
+    if (row.snapshot_date !== snapshotDate) {
+      missingFields.push(`${rowPrefix}.snapshot_date_mismatch`);
+    }
+    if (typeof sample !== "string" || !VALID_SAMPLES.has(sample)) {
+      missingFields.push(`${rowPrefix}.sample`);
+    }
+
+    for (const field of [
+      "resolved_trades",
+      "open_signals",
+      "skipped_trades",
+      "resolved_net_pnl_usd",
+      "resolved_roi_on_stake",
+      "open_exposure_usd",
+      "open_expected_pnl_usd",
+    ]) {
+      if (!isFiniteNumber(row[field])) {
+        missingFields.push(`${rowPrefix}.${field}`);
+      }
+    }
+
+    const strategySummary = row.strategy_summary;
+    if (!isRecord(strategySummary)) {
+      missingFields.push(`${rowPrefix}.strategy_summary.object`);
+    } else {
+      if (strategySummary.id !== row.strategy_id) {
+        missingFields.push(`${rowPrefix}.strategy_summary.id`);
+      }
+      if (strategySummary.sample !== row.sample) {
+        missingFields.push(`${rowPrefix}.strategy_summary.sample`);
+      }
+      if (!isRecord(strategySummary.proof_gate)) {
+        missingFields.push(`${rowPrefix}.strategy_summary.proof_gate`);
+      }
+      if (!isRecord(strategySummary.exposure_ledger)) {
+        missingFields.push(`${rowPrefix}.strategy_summary.exposure_ledger`);
+      }
+    }
+
+    const proofGate = row.proof_gate;
+    if (!isRecord(proofGate)) {
+      missingFields.push(`${rowPrefix}.proof_gate.object`);
+    } else if (proofGate.status !== row.proof_status) {
+      missingFields.push(`${rowPrefix}.proof_gate.status`);
+    }
+
+    if (!isRecord(row.exposure_ledger)) {
+      missingFields.push(`${rowPrefix}.exposure_ledger.object`);
+    }
+
+    const dailySeries = row.daily_series;
+    if (!isRecord(dailySeries)) {
+      missingFields.push(`${rowPrefix}.daily_series.object`);
+    } else {
+      if (dailySeries.strategy_id !== row.strategy_id) {
+        missingFields.push(`${rowPrefix}.daily_series.strategy_id`);
+      }
+      if (!Array.isArray(dailySeries.days)) {
+        missingFields.push(`${rowPrefix}.daily_series.days`);
+      }
+    }
+  });
+
+  check(
+    checks,
+    "row_fields",
+    "Required row evidence fields",
+    missingFields.filter((field) => field.startsWith("rows[")).length === 0,
+    missingFields.filter((field) => field.startsWith("rows[")).length === 0
+      ? "Every row has the required proof fields."
+      : `${missingFields.filter((field) => field.startsWith("rows[")).length} row field issue(s).`,
+  );
+  check(
+    checks,
+    "duplicate_strategy_ids",
+    "Unique strategy ids per artifact",
+    duplicateStrategyIds.size === 0,
+    duplicateStrategyIds.size === 0
+      ? "No duplicate strategy ids in artifact."
+      : [...duplicateStrategyIds].sort().join(", "),
+  );
+  check(
+    checks,
+    "live_row_coverage",
+    "Minimum live strategy rows",
+    liveRowCount >= options.minLiveRows,
+    `${liveRowCount}/${options.minLiveRows} live rows.`,
+  );
+
+  return {
+    path,
+    source,
+    generated_at: generatedAt,
+    snapshot_date: snapshotDate,
+    schema_version: schemaVersion,
+    declared_row_count: declaredRowCount,
+    actual_row_count: rows.length,
+    live_row_count: liveRowCount,
+    control_row_count: controlRowCount,
+    selected_query_row_count: selectedQueryRowCount,
+    strategy_ids: [...strategyIds].sort((a, b) => a.localeCompare(b)),
+    missing_fields: [...new Set(missingFields)].sort((a, b) =>
+      a.localeCompare(b),
+    ),
+    checks,
+  };
+}
+
+function emptyArtifactAudit(path: string, checks: Check[]): ArtifactAudit {
+  return {
+    path,
+    source: null,
+    generated_at: null,
+    snapshot_date: null,
+    schema_version: null,
+    declared_row_count: null,
+    actual_row_count: 0,
+    live_row_count: 0,
+    control_row_count: 0,
+    selected_query_row_count: 0,
+    strategy_ids: [],
+    missing_fields: [],
+    checks,
+  };
+}
+
+function buildReport(options: CliOptions, files: string[]) {
+  const artifactAudits = files.map((file) => auditArtifact(file, options));
+  const failedChecks: FailedCheck[] = artifactAudits.flatMap((artifact) =>
+    artifact.checks
+      .filter((item) => item.status === "fail")
+      .map((item) => ({
+        path: artifact.path,
+        code: item.code,
+        label: item.label,
+        detail: item.detail,
+      })),
+  );
+  const snapshotDates = artifactAudits
+    .map((artifact) => artifact.snapshot_date)
+    .filter((date): date is string => Boolean(date))
+    .sort();
+  const duplicateSnapshotDates = snapshotDates.filter(
+    (date, index) => snapshotDates.indexOf(date) !== index,
+  );
+  const uniqueSnapshotDates = [...new Set(snapshotDates)];
+
+  if (files.length === 0) {
+    failedChecks.push({
+      path: null,
+      code: "artifact_discovery",
+      label: "Artifact discovery",
+      detail: `No ${ARTIFACT_FILE_NAME} files found in the requested path(s).`,
+    });
+  }
+  if (duplicateSnapshotDates.length > 0) {
+    failedChecks.push({
+      path: null,
+      code: "duplicate_snapshot_dates",
+      label: "Unique snapshot dates",
+      detail: [...new Set(duplicateSnapshotDates)].sort().join(", "),
+    });
+  }
+
+  const latestSnapshotDate =
+    uniqueSnapshotDates[uniqueSnapshotDates.length - 1] ?? null;
+  const completeArtifactDays = new Set(
+    artifactAudits
+      .filter(
+        (artifact) =>
+          artifact.snapshot_date &&
+          artifact.live_row_count >= options.minLiveRows &&
+          artifact.checks.every((item) => item.status === "pass"),
+      )
+      .map((artifact) => artifact.snapshot_date as string),
+  );
+
+  return {
+    verdict: failedChecks.length === 0 ? "pass" : "blocked",
+    checked_at: new Date().toISOString(),
+    artifact_file_name: ARTIFACT_FILE_NAME,
+    allow_demo: options.allowDemo,
+    min_live_rows: options.minLiveRows,
+    artifact_count: files.length,
+    artifact_paths: files,
+    snapshot_dates: uniqueSnapshotDates,
+    duplicate_snapshot_dates: [...new Set(duplicateSnapshotDates)].sort(),
+    coverage_days: uniqueSnapshotDates.length,
+    complete_artifact_days: completeArtifactDays.size,
+    latest_snapshot_date: latestSnapshotDate,
+    row_count: artifactAudits.reduce(
+      (sum, artifact) => sum + artifact.actual_row_count,
+      0,
+    ),
+    live_row_count: artifactAudits.reduce(
+      (sum, artifact) => sum + artifact.live_row_count,
+      0,
+    ),
+    control_row_count: artifactAudits.reduce(
+      (sum, artifact) => sum + artifact.control_row_count,
+      0,
+    ),
+    selected_query_row_count: artifactAudits.reduce(
+      (sum, artifact) => sum + artifact.selected_query_row_count,
+      0,
+    ),
+    sources: [
+      ...new Set(
+        artifactAudits.map((artifact) => artifact.source).filter(Boolean),
+      ),
+    ].sort(),
+    schema_versions: [
+      ...new Set(
+        artifactAudits
+          .map((artifact) => artifact.schema_version)
+          .filter(Boolean),
+      ),
+    ].sort(),
+    missing_fields: [
+      ...new Set(artifactAudits.flatMap((artifact) => artifact.missing_fields)),
+    ].sort(),
+    failed_checks: failedChecks,
+    artifacts: artifactAudits,
+    exit_code: failedChecks.length === 0 || options.soft ? 0 : 1,
+  };
+}
+
+function emit(_json: boolean, value: unknown) {
+  console.log(JSON.stringify(value, null, 2));
+}
+
+function main() {
+  const options = parseArgs(process.argv.slice(2));
+  const files = discoverArtifactFiles(options.inputs);
+  const report = buildReport(options, files);
+  emit(options.json, report);
+  if (report.exit_code !== 0) {
+    process.exitCode = report.exit_code;
+  }
+}
+
+try {
+  main();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+}
