@@ -87,6 +87,32 @@ export type PublishedPaperTradingArtifactProof = {
   error: string | null;
 };
 
+export type PaperTradingWriteReadinessStatus =
+  | "persisting"
+  | "artifact_only"
+  | "unknown";
+
+export type PaperTradingWriteReadiness = {
+  schema_version: "1";
+  generated_at: string;
+  status: PaperTradingWriteReadinessStatus;
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  write_enabled: boolean | null;
+  effective_dry_run: boolean | null;
+  requested_dry_run: boolean | null;
+  mode_reason: string | null;
+  artifact_proof_status: PublishedPaperTradingArtifactProof["status"];
+  artifact_workflow_status: PaperTradingArtifactWorkflowStatus["status"];
+  latest_workflow_run_id: number | null;
+  latest_workflow_run_url: string | null;
+  latest_published_at: string | null;
+  blockers: string[];
+};
+
 type GitHubRunPayload = {
   id?: unknown;
   status?: unknown;
@@ -162,6 +188,70 @@ function objectOrNull(value: unknown): Record<string, unknown> | null {
 
 function arrayOrEmpty(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
+}
+
+export function buildPaperTradingWriteReadiness(args: {
+  artifactWorkflow: PaperTradingArtifactWorkflowStatus;
+  publishedArtifactProof: PublishedPaperTradingArtifactProof;
+  generatedAt?: string;
+}): PaperTradingWriteReadiness {
+  const workflowMode = args.publishedArtifactProof.workflow_mode;
+  const writeEnabled = booleanOrNull(workflowMode?.write_enabled);
+  const effectiveDryRun = booleanOrNull(workflowMode?.effective_dry_run);
+  const requestedDryRun = booleanOrNull(workflowMode?.requested_dry_run);
+  const modeReason = nullableString(workflowMode?.mode_reason);
+  const latestRun = args.artifactWorkflow.latest_run;
+  const status: PaperTradingWriteReadinessStatus =
+    writeEnabled === true && effectiveDryRun === false
+      ? "persisting"
+      : writeEnabled === false || effectiveDryRun === true
+        ? "artifact_only"
+        : "unknown";
+  const blockers =
+    status === "artifact_only"
+      ? [
+          modeReason ??
+            "Paper snapshot workflow is publishing artifacts without persisting Supabase rows.",
+        ]
+      : status === "unknown"
+        ? ["No published workflow_mode is available for the latest proof."]
+        : [];
+
+  return {
+    schema_version: "1",
+    generated_at: args.generatedAt ?? new Date().toISOString(),
+    status,
+    status_label:
+      status === "persisting"
+        ? "Persisting"
+        : status === "artifact_only"
+          ? "Artifact only"
+          : "Unknown",
+    message:
+      status === "persisting"
+        ? "Daily proof captures are configured to write Supabase snapshot rows and publish GitHub artifacts."
+        : status === "artifact_only"
+          ? "Daily proof captures are publishing GitHub artifacts, but Supabase snapshot rows are not being written."
+          : "The latest public proof does not expose workflow write mode yet.",
+    next_required_action:
+      status === "persisting"
+        ? "Keep monitoring daily captures and resolved live paper tickets."
+        : status === "artifact_only"
+          ? "Configure SUPABASE_SERVICE_ROLE_KEY for the Paper trading snapshot workflow before relying on the persisted dashboard row trail."
+          : "Run the Paper trading snapshot workflow with workflow-mode publishing enabled.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    write_enabled: writeEnabled,
+    effective_dry_run: effectiveDryRun,
+    requested_dry_run: requestedDryRun,
+    mode_reason: modeReason,
+    artifact_proof_status: args.publishedArtifactProof.status,
+    artifact_workflow_status: args.artifactWorkflow.status,
+    latest_workflow_run_id: latestRun?.id ?? null,
+    latest_workflow_run_url: latestRun?.html_url ?? null,
+    latest_published_at: args.publishedArtifactProof.generated_at,
+    blockers,
+  };
 }
 
 function workflowFileName(): string {

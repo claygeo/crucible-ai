@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
 import {
+  buildPaperTradingWriteReadiness,
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
@@ -153,6 +154,12 @@ function capitalReviewPacketStatusClass(status: string) {
   return "bg-text-muted/10 text-text-muted";
 }
 
+function writeReadinessStatusClass(status: string) {
+  if (status === "persisting") return "bg-positive/10 text-positive";
+  if (status === "artifact_only") return "bg-warn/10 text-warn";
+  return "bg-text-muted/10 text-text-muted";
+}
+
 function proofEvidenceSourceStatusClass(status: string) {
   if (status === "active" || status === "available" || status === "reviewable") {
     return "bg-positive/10 text-positive";
@@ -285,6 +292,10 @@ export default async function TradingPage({
     proofReadiness,
     proofRunway,
   });
+  const writeReadiness = buildPaperTradingWriteReadiness({
+    artifactWorkflow,
+    publishedArtifactProof,
+  });
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -313,6 +324,7 @@ export default async function TradingPage({
       : "unavailable";
   const resolutionReviewJsonHref = `/api/trading-resolution-review?${selectedQuery}`;
   const capitalReviewJsonHref = `/api/trading-capital-review?${selectedQuery}`;
+  const writeReadinessJsonHref = "/api/trading-write-readiness";
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -1025,6 +1037,12 @@ export default async function TradingPage({
                 artifact json
               </Link>
               <Link
+                href={writeReadinessJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                write readiness
+              </Link>
+              <Link
                 href={publishedProofHref}
                 className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
               >
@@ -1038,7 +1056,7 @@ export default async function TradingPage({
               </Link>
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Capital review
@@ -1061,6 +1079,20 @@ export default async function TradingPage({
                 )}`}
               >
                 {registrySync.status_label}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Write mode
+              </div>
+              <div className="mt-2">
+                <span
+                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${writeReadinessStatusClass(
+                    writeReadiness.status
+                  )}`}
+                >
+                  {writeReadiness.status_label}
+                </span>
               </div>
             </div>
             <div>
@@ -1132,6 +1164,21 @@ export default async function TradingPage({
               {int(registrySync.persisted_latest_live_strategy_count)}/
               {int(registrySync.current_live_strategy_count)} live variants
             </span>
+            <Link
+              href={writeReadinessJsonHref}
+              className={`${
+                writeReadiness.status === "persisting"
+                  ? "text-positive"
+                  : "text-warn"
+              } hover:text-text-primary transition-colors`}
+            >
+              write readiness {writeReadiness.status_label.toLowerCase()}
+            </Link>
+            {writeReadiness.status !== "persisting" ? (
+              <span className="text-warn">
+                {writeReadiness.next_required_action}
+              </span>
+            ) : null}
             {registrySync.missing_live_strategy_count > 0 ? (
               <span className="text-warn">
                 pending capture {int(registrySync.missing_live_strategy_count)} variants
