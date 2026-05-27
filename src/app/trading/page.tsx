@@ -82,6 +82,10 @@ function captureCalendarBadgeClass(status: string) {
   return "bg-text-muted/10 text-text-muted";
 }
 
+function edgePoints(n: number) {
+  return `${Math.round(n * 100)}pp`;
+}
+
 const SAMPLE_LABELS = {
   live_only: "Live only",
   all: "All",
@@ -114,7 +118,7 @@ export default async function TradingPage({
   const controls = parseTradingControls(await searchParams);
   const [snapshot, persisted] = await Promise.all([
     getTradingSnapshot(controls),
-    loadPaperTradingSnapshotHistory(500),
+    loadPaperTradingSnapshotHistory(1000),
   ]);
   const leader = snapshot.agent_summaries[0];
   const liveResolved =
@@ -126,6 +130,7 @@ export default async function TradingPage({
   const liveStrategyRows = snapshot.strategy_variants.filter(
     (strategy) => strategy.sample === "live_only"
   );
+  const agentEdgeRows = snapshot.agent_edge_matrix;
   const evidenceRows = snapshot.selected_daily_snapshots;
   const selectedStrategy = snapshot.selected_strategy;
   const selectedProof = selectedStrategy.proof_gate;
@@ -135,7 +140,7 @@ export default async function TradingPage({
   );
   const selectedQuery = tradingControlsToQuery(snapshot.controls);
   const jsonHref = `/api/trading.json?${selectedQuery}`;
-  const snapshotJsonHref = "/api/trading-snapshots?limit=500";
+  const snapshotJsonHref = "/api/trading-snapshots?limit=1000";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
   ).sort((a, b) => a - b);
@@ -1173,6 +1178,104 @@ export default async function TradingPage({
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="panel px-5 py-5 flex flex-col gap-4 min-w-0 lg:col-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="heading text-base text-text-primary">Agent edge rules</h2>
+              <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                canonical live matrix
+              </span>
+            </div>
+            {agentEdgeRows.length === 0 ? (
+              <div className="text-sm text-text-muted mono py-8">
+                [no agent edge rules available]
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full" aria-label="Agent edge rule matrix">
+                  <thead>
+                    <tr className="border-b border-border-subtle text-text-muted">
+                      <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Agent</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Edge</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Proof</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Resolved</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Open</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Skipped</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">P&amp;L</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">ROI</th>
+                      <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Open EV</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-subtle/60">
+                    {agentEdgeRows.map((rule) => {
+                      const agent = AGENTS.find((item) => item.id === rule.agent_id);
+                      const hueTxt = agent ? HUE_TO_TEXT[agent.hue] : "text-text-primary";
+                      const hueBg = agent ? HUE_TO_BG[agent.hue] : "bg-accent";
+
+                      return (
+                        <tr key={`${rule.agent_id}-${rule.min_edge}`}>
+                          <td className="py-3 pr-3">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`w-2 h-2 rounded-full ${hueBg}`}
+                                aria-hidden="true"
+                              />
+                              <span className={`text-sm ${hueTxt}`}>
+                                {rule.agent_name}
+                              </span>
+                            </div>
+                            <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                              {rule.stake_mode.replace("_", " ")}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {edgePoints(rule.min_edge)}
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <span
+                              className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofStatusClass(rule.proof_status)}`}
+                            >
+                              {rule.proof_status_label}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {int(rule.resolved_trades)}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-text-secondary">
+                            {int(rule.open_signals)}
+                          </td>
+                          <td className="py-3 px-3 mono text-right text-warn">
+                            {int(rule.skipped_trades)}
+                          </td>
+                          <td
+                            className={`py-3 px-3 mono text-right ${pnlClass(
+                              rule.resolved_net_pnl_usd
+                            )}`}
+                          >
+                            {dollars(rule.resolved_net_pnl_usd, 0)}
+                          </td>
+                          <td
+                            className={`py-3 px-3 mono text-right ${pnlClass(
+                              rule.resolved_roi_on_stake
+                            )}`}
+                          >
+                            {pct(rule.resolved_roi_on_stake, 1)}
+                          </td>
+                          <td
+                            className={`py-3 pl-3 mono text-right ${pnlClass(
+                              rule.open_expected_pnl_usd
+                            )}`}
+                          >
+                            {dollars(rule.open_expected_pnl_usd, 0)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="panel px-5 py-5 flex flex-col gap-4 min-w-0 lg:col-span-2">
