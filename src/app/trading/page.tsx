@@ -541,7 +541,10 @@ export default async function TradingPage({
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Latest capture
               </div>
-              <div className="heading text-2xl text-text-primary mt-1">
+              <div
+                suppressHydrationWarning
+                className="heading text-2xl text-text-primary mt-1"
+              >
                 {persisted.latest_captured_at
                   ? relativeTime(persisted.latest_captured_at)
                   : "-"}
@@ -563,7 +566,10 @@ export default async function TradingPage({
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Next capture
               </div>
-              <div className="heading text-2xl text-text-primary mt-1">
+              <div
+                suppressHydrationWarning
+                className="heading text-2xl text-text-primary mt-1"
+              >
                 {relativeTime(captureHealth.next_expected_capture_at)}
               </div>
             </div>
@@ -679,7 +685,10 @@ export default async function TradingPage({
                   <tbody className="divide-y divide-border-subtle/60">
                     {latestPersistedSnapshots.map((row) => (
                       <tr key={row.id}>
-                        <td className="py-3 pr-3 mono text-text-secondary">
+                        <td
+                          suppressHydrationWarning
+                          className="py-3 pr-3 mono text-text-secondary"
+                        >
                           {relativeTime(row.captured_at)}
                         </td>
                         <td className="py-3 px-3">
@@ -1204,7 +1213,9 @@ export default async function TradingPage({
                       <span className={pnlClass(t.expected_pnl_usd)}>
                         EV {dollars(t.expected_pnl_usd, 2)}
                       </span>
-                      <span>locked {relativeTime(t.created_at)}</span>
+                      <span suppressHydrationWarning>
+                        locked {relativeTime(t.created_at)}
+                      </span>
                     </div>
                   </div>
                 ))}
