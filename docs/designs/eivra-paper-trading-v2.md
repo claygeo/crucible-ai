@@ -152,7 +152,11 @@ The 30-day proof window now has a durable audit surface:
   downloaded GitHub artifact directories offline. It scans for
   `paper-snapshot-rows.json`, verifies live source, schema version, row-count
   integrity, per-row proof fields, minimum live-strategy coverage, and duplicate
-  snapshot dates before artifact-only days are treated as usable evidence.
+  snapshot dates before artifact-only days are treated as usable evidence. When
+  those checks pass, the command emits `artifact_proof`, a read-only proof
+  summary, readiness/runway report, agent-edge proof matrix, and top strategy
+  rollups built from downloaded rows with the same durable proof logic used for
+  Supabase-backed snapshots.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.
