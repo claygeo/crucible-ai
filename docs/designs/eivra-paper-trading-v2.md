@@ -187,6 +187,12 @@ The 30-day proof window now has a durable audit surface:
 - `/api/trading.json` embeds the same contract as `paper_proof_audit` and
   `persistence.proof_audit`, so the main public trading feed carries the
   capital-review gate alongside the raw snapshot, artifact, and strategy data.
+- `npm run paper:proof-smoke` is the read-only drift check for that contract.
+  It exercises `/api/trading.json`, `/api/trading-proof-audit`, and the shared
+  audit builder's negative cases, including empty published outcome matrices,
+  pending-P&L-as-proof regressions, missing workflow provenance, unknown
+  workflow write mode, and Supabase-primary proof precedence over dry-run
+  artifact context.
 - A Netlify scheduled function runs the writer once per day on published deploys.
 - `.github/workflows/paper-trading-snapshot.yml` is the deploy-independent
   fallback recorder. It runs the same local snapshot builder daily at 05:22 UTC,

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
+import { installNodeWebSocket } from "./node-websocket";
 
 const DEFAULT_QUERY: Record<string, string> = {
   sample: "live_only",
@@ -130,6 +131,7 @@ Options:
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const loadedEnvFiles = options.envFiles.filter((file) => loadEnvFile(file));
+  installNodeWebSocket();
   const { getTradingSnapshot, parseTradingControls } =
     await import("../src/lib/trading");
   const { buildPaperTradingProofAudit } =
