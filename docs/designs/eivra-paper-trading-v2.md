@@ -199,6 +199,11 @@ The 30-day proof window now has a durable audit surface:
   ticket. The workflow snapshot summary and published artifact proof carry the
   same `agent_edge_trade_ledger`, so a future profitable-rule claim can be
   audited back to individual resolved tickets rather than only rollup totals.
+- `GET /api/trading-agent-edge-watchlist` exposes the paper-only open-signal
+  ledger for those same canonical rules. It records tradable versus
+  review-required open live paper tickets, exposure, open EV, close timing, and
+  top signals before markets resolve into the trade ledger. Snapshot summaries
+  and published artifact proof carry the same `agent_edge_watchlist`.
 - `/api/trading.json` and `GET /api/trading-snapshots` expose
   `proof_evidence_sources`, a paper-only source map that separates Supabase
   persistence, GitHub artifact bundles, live resolution hygiene, and the capital
