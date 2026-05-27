@@ -87,6 +87,11 @@ export const DEFAULT_TRADING_CONTROLS: TradingControls = {
   max_open_exposure_usd: PAPER_TRADING_CONFIG.maxOpenExposureUsd,
 };
 
+function readEnv(name: string): string | undefined {
+  const value = process.env[name]?.trim();
+  return value ? value : undefined;
+}
+
 type MarketStatus = "open" | "pending_resolution" | "resolved" | "disputed" | "voided";
 
 type PredictionMarketRow = {
@@ -1489,10 +1494,10 @@ async function loadPredictionRows(): Promise<{
   source: TradingSource;
   rows: PredictionMarketRow[];
 }> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = readEnv("NEXT_PUBLIC_SUPABASE_URL");
   const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    readEnv("SUPABASE_SERVICE_ROLE_KEY") ??
+    readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
   if (supabaseUrl && supabaseKey) {
     try {
