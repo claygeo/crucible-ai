@@ -92,6 +92,7 @@ export type PublishedPaperTradingArtifactProof = {
   would_trade_today: Record<string, unknown> | null;
   market_exposure_digest: Record<string, unknown> | null;
   agent_edge_watchlist: Record<string, unknown> | null;
+  agent_edge_runway: Record<string, unknown> | null;
   agent_edge_trade_ledger: Record<string, unknown> | null;
   agent_edge_proof: Record<string, unknown> | null;
   agent_edge_proof_matrix: unknown[];
@@ -967,6 +968,7 @@ function unavailablePublishedProof(
     would_trade_today: null,
     market_exposure_digest: null,
     agent_edge_watchlist: null,
+    agent_edge_runway: null,
     agent_edge_trade_ledger: null,
     agent_edge_proof: null,
     agent_edge_proof_matrix: [],
@@ -1009,6 +1011,9 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
     const agentEdgeWatchlist =
       objectOrNull(artifactProof?.agent_edge_watchlist) ??
       objectOrNull(proof.agent_edge_watchlist);
+    const agentEdgeRunway =
+      objectOrNull(artifactProof?.agent_edge_runway) ??
+      objectOrNull(proof.agent_edge_runway);
     const agentEdgeProof =
       objectOrNull(artifactProof?.agent_edge_proof) ??
       objectOrNull(proof.agent_edge_proof);
@@ -1075,6 +1080,7 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
       agent_edge_watchlist: agentEdgeWatchlist,
+      agent_edge_runway: agentEdgeRunway,
       agent_edge_trade_ledger: agentEdgeTradeLedger,
       agent_edge_proof: agentEdgeProof,
       agent_edge_proof_matrix: arrayOrEmpty(

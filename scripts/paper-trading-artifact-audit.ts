@@ -98,6 +98,7 @@ type SnapshotSummaryContext = {
   would_trade_today: Record<string, unknown> | null;
   market_exposure_digest: Record<string, unknown> | null;
   agent_edge_watchlist: Record<string, unknown> | null;
+  agent_edge_runway: Record<string, unknown> | null;
   agent_edge_trade_ledger: Record<string, unknown> | null;
   status: "available" | "missing" | "error";
   message: string;
@@ -319,6 +320,7 @@ function readSnapshotSummary(
           would_trade_today: null,
           market_exposure_digest: null,
           agent_edge_watchlist: null,
+          agent_edge_runway: null,
           agent_edge_trade_ledger: null,
           status: "missing",
           message: "Snapshot summary file was not found.",
@@ -339,6 +341,7 @@ function readSnapshotSummary(
         would_trade_today: null,
         market_exposure_digest: null,
         agent_edge_watchlist: null,
+        agent_edge_runway: null,
         agent_edge_trade_ledger: null,
         status: "error",
         message: "Snapshot summary JSON is not an object.",
@@ -359,6 +362,9 @@ function readSnapshotSummary(
     const agentEdgeWatchlist = isRecord(parsed.agent_edge_watchlist)
       ? parsed.agent_edge_watchlist
       : null;
+    const agentEdgeRunway = isRecord(parsed.agent_edge_runway)
+      ? parsed.agent_edge_runway
+      : null;
     const agentEdgeTradeLedger = isRecord(parsed.agent_edge_trade_ledger)
       ? parsed.agent_edge_trade_ledger
       : null;
@@ -372,6 +378,7 @@ function readSnapshotSummary(
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
       agent_edge_watchlist: agentEdgeWatchlist,
+      agent_edge_runway: agentEdgeRunway,
       agent_edge_trade_ledger: agentEdgeTradeLedger,
       status: resolutionWatch ? "available" : "error",
       message: resolutionWatch
@@ -389,6 +396,7 @@ function readSnapshotSummary(
       would_trade_today: null,
       market_exposure_digest: null,
       agent_edge_watchlist: null,
+      agent_edge_runway: null,
       agent_edge_trade_ledger: null,
       status: "error",
       message: error instanceof Error ? error.message : String(error),
@@ -897,6 +905,7 @@ async function buildArtifactProof(
   wouldTradeToday: Record<string, unknown> | null,
   marketExposureDigest: Record<string, unknown> | null,
   agentEdgeWatchlist: Record<string, unknown> | null,
+  agentEdgeRunway: Record<string, unknown> | null,
   agentEdgeTradeLedger: Record<string, unknown> | null,
   workflowMode: WorkflowModeContext | null,
 ) {
@@ -931,6 +940,7 @@ async function buildArtifactProof(
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
       agent_edge_watchlist: agentEdgeWatchlist,
+      agent_edge_runway: agentEdgeRunway,
       agent_edge_trade_ledger: agentEdgeTradeLedger,
       agent_edge_proof: null,
       agent_edge_proof_matrix: [],
@@ -1009,6 +1019,7 @@ async function buildArtifactProof(
     would_trade_today: wouldTradeToday,
     market_exposure_digest: marketExposureDigest,
     agent_edge_watchlist: agentEdgeWatchlist,
+    agent_edge_runway: agentEdgeRunway,
     agent_edge_trade_ledger: agentEdgeTradeLedger,
     agent_edge_proof: agentEdgeProof,
     agent_edge_proof_matrix: agentEdgeProofMatrix,
@@ -1198,6 +1209,7 @@ async function buildReport(options: CliOptions, files: string[]) {
     }
     const agentEdgeTradeLedger = latestSnapshotSummary.agent_edge_trade_ledger;
     const agentEdgeWatchlist = latestSnapshotSummary.agent_edge_watchlist;
+    const agentEdgeRunway = latestSnapshotSummary.agent_edge_runway;
     if (!agentEdgeWatchlist) {
       failedChecks.push({
         path: latestSnapshotSummary.path,
@@ -1215,6 +1227,25 @@ async function buildReport(options: CliOptions, files: string[]) {
         label: "Agent-edge watchlist paper-only lock",
         detail:
           "agent_edge_watchlist must keep paper_only=true and real_money_execution_allowed=false.",
+      });
+    }
+    if (!agentEdgeRunway) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "agent_edge_runway",
+        label: "Agent-edge proof runway",
+        detail: "Snapshot summary is missing agent_edge_runway.",
+      });
+    } else if (
+      agentEdgeRunway.paper_only !== true ||
+      agentEdgeRunway.real_money_execution_allowed !== false
+    ) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "agent_edge_runway_paper_only",
+        label: "Agent-edge runway paper-only lock",
+        detail:
+          "agent_edge_runway must keep paper_only=true and real_money_execution_allowed=false.",
       });
     }
     if (!agentEdgeTradeLedger) {
@@ -1245,6 +1276,7 @@ async function buildReport(options: CliOptions, files: string[]) {
     latestSnapshotSummary?.would_trade_today ?? null,
     latestSnapshotSummary?.market_exposure_digest ?? null,
     latestSnapshotSummary?.agent_edge_watchlist ?? null,
+    latestSnapshotSummary?.agent_edge_runway ?? null,
     latestSnapshotSummary?.agent_edge_trade_ledger ?? null,
     workflowMode,
   );
@@ -1256,6 +1288,9 @@ async function buildReport(options: CliOptions, files: string[]) {
     : null;
   const agentEdgeWatchlist = isRecord(proof.agent_edge_watchlist)
     ? proof.agent_edge_watchlist
+    : null;
+  const agentEdgeRunway = isRecord(proof.agent_edge_runway)
+    ? proof.agent_edge_runway
     : null;
   if (proof.status === "available" && !capitalReviewPacket) {
     failedChecks.push({
@@ -1281,6 +1316,14 @@ async function buildReport(options: CliOptions, files: string[]) {
       detail: "Available artifact proof must include agent_edge_watchlist.",
     });
   }
+  if (proof.status === "available" && !agentEdgeRunway) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_runway",
+      label: "Agent-edge proof runway",
+      detail: "Available artifact proof must include agent_edge_runway.",
+    });
+  }
   if (
     agentEdgeWatchlist &&
     (agentEdgeWatchlist.paper_only !== true ||
@@ -1292,6 +1335,19 @@ async function buildReport(options: CliOptions, files: string[]) {
       label: "Agent-edge watchlist paper-only lock",
       detail:
         "agent_edge_watchlist must keep paper_only=true and real_money_execution_allowed=false.",
+    });
+  }
+  if (
+    agentEdgeRunway &&
+    (agentEdgeRunway.paper_only !== true ||
+      agentEdgeRunway.real_money_execution_allowed !== false)
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_runway_paper_only",
+      label: "Agent-edge runway paper-only lock",
+      detail:
+        "agent_edge_runway must keep paper_only=true and real_money_execution_allowed=false.",
     });
   }
   if (
