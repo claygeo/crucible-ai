@@ -12,6 +12,7 @@
 # Usage:
 #   scp -P 2222 vps-bootstrap.sh root@77.42.83.22:/tmp/
 #   ssh -p 2222 root@77.42.83.22 'bash /tmp/vps-bootstrap.sh'
+#   The script prompts for SUPABASE_SERVICE_ROLE_KEY if it is not already set.
 
 set -e
 
@@ -84,10 +85,19 @@ sudo -u "$SERVICE_USER" bash -c "cd $CRUCIBLE_DIR && npm install --no-audit --no
 ENV_FILE="$CRUCIBLE_DIR/.env.local"
 if [ ! -f "$ENV_FILE" ]; then
   echo "[5/8] Creating .env.local..."
-  cat > "$ENV_FILE" <<'EOF'
+  if [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+    read -rsp "Supabase service role key: " SUPABASE_SERVICE_ROLE_KEY
+    echo
+  fi
+  if [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+    echo "SUPABASE_SERVICE_ROLE_KEY is required to create $ENV_FILE." >&2
+    exit 1
+  fi
+
+  cat > "$ENV_FILE" <<EOF
 NEXT_PUBLIC_SUPABASE_URL=https://atxtnpgwrcesifejltah.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_HgRUYgzIEdElWBYLM-DbKQ_yiZLFeL0
-SUPABASE_SERVICE_ROLE_KEY=***REMOVED-SUPABASE-SERVICE-ROLE-JWT***
+SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
 EOF
   chown "$SERVICE_USER":"$SERVICE_USER" "$ENV_FILE"
   chmod 600 "$ENV_FILE"
