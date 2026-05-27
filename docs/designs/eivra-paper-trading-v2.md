@@ -286,7 +286,12 @@ The 30-day proof window now has a durable audit surface:
   fee, fill-size, and slippage-adjusted entry data are not persisted yet. The
   proof-readiness checklist now treats that missing execution-quality evidence
   as a hard blocker before any profitable paper candidate can move to operator
-  capital review.
+  capital review. The same payload also runs rule-level execution-friction
+  stress tests at 50, 100, and 250 bps of paper stake. These stress rows show
+  whether a future profitable-looking agent/edge rule is robust or fragile
+  after conservative friction, but they are explicitly marked
+  `stress_evidence_counts_as_proof: false` until real source-level liquidity
+  snapshots exist.
 - `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
   the latest paper-proof workflow run, matching artifact bundle, expiry, run
   URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,
