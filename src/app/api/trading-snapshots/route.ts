@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
+import { loadPaperTradingArtifactWorkflowStatus } from "@/lib/trading-artifacts";
 import {
   buildPaperTradingProofEvidenceSources,
   loadPaperTradingSnapshotHistory,
@@ -28,7 +29,10 @@ function authorized(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const history = await loadPaperTradingSnapshotHistory(parseLimit(request));
+  const [history, artifactWorkflow] = await Promise.all([
+    loadPaperTradingSnapshotHistory(parseLimit(request)),
+    loadPaperTradingArtifactWorkflowStatus(5),
+  ]);
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: history,
     proofReadiness: history.proof_readiness,
@@ -51,12 +55,14 @@ export async function GET(request: NextRequest) {
         proof_readiness: history.proof_readiness,
         proof_runway: history.proof_runway,
         proof_evidence_sources: proofEvidenceSources,
+        github_artifact_workflow: artifactWorkflow,
         agent_edge_proof_matrix: history.agent_edge_proof_matrix,
       },
       proof_summary: history.proof_summary,
       proof_readiness: history.proof_readiness,
       proof_runway: history.proof_runway,
       proof_evidence_sources: proofEvidenceSources,
+      github_artifact_workflow: artifactWorkflow,
       capture_calendar: history.capture_calendar,
       agent_edge_proof_matrix: history.agent_edge_proof_matrix,
       count: history.snapshots.length,
@@ -69,7 +75,7 @@ export async function GET(request: NextRequest) {
         "cache-control": "no-store, max-age=0",
         "access-control-allow-origin": "*",
       },
-    }
+    },
   );
 }
 
@@ -81,7 +87,7 @@ export async function POST(request: NextRequest) {
         message:
           "Set CRON_SHARED_SECRET and call with Authorization: Bearer <secret>.",
       },
-      { status: 401, headers: { "cache-control": "no-store" } }
+      { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
 
@@ -99,6 +105,6 @@ export async function POST(request: NextRequest) {
     {
       status: result.status === "written" ? 201 : 503,
       headers: { "cache-control": "no-store, max-age=0" },
-    }
+    },
   );
 }
