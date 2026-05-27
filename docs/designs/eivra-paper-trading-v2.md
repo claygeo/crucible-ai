@@ -141,7 +141,9 @@ The 30-day proof window now has a durable audit surface:
   pass/collecting/blocked gates: archive availability, paper-only lock, capture
   freshness, registry sync, current resolution hygiene, 30-day capture window,
   resolved-trade minimum, positive window P&L/ROI, drawdown, and
-  capital-review boundary.
+  capital-review boundary. The readiness payload also includes per-status item
+  counts, blocked item ids, and structured evidence for gates with live blockers
+  such as overdue resolution signals.
 
 The database table is public-read, service-role-write, and RLS-enabled. Snapshot
 rows are analytics evidence only; they do not create wallets, orders, leverage,
@@ -211,7 +213,8 @@ tables. This is the operator surface for "what is blocking real-money review
 right now"; it never enables execution and always keeps `paper_only: true`.
 When loaded through `/api/trading.json`, the checklist includes the current
 resolution backlog so overdue live paper markets are visible before open EV is
-mistaken for realized P&L.
+mistaken for realized P&L. Blocked gates can render their attached evidence
+directly under the checklist row, linking back to the market that needs review.
 
 Capture health is `fresh` while the latest persisted row is less than 36 hours
 old. It becomes `stale` after that window, which makes a missed daily snapshot
