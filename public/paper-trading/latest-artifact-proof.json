@@ -1,19 +1,19 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-05-27T10:52:35.661Z",
+  "generated_at": "2026-05-27T11:10:01.914Z",
   "source": "github_actions_artifact_audit",
   "paper_only": true,
   "real_money_execution_allowed": false,
   "repository": "claygeo/eivra",
   "workflow_path": ".github/workflows/paper-trading-snapshot.yml",
   "workflow_run": {
-    "id": "26506750796",
-    "url": "https://github.com/claygeo/eivra/actions/runs/26506750796",
+    "id": "26507536525",
+    "url": "https://github.com/claygeo/eivra/actions/runs/26507536525",
     "event": "workflow_dispatch",
     "ref": "main",
-    "head_sha": "7efe1bd279a9d8dd044bdcbc76e09683911b739e",
-    "artifact_name": "paper-trading-proof-26506750796",
-    "download_command": "gh run download 26506750796 --repo claygeo/eivra --dir ./paper-artifacts"
+    "head_sha": "6a1d8416d694019d484ae7ccfb77281b35b23213",
+    "artifact_name": "paper-trading-proof-26507536525",
+    "download_command": "gh run download 26507536525 --repo claygeo/eivra --dir ./paper-artifacts"
   },
   "artifact_contract": {
     "repository": "claygeo/eivra",
@@ -42,7 +42,7 @@
   },
   "agent_edge_proof": {
     "schema_version": "1",
-    "generated_at": "2026-05-27T10:52:34.986Z",
+    "generated_at": "2026-05-27T11:10:01.052Z",
     "status": "collecting",
     "status_label": "Collecting",
     "message": "Canonical agent-edge rules are being captured, but no live paper trades have resolved in the proof window yet.",
@@ -56,7 +56,7 @@
     "profitable_rule_count": 0,
     "unresolved_rule_count": 12,
     "latest_snapshot_date": "2026-05-27",
-    "latest_captured_at": "2026-05-27T10:52:09.980Z",
+    "latest_captured_at": "2026-05-27T11:09:36.928Z",
     "best_resolved_rule": null,
     "best_open_ev_rule": {
       "strategy_id": "sage-live-edge-10",
@@ -82,7 +82,7 @@
       "open_exposure_usd": 500,
       "open_expected_pnl_usd": 654.71,
       "latest_snapshot_date": "2026-05-27",
-      "latest_captured_at": "2026-05-27T10:52:09.980Z",
+      "latest_captured_at": "2026-05-27T11:09:36.928Z",
       "proof_quality": {
         "evidence_grade": "none",
         "evidence_grade_label": "No sample",
@@ -142,7 +142,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -201,7 +201,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 551.42,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -260,7 +260,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 223.7,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -319,7 +319,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 215.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -378,7 +378,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 164.21,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -437,7 +437,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 161.2,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -496,7 +496,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 125.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -555,7 +555,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 109.88,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -614,7 +614,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -673,7 +673,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -732,7 +732,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -791,7 +791,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -828,12 +828,210 @@
       }
     ]
   },
+  "agent_edge_trade_ledger": {
+    "schema_version": "1",
+    "generated_at": "2026-05-27T11:09:36.928Z",
+    "status": "collecting",
+    "status_label": "Collecting",
+    "message": "Canonical agent-edge rules have not resolved paper tickets yet.",
+    "next_required_action": "Wait for live paper markets to resolve before judging realized profitability.",
+    "paper_only": true,
+    "real_money_execution_allowed": false,
+    "rule_count": 12,
+    "resolved_rule_count": 0,
+    "profitable_rule_count": 0,
+    "total_resolved_trades": 0,
+    "total_net_pnl_usd": 0,
+    "latest_resolved_at": null,
+    "rules": [
+      {
+        "strategy_id": "echo-live-edge-05",
+        "strategy_label": "Echo live, edge >= 5pp",
+        "agent_id": "echo",
+        "agent_name": "Echo",
+        "min_edge": 0.05,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "echo-live-edge-10",
+        "strategy_label": "Echo live, edge >= 10pp",
+        "agent_id": "echo",
+        "agent_name": "Echo",
+        "min_edge": 0.1,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "ensemble-live-edge-05",
+        "strategy_label": "Crowd live, edge >= 5pp",
+        "agent_id": "ensemble",
+        "agent_name": "Crowd",
+        "min_edge": 0.05,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "ensemble-live-edge-10",
+        "strategy_label": "Crowd live, edge >= 10pp",
+        "agent_id": "ensemble",
+        "agent_name": "Crowd",
+        "min_edge": 0.1,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "hawk-live-edge-05",
+        "strategy_label": "Hawk live, edge >= 5pp",
+        "agent_id": "hawk",
+        "agent_name": "Hawk",
+        "min_edge": 0.05,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "hawk-live-edge-10",
+        "strategy_label": "Hawk live, edge >= 10pp",
+        "agent_id": "hawk",
+        "agent_name": "Hawk",
+        "min_edge": 0.1,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "magpie-live-edge-05",
+        "strategy_label": "Magpie live, edge >= 5pp",
+        "agent_id": "magpie",
+        "agent_name": "Magpie",
+        "min_edge": 0.05,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "magpie-live-edge-10",
+        "strategy_label": "Magpie live, edge >= 10pp",
+        "agent_id": "magpie",
+        "agent_name": "Magpie",
+        "min_edge": 0.1,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "mirror-live-edge-05",
+        "strategy_label": "Mirror live, edge >= 5pp",
+        "agent_id": "mirror",
+        "agent_name": "Mirror",
+        "min_edge": 0.05,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "mirror-live-edge-10",
+        "strategy_label": "Mirror live, edge >= 10pp",
+        "agent_id": "mirror",
+        "agent_name": "Mirror",
+        "min_edge": 0.1,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "sage-live-edge-05",
+        "strategy_label": "Sage live, edge >= 5pp",
+        "agent_id": "sage",
+        "agent_name": "Sage",
+        "min_edge": 0.05,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      },
+      {
+        "strategy_id": "sage-live-edge-10",
+        "strategy_label": "Sage live, edge >= 10pp",
+        "agent_id": "sage",
+        "agent_name": "Sage",
+        "min_edge": 0.1,
+        "resolved_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "stake_usd": 0,
+        "net_pnl_usd": 0,
+        "roi_on_stake": 0,
+        "latest_resolved_at": null,
+        "recent_resolved_trades": []
+      }
+    ]
+  },
   "artifact_audit": {
     "verdict": "pass",
-    "checked_at": "2026-05-27T10:52:34.987Z",
+    "checked_at": "2026-05-27T11:10:01.054Z",
     "exit_code": 0,
     "artifact_count": 1,
-    "discovered_artifact_count": 16,
+    "discovered_artifact_count": 17,
     "selected_artifact_paths": [
       "/home/runner/work/eivra/eivra/paper-snapshot-rows.json"
     ],
@@ -854,105 +1052,112 @@
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26498526536/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T07:56:37.014Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26498986114/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:06:29.751Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26499296182/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:13:12.093Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26499440155/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:16:14.940Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26499695094/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:21:51.079Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26500821320/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:45:36.076Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26501344942/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T08:56:22.838Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26502259113/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:15:01.113Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26502881869/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:28:12.452Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26503397669/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:39:00.200Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26503633424/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:44:01.610Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26503931612/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:50:18.647Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26504250559/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T09:57:07.916Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26504533944/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T10:03:02.020Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       },
       {
         "snapshot_date": "2026-05-27",
         "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26506080109/paper-snapshot-rows.json",
         "ignored_generated_at": "2026-05-27T10:37:09.417Z",
         "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
-        "selected_generated_at": "2026-05-27T10:52:09.980Z"
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
+      },
+      {
+        "snapshot_date": "2026-05-27",
+        "ignored_path": "/home/runner/work/eivra/eivra/paper-artifact-history/26506750796/paper-snapshot-rows.json",
+        "ignored_generated_at": "2026-05-27T10:52:09.980Z",
+        "selected_path": "/home/runner/work/eivra/eivra/paper-snapshot-rows.json",
+        "selected_generated_at": "2026-05-27T11:09:36.928Z"
       }
     ],
     "sources": [
@@ -966,7 +1171,7 @@
       {
         "path": "/home/runner/work/eivra/eivra/paper-snapshot-result.json",
         "source": "live",
-        "generated_at": "2026-05-27T10:52:09.980Z",
+        "generated_at": "2026-05-27T11:09:36.928Z",
         "snapshot_date": "2026-05-27",
         "resolution_watch": {
           "status": "overdue_resolution",
@@ -1002,8 +1207,8 @@
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
               "tradability_status": "needs_review",
-              "days_until_close": -0.45,
-              "age_days": 1.94
+              "days_until_close": -0.47,
+              "age_days": 1.95
             },
             {
               "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
@@ -1021,8 +1226,8 @@
               "created_at": "2026-05-26T00:19:14.77882+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.55,
-              "age_days": 1.44
+              "days_until_close": 0.53,
+              "age_days": 1.45
             },
             {
               "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
@@ -1040,8 +1245,8 @@
               "created_at": "2026-05-26T00:19:23.812179+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.55,
-              "age_days": 1.44
+              "days_until_close": 0.53,
+              "age_days": 1.45
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -1059,8 +1264,8 @@
               "created_at": "2026-05-26T00:19:36.083882+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.55,
-              "age_days": 1.44
+              "days_until_close": 0.53,
+              "age_days": 1.45
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -1078,8 +1283,8 @@
               "created_at": "2026-05-26T00:20:04.586579+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.55,
-              "age_days": 1.44
+              "days_until_close": 0.53,
+              "age_days": 1.45
             },
             {
               "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
@@ -1097,8 +1302,8 @@
               "created_at": "2026-05-24T12:19:25.197698+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 1.71,
-              "age_days": 2.94
+              "days_until_close": 1.7,
+              "age_days": 2.95
             },
             {
               "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
@@ -1116,8 +1321,8 @@
               "created_at": "2026-05-26T00:20:32.626001+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 3.21,
-              "age_days": 1.44
+              "days_until_close": 3.2,
+              "age_days": 1.45
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -1135,8 +1340,8 @@
               "created_at": "2026-05-25T12:20:09.746582+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.31,
-              "age_days": 1.94
+              "days_until_close": 4.3,
+              "age_days": 1.95
             },
             {
               "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -1154,8 +1359,8 @@
               "created_at": "2026-05-25T12:20:20.681026+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.31,
-              "age_days": 1.94
+              "days_until_close": 4.3,
+              "age_days": 1.95
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -1173,8 +1378,8 @@
               "created_at": "2026-05-21T00:45:32.748096+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -1192,8 +1397,8 @@
               "created_at": "2026-05-21T00:45:42.837675+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
@@ -1211,14 +1416,14 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             }
           ]
         },
         "strategy_registry": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T10:52:09.980Z",
+          "generated_at": "2026-05-27T11:09:36.928Z",
           "paper_only": true,
           "real_money_execution_allowed": false,
           "config": {
@@ -1627,7 +1832,7 @@
         },
         "would_trade_today": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T10:52:09.980Z",
+          "generated_at": "2026-05-27T11:09:36.928Z",
           "status": "blocked",
           "status_label": "Blocked",
           "message": "1 global live paper market need resolution review before any would-trade watchlist is trusted.",
@@ -1675,8 +1880,8 @@
                 "created_at": "2026-05-21T00:51:06.72125+00:00",
                 "close_status": "closing_next_7d",
                 "tradability_status": "tradable",
-                "days_until_close": 4.55,
-                "age_days": 6.42
+                "days_until_close": 4.53,
+                "age_days": 6.43
               },
               {
                 "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1699,8 +1904,8 @@
                 "created_at": "2026-05-21T00:52:03.42215+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 34.55,
-                "age_days": 6.42
+                "days_until_close": 34.53,
+                "age_days": 6.43
               },
               {
                 "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -1723,8 +1928,8 @@
                 "created_at": "2026-05-21T00:52:14.669044+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 34.55,
-                "age_days": 6.42
+                "days_until_close": 34.53,
+                "age_days": 6.43
               },
               {
                 "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -1747,8 +1952,8 @@
                 "created_at": "2026-05-21T01:22:28.731906+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 218.55,
-                "age_days": 6.4
+                "days_until_close": 218.53,
+                "age_days": 6.41
               },
               {
                 "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -1771,8 +1976,8 @@
                 "created_at": "2026-05-21T00:48:41.661021+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 21.59,
-                "age_days": 6.42
+                "days_until_close": 21.58,
+                "age_days": 6.43
               }
             ],
             "paper_only": true,
@@ -1801,8 +2006,8 @@
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
               "tradability_status": "needs_review",
-              "days_until_close": -0.45,
-              "age_days": 1.94
+              "days_until_close": -0.47,
+              "age_days": 1.95
             }
           ],
           "unique_open_signals": 30,
@@ -1852,8 +2057,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -1876,8 +2081,8 @@
                   "created_at": "2026-05-25T12:20:09.746582+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.31,
-                  "age_days": 1.94
+                  "days_until_close": 4.3,
+                  "age_days": 1.95
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1900,8 +2105,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.55,
-                  "age_days": 6.42
+                  "days_until_close": 34.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -1924,8 +2129,8 @@
                   "created_at": "2026-05-21T01:22:28.731906+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 218.55,
-                  "age_days": 6.4
+                  "days_until_close": 218.53,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -1948,8 +2153,8 @@
                   "created_at": "2026-05-21T01:24:34.379932+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.84,
-                  "age_days": 6.39
+                  "days_until_close": 4.83,
+                  "age_days": 6.41
                 }
               ],
               "paper_only": true,
@@ -1994,8 +2199,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -2018,8 +2223,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.55,
-                  "age_days": 6.42
+                  "days_until_close": 34.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -2042,8 +2247,8 @@
                   "created_at": "2026-05-21T00:52:14.669044+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.55,
-                  "age_days": 6.42
+                  "days_until_close": 34.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -2066,8 +2271,8 @@
                   "created_at": "2026-05-21T01:22:28.731906+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 218.55,
-                  "age_days": 6.4
+                  "days_until_close": 218.53,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -2090,8 +2295,8 @@
                   "created_at": "2026-05-21T00:48:41.661021+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 21.59,
-                  "age_days": 6.42
+                  "days_until_close": 21.58,
+                  "age_days": 6.43
                 }
               ],
               "paper_only": true,
@@ -2136,8 +2341,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -2160,8 +2365,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.55,
-                  "age_days": 6.42
+                  "days_until_close": 34.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -2184,8 +2389,8 @@
                   "created_at": "2026-05-21T00:52:14.669044+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.55,
-                  "age_days": 6.42
+                  "days_until_close": 34.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -2208,8 +2413,8 @@
                   "created_at": "2026-05-21T01:22:28.731906+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 218.55,
-                  "age_days": 6.4
+                  "days_until_close": 218.53,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -2232,8 +2437,8 @@
                   "created_at": "2026-05-21T00:48:41.661021+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 21.59,
-                  "age_days": 6.42
+                  "days_until_close": 21.58,
+                  "age_days": 6.43
                 }
               ],
               "paper_only": true,
@@ -2278,8 +2483,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -2302,8 +2507,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.55,
-                  "age_days": 6.42
+                  "days_until_close": 34.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -2326,8 +2531,8 @@
                   "created_at": "2026-05-21T01:22:28.731906+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 218.55,
-                  "age_days": 6.4
+                  "days_until_close": 218.53,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -2350,8 +2555,8 @@
                   "created_at": "2026-05-21T00:45:32.748096+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "f661b165-9ed0-4b8a-a3e7-bacdb97797f5",
@@ -2374,8 +2579,8 @@
                   "created_at": "2026-05-21T01:18:21.232109+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 76.65,
-                  "age_days": 6.4
+                  "days_until_close": 76.64,
+                  "age_days": 6.41
                 }
               ],
               "paper_only": true,
@@ -2420,8 +2625,8 @@
                   "created_at": "2026-05-21T00:51:06.72125+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -2444,8 +2649,8 @@
                   "created_at": "2026-05-21T01:24:34.379932+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.84,
-                  "age_days": 6.39
+                  "days_until_close": 4.83,
+                  "age_days": 6.41
                 },
                 {
                   "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -2468,8 +2673,8 @@
                   "created_at": "2026-05-21T00:45:32.748096+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -2492,8 +2697,8 @@
                   "created_at": "2026-05-21T00:45:42.837675+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "a8cf8cf0-f847-4afd-b2c5-0ea0d8505e9e",
@@ -2516,8 +2721,8 @@
                   "created_at": "2026-05-21T00:51:18.194778+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 6.42
+                  "days_until_close": 4.53,
+                  "age_days": 6.43
                 }
               ],
               "paper_only": true,
@@ -2562,8 +2767,8 @@
                   "created_at": "2026-05-25T12:25:26.573026+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 24.55,
-                  "age_days": 1.94
+                  "days_until_close": 24.53,
+                  "age_days": 1.95
                 },
                 {
                   "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -2586,8 +2791,8 @@
                   "created_at": "2026-05-25T12:25:44.977834+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 24.55,
-                  "age_days": 1.94
+                  "days_until_close": 24.53,
+                  "age_days": 1.95
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -2610,8 +2815,8 @@
                   "created_at": "2026-05-21T00:52:03.42215+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.55,
-                  "age_days": 6.42
+                  "days_until_close": 34.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -2634,8 +2839,8 @@
                   "created_at": "2026-05-21T00:52:14.669044+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 34.55,
-                  "age_days": 6.42
+                  "days_until_close": 34.53,
+                  "age_days": 6.43
                 },
                 {
                   "prediction_id": "2beccc28-c763-4f47-836e-18aac6183b89",
@@ -2658,8 +2863,8 @@
                   "created_at": "2026-05-25T12:21:20.761642+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 1.94
+                  "days_until_close": 4.53,
+                  "age_days": 1.95
                 }
               ],
               "paper_only": true,
@@ -2704,8 +2909,8 @@
                   "created_at": "2026-05-25T12:22:45.827441+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 1.94
+                  "days_until_close": 4.53,
+                  "age_days": 1.95
                 },
                 {
                   "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -2728,8 +2933,8 @@
                   "created_at": "2026-05-26T00:19:36.083882+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 0.55,
-                  "age_days": 1.44
+                  "days_until_close": 0.53,
+                  "age_days": 1.45
                 },
                 {
                   "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -2752,8 +2957,8 @@
                   "created_at": "2026-05-25T12:25:44.977834+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 24.55,
-                  "age_days": 1.94
+                  "days_until_close": 24.53,
+                  "age_days": 1.95
                 }
               ],
               "paper_only": true,
@@ -2798,8 +3003,8 @@
                   "created_at": "2026-05-25T12:23:14.250271+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.55,
-                  "age_days": 1.94
+                  "days_until_close": 4.53,
+                  "age_days": 1.95
                 },
                 {
                   "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -2822,8 +3027,8 @@
                   "created_at": "2026-05-26T00:20:04.586579+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 0.55,
-                  "age_days": 1.44
+                  "days_until_close": 0.53,
+                  "age_days": 1.45
                 },
                 {
                   "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -2846,8 +3051,8 @@
                   "created_at": "2026-05-25T12:26:11.241279+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 24.55,
-                  "age_days": 1.93
+                  "days_until_close": 24.53,
+                  "age_days": 1.95
                 }
               ],
               "paper_only": true,
@@ -2857,7 +3062,7 @@
         },
         "market_exposure_digest": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T10:52:09.980Z",
+          "generated_at": "2026-05-27T11:09:36.928Z",
           "status": "observing",
           "status_label": "Observing",
           "message": "Open live paper exposure is grouped by market so repeated agent bets are visible before review.",
@@ -3737,6 +3942,204 @@
             }
           ]
         },
+        "agent_edge_trade_ledger": {
+          "schema_version": "1",
+          "generated_at": "2026-05-27T11:09:36.928Z",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "message": "Canonical agent-edge rules have not resolved paper tickets yet.",
+          "next_required_action": "Wait for live paper markets to resolve before judging realized profitability.",
+          "paper_only": true,
+          "real_money_execution_allowed": false,
+          "rule_count": 12,
+          "resolved_rule_count": 0,
+          "profitable_rule_count": 0,
+          "total_resolved_trades": 0,
+          "total_net_pnl_usd": 0,
+          "latest_resolved_at": null,
+          "rules": [
+            {
+              "strategy_id": "echo-live-edge-05",
+              "strategy_label": "Echo live, edge >= 5pp",
+              "agent_id": "echo",
+              "agent_name": "Echo",
+              "min_edge": 0.05,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "echo-live-edge-10",
+              "strategy_label": "Echo live, edge >= 10pp",
+              "agent_id": "echo",
+              "agent_name": "Echo",
+              "min_edge": 0.1,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "ensemble-live-edge-05",
+              "strategy_label": "Crowd live, edge >= 5pp",
+              "agent_id": "ensemble",
+              "agent_name": "Crowd",
+              "min_edge": 0.05,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "ensemble-live-edge-10",
+              "strategy_label": "Crowd live, edge >= 10pp",
+              "agent_id": "ensemble",
+              "agent_name": "Crowd",
+              "min_edge": 0.1,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "hawk-live-edge-05",
+              "strategy_label": "Hawk live, edge >= 5pp",
+              "agent_id": "hawk",
+              "agent_name": "Hawk",
+              "min_edge": 0.05,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "hawk-live-edge-10",
+              "strategy_label": "Hawk live, edge >= 10pp",
+              "agent_id": "hawk",
+              "agent_name": "Hawk",
+              "min_edge": 0.1,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "magpie-live-edge-05",
+              "strategy_label": "Magpie live, edge >= 5pp",
+              "agent_id": "magpie",
+              "agent_name": "Magpie",
+              "min_edge": 0.05,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "magpie-live-edge-10",
+              "strategy_label": "Magpie live, edge >= 10pp",
+              "agent_id": "magpie",
+              "agent_name": "Magpie",
+              "min_edge": 0.1,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "mirror-live-edge-05",
+              "strategy_label": "Mirror live, edge >= 5pp",
+              "agent_id": "mirror",
+              "agent_name": "Mirror",
+              "min_edge": 0.05,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "mirror-live-edge-10",
+              "strategy_label": "Mirror live, edge >= 10pp",
+              "agent_id": "mirror",
+              "agent_name": "Mirror",
+              "min_edge": 0.1,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "sage-live-edge-05",
+              "strategy_label": "Sage live, edge >= 5pp",
+              "agent_id": "sage",
+              "agent_name": "Sage",
+              "min_edge": 0.05,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            },
+            {
+              "strategy_id": "sage-live-edge-10",
+              "strategy_label": "Sage live, edge >= 10pp",
+              "agent_id": "sage",
+              "agent_name": "Sage",
+              "min_edge": 0.1,
+              "resolved_trades": 0,
+              "wins": 0,
+              "losses": 0,
+              "stake_usd": 0,
+              "net_pnl_usd": 0,
+              "roi_on_stake": 0,
+              "latest_resolved_at": null,
+              "recent_resolved_trades": []
+            }
+          ]
+        },
         "status": "available",
         "message": "Snapshot summary resolution context loaded."
       }
@@ -3753,7 +4156,7 @@
       "write_enabled": false,
       "mode_reason": "missing SUPABASE_SERVICE_ROLE_KEY; read-only artifacts only"
     },
-    "latest_captured_at": "2026-05-27T10:52:09.980Z",
+    "latest_captured_at": "2026-05-27T11:09:36.928Z",
     "proof_summary": {
       "status": "collecting",
       "status_label": "Collecting",
@@ -3864,8 +4267,8 @@
               "market_closes_at": "2026-05-26T23:59:00+00:00",
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
-              "days_until_close": -0.45,
-              "age_days": 1.94
+              "days_until_close": -0.47,
+              "age_days": 1.95
             }
           ]
         },
@@ -3993,7 +4396,7 @@
     },
     "capital_review_packet": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:52:34.986Z",
+      "generated_at": "2026-05-27T11:10:01.053Z",
       "status": "not_reviewable",
       "status_label": "Not reviewable",
       "decision": "do_not_allocate_capital",
@@ -4112,8 +4515,8 @@
               "market_closes_at": "2026-05-26T23:59:00+00:00",
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
-              "days_until_close": -0.45,
-              "age_days": 1.94
+              "days_until_close": -0.47,
+              "age_days": 1.95
             }
           ]
         },
@@ -4225,7 +4628,7 @@
       "cron": "22 5 * * *",
       "scheduled_time_utc": "05:22",
       "stale_after_hours": 36,
-      "latest_captured_at": "2026-05-27T10:52:09.980Z",
+      "latest_captured_at": "2026-05-27T11:09:36.928Z",
       "previous_expected_capture_at": "2026-05-27T05:22:00.000Z",
       "next_expected_capture_at": "2026-05-28T05:22:00.000Z",
       "status": "fresh",
@@ -4295,7 +4698,7 @@
             "sage-live-edge-10",
             "sports-live-edge-10"
           ],
-          "latest_captured_at": "2026-05-27T10:52:09.980Z"
+          "latest_captured_at": "2026-05-27T11:09:36.928Z"
         }
       ]
     },
@@ -4333,8 +4736,8 @@
           "created_at": "2026-05-25T12:19:22.529011+00:00",
           "close_status": "overdue",
           "tradability_status": "needs_review",
-          "days_until_close": -0.45,
-          "age_days": 1.94
+          "days_until_close": -0.47,
+          "age_days": 1.95
         },
         {
           "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
@@ -4352,8 +4755,8 @@
           "created_at": "2026-05-26T00:19:14.77882+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.55,
-          "age_days": 1.44
+          "days_until_close": 0.53,
+          "age_days": 1.45
         },
         {
           "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
@@ -4371,8 +4774,8 @@
           "created_at": "2026-05-26T00:19:23.812179+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.55,
-          "age_days": 1.44
+          "days_until_close": 0.53,
+          "age_days": 1.45
         },
         {
           "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -4390,8 +4793,8 @@
           "created_at": "2026-05-26T00:19:36.083882+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.55,
-          "age_days": 1.44
+          "days_until_close": 0.53,
+          "age_days": 1.45
         },
         {
           "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -4409,8 +4812,8 @@
           "created_at": "2026-05-26T00:20:04.586579+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 0.55,
-          "age_days": 1.44
+          "days_until_close": 0.53,
+          "age_days": 1.45
         },
         {
           "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
@@ -4428,8 +4831,8 @@
           "created_at": "2026-05-24T12:19:25.197698+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 1.71,
-          "age_days": 2.94
+          "days_until_close": 1.7,
+          "age_days": 2.95
         },
         {
           "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
@@ -4447,8 +4850,8 @@
           "created_at": "2026-05-26T00:20:32.626001+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 3.21,
-          "age_days": 1.44
+          "days_until_close": 3.2,
+          "age_days": 1.45
         },
         {
           "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -4466,8 +4869,8 @@
           "created_at": "2026-05-25T12:20:09.746582+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.31,
-          "age_days": 1.94
+          "days_until_close": 4.3,
+          "age_days": 1.95
         },
         {
           "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -4485,8 +4888,8 @@
           "created_at": "2026-05-25T12:20:20.681026+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.31,
-          "age_days": 1.94
+          "days_until_close": 4.3,
+          "age_days": 1.95
         },
         {
           "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -4504,8 +4907,8 @@
           "created_at": "2026-05-21T00:45:32.748096+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.55,
-          "age_days": 6.42
+          "days_until_close": 4.53,
+          "age_days": 6.43
         },
         {
           "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -4523,8 +4926,8 @@
           "created_at": "2026-05-21T00:45:42.837675+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.55,
-          "age_days": 6.42
+          "days_until_close": 4.53,
+          "age_days": 6.43
         },
         {
           "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
@@ -4542,14 +4945,14 @@
           "created_at": "2026-05-21T00:51:06.72125+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 4.55,
-          "age_days": 6.42
+          "days_until_close": 4.53,
+          "age_days": 6.43
         }
       ]
     },
     "strategy_registry": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:52:09.980Z",
+      "generated_at": "2026-05-27T11:09:36.928Z",
       "paper_only": true,
       "real_money_execution_allowed": false,
       "config": {
@@ -4958,7 +5361,7 @@
     },
     "would_trade_today": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:52:09.980Z",
+      "generated_at": "2026-05-27T11:09:36.928Z",
       "status": "blocked",
       "status_label": "Blocked",
       "message": "1 global live paper market need resolution review before any would-trade watchlist is trusted.",
@@ -5006,8 +5409,8 @@
             "created_at": "2026-05-21T00:51:06.72125+00:00",
             "close_status": "closing_next_7d",
             "tradability_status": "tradable",
-            "days_until_close": 4.55,
-            "age_days": 6.42
+            "days_until_close": 4.53,
+            "age_days": 6.43
           },
           {
             "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5030,8 +5433,8 @@
             "created_at": "2026-05-21T00:52:03.42215+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 34.55,
-            "age_days": 6.42
+            "days_until_close": 34.53,
+            "age_days": 6.43
           },
           {
             "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -5054,8 +5457,8 @@
             "created_at": "2026-05-21T00:52:14.669044+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 34.55,
-            "age_days": 6.42
+            "days_until_close": 34.53,
+            "age_days": 6.43
           },
           {
             "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5078,8 +5481,8 @@
             "created_at": "2026-05-21T01:22:28.731906+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 218.55,
-            "age_days": 6.4
+            "days_until_close": 218.53,
+            "age_days": 6.41
           },
           {
             "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -5102,8 +5505,8 @@
             "created_at": "2026-05-21T00:48:41.661021+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 21.59,
-            "age_days": 6.42
+            "days_until_close": 21.58,
+            "age_days": 6.43
           }
         ],
         "paper_only": true,
@@ -5132,8 +5535,8 @@
           "created_at": "2026-05-25T12:19:22.529011+00:00",
           "close_status": "overdue",
           "tradability_status": "needs_review",
-          "days_until_close": -0.45,
-          "age_days": 1.94
+          "days_until_close": -0.47,
+          "age_days": 1.95
         }
       ],
       "unique_open_signals": 30,
@@ -5183,8 +5586,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -5207,8 +5610,8 @@
               "created_at": "2026-05-25T12:20:09.746582+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.31,
-              "age_days": 1.94
+              "days_until_close": 4.3,
+              "age_days": 1.95
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5231,8 +5634,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.55,
-              "age_days": 6.42
+              "days_until_close": 34.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5255,8 +5658,8 @@
               "created_at": "2026-05-21T01:22:28.731906+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 218.55,
-              "age_days": 6.4
+              "days_until_close": 218.53,
+              "age_days": 6.41
             },
             {
               "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -5279,8 +5682,8 @@
               "created_at": "2026-05-21T01:24:34.379932+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.84,
-              "age_days": 6.39
+              "days_until_close": 4.83,
+              "age_days": 6.41
             }
           ],
           "paper_only": true,
@@ -5325,8 +5728,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5349,8 +5752,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.55,
-              "age_days": 6.42
+              "days_until_close": 34.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -5373,8 +5776,8 @@
               "created_at": "2026-05-21T00:52:14.669044+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.55,
-              "age_days": 6.42
+              "days_until_close": 34.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5397,8 +5800,8 @@
               "created_at": "2026-05-21T01:22:28.731906+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 218.55,
-              "age_days": 6.4
+              "days_until_close": 218.53,
+              "age_days": 6.41
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -5421,8 +5824,8 @@
               "created_at": "2026-05-21T00:48:41.661021+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 21.59,
-              "age_days": 6.42
+              "days_until_close": 21.58,
+              "age_days": 6.43
             }
           ],
           "paper_only": true,
@@ -5467,8 +5870,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5491,8 +5894,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.55,
-              "age_days": 6.42
+              "days_until_close": 34.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -5515,8 +5918,8 @@
               "created_at": "2026-05-21T00:52:14.669044+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.55,
-              "age_days": 6.42
+              "days_until_close": 34.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5539,8 +5942,8 @@
               "created_at": "2026-05-21T01:22:28.731906+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 218.55,
-              "age_days": 6.4
+              "days_until_close": 218.53,
+              "age_days": 6.41
             },
             {
               "prediction_id": "d8d30b90-dbd9-495b-917b-afdc70c1e668",
@@ -5563,8 +5966,8 @@
               "created_at": "2026-05-21T00:48:41.661021+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 21.59,
-              "age_days": 6.42
+              "days_until_close": 21.58,
+              "age_days": 6.43
             }
           ],
           "paper_only": true,
@@ -5609,8 +6012,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5633,8 +6036,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.55,
-              "age_days": 6.42
+              "days_until_close": 34.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "05170259-4467-4f9b-8ffe-b849adc46dee",
@@ -5657,8 +6060,8 @@
               "created_at": "2026-05-21T01:22:28.731906+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 218.55,
-              "age_days": 6.4
+              "days_until_close": 218.53,
+              "age_days": 6.41
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -5681,8 +6084,8 @@
               "created_at": "2026-05-21T00:45:32.748096+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "f661b165-9ed0-4b8a-a3e7-bacdb97797f5",
@@ -5705,8 +6108,8 @@
               "created_at": "2026-05-21T01:18:21.232109+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 76.65,
-              "age_days": 6.4
+              "days_until_close": 76.64,
+              "age_days": 6.41
             }
           ],
           "paper_only": true,
@@ -5751,8 +6154,8 @@
               "created_at": "2026-05-21T00:51:06.72125+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "848ea15b-5b9d-4907-85ab-e1bd7a99b873",
@@ -5775,8 +6178,8 @@
               "created_at": "2026-05-21T01:24:34.379932+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.84,
-              "age_days": 6.39
+              "days_until_close": 4.83,
+              "age_days": 6.41
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -5799,8 +6202,8 @@
               "created_at": "2026-05-21T00:45:32.748096+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -5823,8 +6226,8 @@
               "created_at": "2026-05-21T00:45:42.837675+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "a8cf8cf0-f847-4afd-b2c5-0ea0d8505e9e",
@@ -5847,8 +6250,8 @@
               "created_at": "2026-05-21T00:51:18.194778+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 6.42
+              "days_until_close": 4.53,
+              "age_days": 6.43
             }
           ],
           "paper_only": true,
@@ -5893,8 +6296,8 @@
               "created_at": "2026-05-25T12:25:26.573026+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 24.55,
-              "age_days": 1.94
+              "days_until_close": 24.53,
+              "age_days": 1.95
             },
             {
               "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -5917,8 +6320,8 @@
               "created_at": "2026-05-25T12:25:44.977834+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 24.55,
-              "age_days": 1.94
+              "days_until_close": 24.53,
+              "age_days": 1.95
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -5941,8 +6344,8 @@
               "created_at": "2026-05-21T00:52:03.42215+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.55,
-              "age_days": 6.42
+              "days_until_close": 34.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "d3a674ba-bad6-494b-b32f-45a5cceb7964",
@@ -5965,8 +6368,8 @@
               "created_at": "2026-05-21T00:52:14.669044+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 34.55,
-              "age_days": 6.42
+              "days_until_close": 34.53,
+              "age_days": 6.43
             },
             {
               "prediction_id": "2beccc28-c763-4f47-836e-18aac6183b89",
@@ -5989,8 +6392,8 @@
               "created_at": "2026-05-25T12:21:20.761642+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 1.94
+              "days_until_close": 4.53,
+              "age_days": 1.95
             }
           ],
           "paper_only": true,
@@ -6035,8 +6438,8 @@
               "created_at": "2026-05-25T12:22:45.827441+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 1.94
+              "days_until_close": 4.53,
+              "age_days": 1.95
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -6059,8 +6462,8 @@
               "created_at": "2026-05-26T00:19:36.083882+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.55,
-              "age_days": 1.44
+              "days_until_close": 0.53,
+              "age_days": 1.45
             },
             {
               "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -6083,8 +6486,8 @@
               "created_at": "2026-05-25T12:25:44.977834+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 24.55,
-              "age_days": 1.94
+              "days_until_close": 24.53,
+              "age_days": 1.95
             }
           ],
           "paper_only": true,
@@ -6129,8 +6532,8 @@
               "created_at": "2026-05-25T12:23:14.250271+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.55,
-              "age_days": 1.94
+              "days_until_close": 4.53,
+              "age_days": 1.95
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -6153,8 +6556,8 @@
               "created_at": "2026-05-26T00:20:04.586579+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 0.55,
-              "age_days": 1.44
+              "days_until_close": 0.53,
+              "age_days": 1.45
             },
             {
               "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -6177,8 +6580,8 @@
               "created_at": "2026-05-25T12:26:11.241279+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 24.55,
-              "age_days": 1.93
+              "days_until_close": 24.53,
+              "age_days": 1.95
             }
           ],
           "paper_only": true,
@@ -6188,7 +6591,7 @@
     },
     "market_exposure_digest": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:52:09.980Z",
+      "generated_at": "2026-05-27T11:09:36.928Z",
       "status": "observing",
       "status_label": "Observing",
       "message": "Open live paper exposure is grouped by market so repeated agent bets are visible before review.",
@@ -7068,9 +7471,207 @@
         }
       ]
     },
+    "agent_edge_trade_ledger": {
+      "schema_version": "1",
+      "generated_at": "2026-05-27T11:09:36.928Z",
+      "status": "collecting",
+      "status_label": "Collecting",
+      "message": "Canonical agent-edge rules have not resolved paper tickets yet.",
+      "next_required_action": "Wait for live paper markets to resolve before judging realized profitability.",
+      "paper_only": true,
+      "real_money_execution_allowed": false,
+      "rule_count": 12,
+      "resolved_rule_count": 0,
+      "profitable_rule_count": 0,
+      "total_resolved_trades": 0,
+      "total_net_pnl_usd": 0,
+      "latest_resolved_at": null,
+      "rules": [
+        {
+          "strategy_id": "echo-live-edge-05",
+          "strategy_label": "Echo live, edge >= 5pp",
+          "agent_id": "echo",
+          "agent_name": "Echo",
+          "min_edge": 0.05,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "echo-live-edge-10",
+          "strategy_label": "Echo live, edge >= 10pp",
+          "agent_id": "echo",
+          "agent_name": "Echo",
+          "min_edge": 0.1,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "ensemble-live-edge-05",
+          "strategy_label": "Crowd live, edge >= 5pp",
+          "agent_id": "ensemble",
+          "agent_name": "Crowd",
+          "min_edge": 0.05,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "ensemble-live-edge-10",
+          "strategy_label": "Crowd live, edge >= 10pp",
+          "agent_id": "ensemble",
+          "agent_name": "Crowd",
+          "min_edge": 0.1,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "hawk-live-edge-05",
+          "strategy_label": "Hawk live, edge >= 5pp",
+          "agent_id": "hawk",
+          "agent_name": "Hawk",
+          "min_edge": 0.05,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "hawk-live-edge-10",
+          "strategy_label": "Hawk live, edge >= 10pp",
+          "agent_id": "hawk",
+          "agent_name": "Hawk",
+          "min_edge": 0.1,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "magpie-live-edge-05",
+          "strategy_label": "Magpie live, edge >= 5pp",
+          "agent_id": "magpie",
+          "agent_name": "Magpie",
+          "min_edge": 0.05,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "magpie-live-edge-10",
+          "strategy_label": "Magpie live, edge >= 10pp",
+          "agent_id": "magpie",
+          "agent_name": "Magpie",
+          "min_edge": 0.1,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "mirror-live-edge-05",
+          "strategy_label": "Mirror live, edge >= 5pp",
+          "agent_id": "mirror",
+          "agent_name": "Mirror",
+          "min_edge": 0.05,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "mirror-live-edge-10",
+          "strategy_label": "Mirror live, edge >= 10pp",
+          "agent_id": "mirror",
+          "agent_name": "Mirror",
+          "min_edge": 0.1,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "sage-live-edge-05",
+          "strategy_label": "Sage live, edge >= 5pp",
+          "agent_id": "sage",
+          "agent_name": "Sage",
+          "min_edge": 0.05,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        },
+        {
+          "strategy_id": "sage-live-edge-10",
+          "strategy_label": "Sage live, edge >= 10pp",
+          "agent_id": "sage",
+          "agent_name": "Sage",
+          "min_edge": 0.1,
+          "resolved_trades": 0,
+          "wins": 0,
+          "losses": 0,
+          "stake_usd": 0,
+          "net_pnl_usd": 0,
+          "roi_on_stake": 0,
+          "latest_resolved_at": null,
+          "recent_resolved_trades": []
+        }
+      ]
+    },
     "agent_edge_proof": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T10:52:34.986Z",
+      "generated_at": "2026-05-27T11:10:01.052Z",
       "status": "collecting",
       "status_label": "Collecting",
       "message": "Canonical agent-edge rules are being captured, but no live paper trades have resolved in the proof window yet.",
@@ -7084,7 +7685,7 @@
       "profitable_rule_count": 0,
       "unresolved_rule_count": 12,
       "latest_snapshot_date": "2026-05-27",
-      "latest_captured_at": "2026-05-27T10:52:09.980Z",
+      "latest_captured_at": "2026-05-27T11:09:36.928Z",
       "best_resolved_rule": null,
       "best_open_ev_rule": {
         "strategy_id": "sage-live-edge-10",
@@ -7110,7 +7711,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -7170,7 +7771,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 654.71,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7229,7 +7830,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 551.42,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7288,7 +7889,7 @@
           "open_exposure_usd": 300,
           "open_expected_pnl_usd": 223.7,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7347,7 +7948,7 @@
           "open_exposure_usd": 300,
           "open_expected_pnl_usd": 215.04,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7406,7 +8007,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 164.21,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7465,7 +8066,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 161.2,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7524,7 +8125,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 125.04,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7583,7 +8184,7 @@
           "open_exposure_usd": 500,
           "open_expected_pnl_usd": 109.88,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7642,7 +8243,7 @@
           "open_exposure_usd": 0,
           "open_expected_pnl_usd": 0,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7701,7 +8302,7 @@
           "open_exposure_usd": 0,
           "open_expected_pnl_usd": 0,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7760,7 +8361,7 @@
           "open_exposure_usd": 0,
           "open_expected_pnl_usd": 0,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7819,7 +8420,7 @@
           "open_exposure_usd": 0,
           "open_expected_pnl_usd": 0,
           "latest_snapshot_date": "2026-05-27",
-          "latest_captured_at": "2026-05-27T10:52:09.980Z",
+          "latest_captured_at": "2026-05-27T11:09:36.928Z",
           "proof_quality": {
             "evidence_grade": "none",
             "evidence_grade_label": "No sample",
@@ -7881,7 +8482,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 551.42,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -7934,7 +8535,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -7987,7 +8588,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 109.88,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8040,7 +8641,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 161.2,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8093,7 +8694,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 125.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8146,7 +8747,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 223.7,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8199,7 +8800,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8252,7 +8853,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8305,7 +8906,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 164.21,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8358,7 +8959,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 215.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8411,7 +9012,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -8464,7 +9065,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T10:52:09.980Z",
+        "latest_captured_at": "2026-05-27T11:09:36.928Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
