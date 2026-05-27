@@ -70,6 +70,18 @@ function captureHealthClass(status: string) {
   return "text-text-muted";
 }
 
+function captureCalendarClass(status: string) {
+  if (status === "complete") return "text-positive";
+  if (status === "partial" || status === "missing") return "text-warn";
+  return "text-text-muted";
+}
+
+function captureCalendarBadgeClass(status: string) {
+  if (status === "complete") return "bg-positive/10 text-positive";
+  if (status === "partial" || status === "missing") return "bg-warn/10 text-warn";
+  return "bg-text-muted/10 text-text-muted";
+}
+
 const SAMPLE_LABELS = {
   live_only: "Live only",
   all: "All",
@@ -131,6 +143,8 @@ export default async function TradingPage({
   const latestPersistedSnapshots = persisted.snapshots.slice(0, 8);
   const persistedRollups = persisted.strategy_rollups.slice(0, 8);
   const captureHealth = persisted.capture_health;
+  const captureCalendar = persisted.capture_calendar;
+  const captureCalendarDays = captureCalendar.days.slice().reverse().slice(0, 30);
   const proofSummary = persisted.proof_summary;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
@@ -626,6 +640,127 @@ export default async function TradingPage({
               <span>
                 age {captureHealth.latest_capture_age_hours.toFixed(1)}h
               </span>
+            ) : null}
+          </div>
+          <div className="border-t border-border-subtle pt-4 flex flex-col gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Daily ledger
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${captureCalendarClass(
+                    captureCalendar.status
+                  )}`}
+                >
+                  {captureCalendar.status_label}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Complete days
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(captureCalendar.complete_days)}/
+                  {int(captureCalendar.expected_days)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Missing
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${
+                    captureCalendar.missing_days > 0
+                      ? "text-warn"
+                      : "text-text-primary"
+                  }`}
+                >
+                  {int(captureCalendar.missing_days)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Partial
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${
+                    captureCalendar.partial_days > 0
+                      ? "text-warn"
+                      : "text-text-primary"
+                  }`}
+                >
+                  {int(captureCalendar.partial_days)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Live variants
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(captureCalendar.expected_live_strategy_rows)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Days left
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(captureCalendar.days_remaining_to_30)}
+                </div>
+              </div>
+            </div>
+            {captureCalendarDays.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full" aria-label="Daily persisted capture calendar">
+                  <thead>
+                    <tr className="border-b border-border-subtle text-text-muted">
+                      <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Date</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Status</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Rows</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Live</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Controls</th>
+                      <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Latest</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-subtle/60">
+                    {captureCalendarDays.map((day) => (
+                      <tr key={day.snapshot_date}>
+                        <td className="py-3 pr-3 mono text-text-secondary">
+                          {day.snapshot_date}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <span
+                            className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${captureCalendarBadgeClass(
+                              day.status
+                            )}`}
+                          >
+                            {day.status_label}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 mono text-right text-text-secondary">
+                          {int(day.captured_rows)}
+                        </td>
+                        <td className="py-3 px-3 mono text-right text-text-secondary">
+                          {int(day.live_strategy_rows)}/
+                          {int(day.expected_live_strategy_rows)}
+                        </td>
+                        <td className="py-3 px-3 mono text-right text-text-secondary">
+                          {int(day.control_rows)}
+                        </td>
+                        <td
+                          suppressHydrationWarning
+                          className="py-3 pl-3 mono text-right text-text-secondary"
+                        >
+                          {day.latest_captured_at
+                            ? relativeTime(day.latest_captured_at)
+                            : "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : null}
           </div>
           {latestPersistedSnapshots.length === 0 ? (

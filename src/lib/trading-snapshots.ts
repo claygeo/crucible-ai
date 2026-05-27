@@ -55,6 +55,7 @@ export type PaperTradingPersistenceRead = {
   message: string;
   latest_captured_at: string | null;
   capture_health: PaperTradingCaptureHealth;
+  capture_calendar: PaperTradingCaptureCalendar;
   proof_summary: PaperTradingProofSummary;
   snapshots: PaperTradingSnapshotRow[];
   strategy_rollups: PaperTradingStrategyProofRollup[];
@@ -131,6 +132,36 @@ export type PaperTradingCaptureCoverage = {
   last_expected_snapshot_date: string | null;
   captured_snapshot_dates: string[];
   missing_snapshot_dates: string[];
+};
+
+export type PaperTradingCaptureCalendarDay = {
+  snapshot_date: string;
+  status: "complete" | "partial" | "missing";
+  status_label: string;
+  captured_rows: number;
+  live_strategy_rows: number;
+  control_rows: number;
+  custom_rows: number;
+  expected_live_strategy_rows: number;
+  strategy_ids: string[];
+  live_strategy_ids: string[];
+  latest_captured_at: string | null;
+};
+
+export type PaperTradingCaptureCalendar = {
+  status: "complete" | "partial" | "missing" | "unavailable";
+  status_label: string;
+  expected_days: number;
+  complete_days: number;
+  partial_days: number;
+  missing_days: number;
+  coverage_ratio: number;
+  current_streak_days: number;
+  expected_live_strategy_rows: number;
+  first_expected_snapshot_date: string | null;
+  last_expected_snapshot_date: string | null;
+  days_remaining_to_30: number;
+  days: PaperTradingCaptureCalendarDay[];
 };
 
 export type PaperTradingStrategyProofRollup = {
@@ -548,6 +579,153 @@ function buildCaptureCoverage(
     last_expected_snapshot_date: lastExpectedDate,
     captured_snapshot_dates: capturedDates,
     missing_snapshot_dates: missingDates,
+  };
+}
+
+function emptyCaptureCalendar(
+  statusLabel: string
+): PaperTradingCaptureCalendar {
+  return {
+    status: "unavailable",
+    status_label: statusLabel,
+    expected_days: 0,
+    complete_days: 0,
+    partial_days: 0,
+    missing_days: 0,
+    coverage_ratio: 0,
+    current_streak_days: 0,
+    expected_live_strategy_rows: 0,
+    first_expected_snapshot_date: null,
+    last_expected_snapshot_date: null,
+    days_remaining_to_30: REQUIRED_PROOF_DAYS,
+    days: [],
+  };
+}
+
+function latestCapturedAtForRows(
+  rows: PaperTradingSnapshotRow[]
+): string | null {
+  return latestRowForDay(rows)?.captured_at ?? null;
+}
+
+export function buildPaperTradingCaptureCalendar(
+  snapshots: PaperTradingSnapshotRow[],
+  captureHealth: PaperTradingCaptureHealth
+): PaperTradingCaptureCalendar {
+  const byDate = new Map<string, PaperTradingSnapshotRow[]>();
+  for (const snapshot of snapshots) {
+    if (!snapshotDateToUtcDate(snapshot.snapshot_date)) continue;
+    const rows = byDate.get(snapshot.snapshot_date) ?? [];
+    rows.push(snapshot);
+    byDate.set(snapshot.snapshot_date, rows);
+  }
+
+  const capturedDates = Array.from(byDate.keys()).sort((a, b) =>
+    a.localeCompare(b)
+  );
+  const firstCapturedDate = capturedDates[0] ?? null;
+  const previousExpectedDate = captureHealth.previous_expected_capture_at.slice(0, 10);
+  const previousExpectedUtc = snapshotDateToUtcDate(previousExpectedDate);
+  const windowStartDate = previousExpectedUtc
+    ? utcSnapshotDate(addUtcDays(previousExpectedUtc, -(REQUIRED_PROOF_DAYS - 1)))
+    : null;
+  const firstExpectedDate =
+    firstCapturedDate && windowStartDate
+      ? firstCapturedDate > windowStartDate
+        ? firstCapturedDate
+        : windowStartDate
+      : firstCapturedDate;
+  const lastExpectedDate =
+    firstExpectedDate && firstExpectedDate <= previousExpectedDate
+      ? previousExpectedDate
+      : firstExpectedDate;
+  const expectedDates =
+    firstExpectedDate && lastExpectedDate
+      ? snapshotDateRange(firstExpectedDate, lastExpectedDate)
+      : [];
+
+  if (expectedDates.length === 0) {
+    return emptyCaptureCalendar("No captures");
+  }
+
+  const expectedLiveStrategyRows = Math.max(
+    0,
+    ...expectedDates.map((date) =>
+      (byDate.get(date) ?? []).filter((row) => row.sample === "live_only").length
+    )
+  );
+
+  const days = expectedDates.map((date): PaperTradingCaptureCalendarDay => {
+    const rows = byDate.get(date) ?? [];
+    const liveRows = rows.filter((row) => row.sample === "live_only");
+    const controlRows = rows.filter((row) => row.sample !== "live_only");
+    const capturedRows = rows.length;
+    const status: PaperTradingCaptureCalendarDay["status"] =
+      capturedRows === 0
+        ? "missing"
+        : expectedLiveStrategyRows === 0 ||
+            liveRows.length < expectedLiveStrategyRows
+          ? "partial"
+          : "complete";
+
+    return {
+      snapshot_date: date,
+      status,
+      status_label:
+        status === "complete"
+          ? "Complete"
+          : status === "partial"
+            ? "Partial"
+            : "Missing",
+      captured_rows: capturedRows,
+      live_strategy_rows: liveRows.length,
+      control_rows: controlRows.length,
+      custom_rows: rows.filter((row) => row.is_custom).length,
+      expected_live_strategy_rows: expectedLiveStrategyRows,
+      strategy_ids: Array.from(new Set(rows.map((row) => row.strategy_id))).sort(),
+      live_strategy_ids: Array.from(
+        new Set(liveRows.map((row) => row.strategy_id))
+      ).sort(),
+      latest_captured_at: capturedRows > 0 ? latestCapturedAtForRows(rows) : null,
+    };
+  });
+
+  const completeDays = days.filter((day) => day.status === "complete").length;
+  const partialDays = days.filter((day) => day.status === "partial").length;
+  const missingDays = days.filter((day) => day.status === "missing").length;
+  let currentStreakDays = 0;
+  for (let i = days.length - 1; i >= 0; i -= 1) {
+    if (days[i].status !== "complete") break;
+    currentStreakDays += 1;
+  }
+
+  const status: PaperTradingCaptureCalendar["status"] =
+    missingDays > 0
+      ? "missing"
+      : partialDays > 0
+        ? "partial"
+        : "complete";
+
+  return {
+    status,
+    status_label:
+      status === "complete"
+        ? "Complete"
+        : status === "partial"
+          ? "Partial"
+          : "Missing",
+    expected_days: expectedDates.length,
+    complete_days: completeDays,
+    partial_days: partialDays,
+    missing_days: missingDays,
+    coverage_ratio:
+      expectedDates.length > 0 ? round2(completeDays / expectedDates.length) : 0,
+    current_streak_days: currentStreakDays,
+    expected_live_strategy_rows: expectedLiveStrategyRows,
+    first_expected_snapshot_date: expectedDates[0] ?? null,
+    last_expected_snapshot_date: expectedDates[expectedDates.length - 1] ?? null,
+    days_remaining_to_30: Math.max(0, REQUIRED_PROOF_DAYS - completeDays),
+    days,
   };
 }
 
@@ -987,6 +1165,7 @@ export async function loadPaperTradingSnapshotHistory(
         "Unconfigured",
         "Supabase env is not configured for persisted paper-trading snapshots."
       ),
+      capture_calendar: emptyCaptureCalendar("Unconfigured"),
       proof_summary: emptyPaperTradingProofSummary(
         "unavailable",
         "Unconfigured"
@@ -1012,6 +1191,9 @@ export async function loadPaperTradingSnapshotHistory(
         isMissingTableError(error) ? "Table missing" : "Error",
         error.message
       ),
+      capture_calendar: emptyCaptureCalendar(
+        isMissingTableError(error) ? "Table missing" : "Error"
+      ),
       proof_summary: emptyPaperTradingProofSummary(
         "unavailable",
         isMissingTableError(error) ? "Table missing" : "Error"
@@ -1025,12 +1207,17 @@ export async function loadPaperTradingSnapshotHistory(
   const captureHealth = buildPaperTradingCaptureHealth(
     snapshots[0]?.captured_at ?? null
   );
+  const captureCalendar = buildPaperTradingCaptureCalendar(
+    snapshots,
+    captureHealth
+  );
   const strategyRollups = buildPaperTradingStrategyRollups(snapshots, captureHealth);
   return {
     status: "available",
     message: "Persisted paper-trading snapshots loaded.",
     latest_captured_at: snapshots[0]?.captured_at ?? null,
     capture_health: captureHealth,
+    capture_calendar: captureCalendar,
     proof_summary: buildPaperTradingProofSummary(strategyRollups),
     snapshots,
     strategy_rollups: strategyRollups,
