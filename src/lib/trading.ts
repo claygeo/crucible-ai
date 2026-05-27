@@ -101,6 +101,31 @@ function readEnv(name: string): string | undefined {
   return value ? value : undefined;
 }
 
+function recordValue(value: unknown): Record<string, unknown> | null {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function numberLike(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function stringLike(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value;
+  return null;
+}
+
+function booleanLike(value: unknown): boolean | null {
+  if (typeof value === "boolean") return value;
+  return null;
+}
+
 type MarketStatus =
   | "open"
   | "pending_resolution"
@@ -129,7 +154,32 @@ type PredictionMarketRow = {
     resolved_at: string | null;
     closes_at: string | null;
     outcome_yes_price: number;
+    raw: Record<string, unknown> | null;
   };
+};
+
+export type MarketExecutionQualityStatus = "measured" | "partial" | "missing";
+
+export type PaperTradingMarketExecutionQuality = {
+  status: MarketExecutionQualityStatus;
+  status_label: string;
+  source: string;
+  available_fields: string[];
+  missing_fields: string[];
+  bid_ask_spread_at_entry: number | null;
+  best_bid: number | null;
+  best_ask: number | null;
+  order_book_depth_at_entry: number | null;
+  fee_schedule_at_entry: string | null;
+  max_fill_size_at_simulated_stake: number | null;
+  slippage_adjusted_entry_price: number | null;
+  last_trade_price: number | null;
+  liquidity_usd: number | null;
+  volume_24h_usd: number | null;
+  order_min_size: number | null;
+  order_tick_size: number | null;
+  accepting_orders: boolean | null;
+  source_fields: string[];
 };
 
 export type PaperTrade = {
@@ -158,6 +208,7 @@ export type PaperTrade = {
   is_backfill: boolean;
   confidence: string;
   reasoning: string;
+  market_execution_quality: PaperTradingMarketExecutionQuality;
   won: boolean | null;
   pnl_usd: number | null;
 };
@@ -359,6 +410,7 @@ export type PaperTradingMarketExposureRow = {
   avg_abs_edge: number;
   review_required_signals: number;
   tradable_signals: number;
+  execution_quality: PaperTradingMarketExecutionQuality;
   top_signals: PaperTradingMarketExposureSignal[];
 };
 
@@ -1292,6 +1344,100 @@ function stakeForTrade(
   );
 }
 
+const EXECUTION_QUALITY_REQUIRED_FIELDS = [
+  "bid_ask_spread_at_entry",
+  "order_book_depth_at_entry",
+  "fee_schedule_at_entry",
+  "max_fill_size_at_simulated_stake",
+  "slippage_adjusted_entry_price",
+] as const;
+
+function executionQualityStatusLabel(
+  status: MarketExecutionQualityStatus,
+): string {
+  if (status === "measured") return "Measured";
+  if (status === "partial") return "Partial";
+  return "Missing";
+}
+
+function buildMarketExecutionQuality(
+  source: string,
+  raw: Record<string, unknown> | null,
+): PaperTradingMarketExecutionQuality {
+  const fields = raw ? Object.keys(raw).sort() : [];
+  const bestBid = numberLike(raw?.bestBid);
+  const bestAsk = numberLike(raw?.bestAsk);
+  const explicitSpread = numberLike(raw?.spread);
+  const bidAskSpread =
+    explicitSpread ??
+    (bestBid !== null && bestAsk !== null
+      ? Math.max(0, bestAsk - bestBid)
+      : null);
+  const liquidityUsd =
+    numberLike(raw?.liquidityClob) ??
+    numberLike(raw?.liquidityNum) ??
+    numberLike(raw?.liquidity) ??
+    numberLike(raw?.totalLiquidity);
+  const volume24hUsd =
+    numberLike(raw?.volume24hrClob) ??
+    numberLike(raw?.volume24hr) ??
+    numberLike(raw?.volume24Hours);
+  const feeSchedule =
+    stringLike(raw?.feeType) ??
+    (booleanLike(raw?.feesEnabled) !== null
+      ? `fees_enabled=${String(booleanLike(raw?.feesEnabled))}`
+      : null);
+  const orderMinSize = numberLike(raw?.orderMinSize);
+  const orderTickSize = numberLike(raw?.orderPriceMinTickSize);
+  const lastTradePrice = numberLike(raw?.lastTradePrice);
+  const acceptingOrders = booleanLike(raw?.acceptingOrders);
+  const maxFillSize =
+    liquidityUsd !== null && orderMinSize !== null
+      ? Math.max(orderMinSize, Math.min(liquidityUsd, 100))
+      : liquidityUsd;
+
+  const availableFields = [
+    bidAskSpread !== null ? "bid_ask_spread_at_entry" : null,
+    liquidityUsd !== null ? "order_book_depth_at_entry" : null,
+    feeSchedule !== null ? "fee_schedule_at_entry" : null,
+    maxFillSize !== null ? "max_fill_size_at_simulated_stake" : null,
+  ].filter((field): field is string => Boolean(field));
+  const missingFields = EXECUTION_QUALITY_REQUIRED_FIELDS.filter(
+    (field) => !availableFields.includes(field),
+  );
+  const status: MarketExecutionQualityStatus =
+    missingFields.length === 0
+      ? "measured"
+      : availableFields.length > 0
+        ? "partial"
+        : "missing";
+
+  return {
+    status,
+    status_label: executionQualityStatusLabel(status),
+    source,
+    available_fields: availableFields,
+    missing_fields: [...missingFields],
+    bid_ask_spread_at_entry:
+      bidAskSpread === null ? null : round4(bidAskSpread),
+    best_bid: bestBid === null ? null : round4(bestBid),
+    best_ask: bestAsk === null ? null : round4(bestAsk),
+    order_book_depth_at_entry:
+      liquidityUsd === null ? null : round2(liquidityUsd),
+    fee_schedule_at_entry: feeSchedule,
+    max_fill_size_at_simulated_stake:
+      maxFillSize === null ? null : round2(maxFillSize),
+    slippage_adjusted_entry_price: null,
+    last_trade_price: lastTradePrice === null ? null : round4(lastTradePrice),
+    liquidity_usd: liquidityUsd === null ? null : round2(liquidityUsd),
+    volume_24h_usd: volume24hUsd === null ? null : round2(volume24hUsd),
+    order_min_size: orderMinSize === null ? null : round2(orderMinSize),
+    order_tick_size: orderTickSize === null ? null : round4(orderTickSize),
+    accepting_orders: acceptingOrders,
+    source_fields: fields,
+  };
+}
+
 function buildTrade(
   row: PredictionMarketRow,
   opts: { minEdge: number; stakeMode: StakeMode; config?: PaperTradingConfig },
@@ -1363,6 +1509,10 @@ function buildTrade(
     is_backfill: row.is_backfill,
     confidence: row.confidence,
     reasoning: cleanReasoning(row.reasoning).slice(0, 500),
+    market_execution_quality: buildMarketExecutionQuality(
+      row.market.source,
+      row.market.raw,
+    ),
     won,
     pnl_usd: pnlUsd === null ? null : round2(pnlUsd),
   };
@@ -2038,6 +2188,7 @@ function buildMarketExposureDigest(
             : 0,
         review_required_signals: reviewRequiredSignals,
         tradable_signals: signals.length - reviewRequiredSignals,
+        execution_quality: first.market_execution_quality,
         top_signals: signals.slice(0, 6),
       };
     })
@@ -3841,7 +3992,7 @@ async function loadPredictionRows(): Promise<{
       const { data, error } = await sb
         .from("predictions")
         .select(
-          "id, agent_id, market_id, probability, confidence, reasoning, market_price_at_forecast, is_backfill, created_at, markets!inner(id, source, question, category, url, status, resolved_outcome, resolved_at, closes_at, outcome_yes_price)",
+          "id, agent_id, market_id, probability, confidence, reasoning, market_price_at_forecast, is_backfill, created_at, markets!inner(id, source, question, category, url, status, resolved_outcome, resolved_at, closes_at, outcome_yes_price, raw)",
         )
         .eq("abstained", false)
         .order("created_at", { ascending: false })
@@ -3874,6 +4025,7 @@ async function loadPredictionRows(): Promise<{
               resolved_at: (market.resolved_at as string | null) ?? null,
               closes_at: (market.closes_at as string | null) ?? null,
               outcome_yes_price: Number(market.outcome_yes_price ?? 0.5),
+              raw: recordValue(market.raw),
             },
           };
         });
@@ -3910,6 +4062,7 @@ async function loadPredictionRows(): Promise<{
         resolved_at: m.resolved_at ?? null,
         closes_at: m.closes_at ?? null,
         outcome_yes_price: m.outcome_yes_price,
+        raw: null,
       },
     });
   }

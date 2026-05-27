@@ -1,6 +1,8 @@
 import type {
   AgentEdgeResolvedTradeLedgerEntry,
+  PaperTradingMarketExecutionQuality,
   PaperTradingExposureBreakdownRow,
+  PaperTradingMarketExposureRow,
   TradingSnapshot,
 } from "@/lib/trading";
 
@@ -53,9 +55,20 @@ export type PaperTradingLiquidityReviewSource = {
   exposure_share: number;
   recent_resolved_trades: number;
   recent_resolved_net_pnl_usd: number;
-  liquidity_fields_available: false;
+  liquidity_fields_available: boolean;
   slippage_adjusted_pnl_available: false;
+  execution_quality_sample_count: number;
+  partial_execution_quality_market_count: number;
+  measured_execution_quality_market_count: number;
+  available_fields: string[];
   missing_fields: readonly string[];
+  sample_markets: Array<{
+    market_id: string;
+    market_question: string;
+    open_exposure_usd: number;
+    signal_count: number;
+    execution_quality: PaperTradingMarketExecutionQuality;
+  }>;
   blocker: string;
 };
 
@@ -75,11 +88,7 @@ export type PaperTradingExecutionStressRule = {
   agent_id: string;
   agent_name: string;
   min_edge: number;
-  status:
-    | "survives_stress"
-    | "fragile_profit"
-    | "loss_making"
-    | "collecting";
+  status: "survives_stress" | "fragile_profit" | "loss_making" | "collecting";
   status_label: string;
   resolved_trades: number;
   stake_usd: number;
@@ -170,10 +179,37 @@ function uniqueRecentResolvedTrades(
 function sourceRowFromOpenExposure(
   row: PaperTradingExposureBreakdownRow | undefined,
   sourceId: string,
+  marketRows: PaperTradingMarketExposureRow[],
   resolvedTrades: AgentEdgeResolvedTradeLedgerEntry[],
 ): PaperTradingLiquidityReviewSource {
   const hasSourceActivity =
     (row?.signal_count ?? 0) > 0 || resolvedTrades.length > 0;
+  const sampleMarkets = marketRows
+    .filter((market) => market.market_source === sourceId)
+    .slice(0, 8)
+    .map((market) => ({
+      market_id: market.market_id,
+      market_question: market.market_question,
+      open_exposure_usd: market.open_exposure_usd,
+      signal_count: market.signal_count,
+      execution_quality: market.execution_quality,
+    }));
+  const availableFields = Array.from(
+    new Set(
+      sampleMarkets.flatMap(
+        (market) => market.execution_quality.available_fields,
+      ),
+    ),
+  ).sort();
+  const missingFields = PAPER_TRADING_LIQUIDITY_RULES.required_source_fields
+    .filter((field) => !availableFields.includes(field))
+    .sort();
+  const measuredMarketCount = sampleMarkets.filter(
+    (market) => market.execution_quality.status === "measured",
+  ).length;
+  const partialMarketCount = sampleMarkets.filter(
+    (market) => market.execution_quality.status === "partial",
+  ).length;
   return {
     source_id: sourceId,
     source_label: row?.label ?? sourceId,
@@ -188,19 +224,31 @@ function sourceRowFromOpenExposure(
     recent_resolved_net_pnl_usd: round2(
       resolvedTrades.reduce((sum, trade) => sum + trade.pnl_usd, 0),
     ),
-    liquidity_fields_available: false,
+    liquidity_fields_available: missingFields.length === 0,
     slippage_adjusted_pnl_available: false,
-    missing_fields: PAPER_TRADING_LIQUIDITY_RULES.required_source_fields,
+    execution_quality_sample_count: sampleMarkets.length,
+    partial_execution_quality_market_count: partialMarketCount,
+    measured_execution_quality_market_count: measuredMarketCount,
+    available_fields: availableFields,
+    missing_fields: missingFields,
+    sample_markets: sampleMarkets,
     blocker:
-      "No source-level spread, depth, fee, or fill-size evidence is persisted for these paper tickets.",
+      missingFields.length ===
+      PAPER_TRADING_LIQUIDITY_RULES.required_source_fields.length
+        ? "No source-level spread, depth, fee, or fill-size evidence is persisted for these paper tickets."
+        : missingFields.length === 1
+          ? `Partial execution-quality evidence exists, but ${missingFields[0]} still blocks capital review.`
+          : `Partial execution-quality evidence exists, but ${missingFields.join(
+              ", ",
+            )} still block capital review.`,
   };
 }
 
 function buildStressRule(
   rule: TradingSnapshot["agent_edge_trade_ledger"]["rules"][number],
 ): PaperTradingExecutionStressRule {
-  const scenarios = PAPER_TRADING_LIQUIDITY_RULES.execution_stress_scenarios.map(
-    (scenario) => {
+  const scenarios =
+    PAPER_TRADING_LIQUIDITY_RULES.execution_stress_scenarios.map((scenario) => {
       const frictionCostUsd =
         rule.stake_usd * (scenario.total_friction_bps / 10000);
       const netPnlAfterFriction = rule.net_pnl_usd - frictionCostUsd;
@@ -214,8 +262,7 @@ function buildStressRule(
           rule.stake_usd > 0 ? round4(netPnlAfterFriction / rule.stake_usd) : 0,
         remains_profitable: netPnlAfterFriction > 0,
       };
-    },
-  );
+    });
   const worstCase = scenarios[scenarios.length - 1] ?? null;
   const hasResolvedTrades = rule.resolved_trades > 0;
   const status: PaperTradingExecutionStressRule["status"] = !hasResolvedTrades
@@ -275,6 +322,7 @@ export function buildPaperTradingLiquidityReview(
       sourceRowFromOpenExposure(
         openRowsBySource.get(sourceId),
         sourceId,
+        snapshot.market_exposure_digest.top_markets,
         resolvedBySource.get(sourceId) ?? [],
       ),
     );

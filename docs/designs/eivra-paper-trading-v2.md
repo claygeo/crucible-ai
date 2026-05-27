@@ -355,6 +355,15 @@ The 30-day proof window now has a durable audit surface:
   snapshots exist. Snapshot summaries and published artifact proof carry the
   same `liquidity_review`, including the friction stress rows, so the daily
   proof bundle preserves why execution-quality evidence is still blocked.
+  Current open-market provider payloads are also sanitized into
+  `execution_quality` samples. Polymarket-style raw fields can now surface
+  bid/ask spread, depth/liquidity proxies, fee flags, minimum order size, tick
+  size, and accepting-orders state in `/api/trading.json`,
+  `/api/trading-market-exposure`, `/api/trading-liquidity-review`, and the
+  dashboard. This is partial tradability evidence only:
+  `slippage_adjusted_entry_price` remains missing, and the liquidity review
+  stays a capital-review blocker until true source-level fill/slippage snapshots
+  exist.
 - `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
   the latest paper-proof workflow run, matching artifact bundle, expiry, run
   URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,
