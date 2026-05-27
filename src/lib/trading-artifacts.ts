@@ -72,6 +72,7 @@ export type PublishedPaperTradingArtifactProof = {
   repository: string | null;
   workflow_path: string | null;
   workflow_run: Record<string, unknown> | null;
+  workflow_mode: Record<string, unknown> | null;
   artifact_audit: Record<string, unknown> | null;
   artifact_proof: Record<string, unknown> | null;
   proof_summary: Record<string, unknown> | null;
@@ -381,6 +382,7 @@ function unavailablePublishedProof(
     repository: PAPER_TRADING_ARTIFACT_CONTRACT.repository,
     workflow_path: PAPER_TRADING_ARTIFACT_CONTRACT.workflow_path,
     workflow_run: null,
+    workflow_mode: null,
     artifact_audit: null,
     artifact_proof: null,
     proof_summary: null,
@@ -412,6 +414,7 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
     }
     const artifactProof = objectOrNull(proof.artifact_proof);
     const artifactAudit = objectOrNull(proof.artifact_audit);
+    const workflowMode = objectOrNull(proof.workflow_mode);
     const proofReadiness = objectOrNull(artifactProof?.proof_readiness);
     const proofRunway = objectOrNull(artifactProof?.proof_runway);
     const capitalReviewPacket = objectOrNull(
@@ -475,6 +478,7 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
       repository: nullableString(proof.repository),
       workflow_path: nullableString(proof.workflow_path),
       workflow_run: objectOrNull(proof.workflow_run),
+      workflow_mode: workflowMode,
       artifact_audit: artifactAudit,
       artifact_proof: artifactProof,
       proof_summary: proofSummary,

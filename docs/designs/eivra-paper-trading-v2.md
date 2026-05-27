@@ -229,6 +229,11 @@ The 30-day proof window now has a durable audit surface:
   `execution_path_present: false`. The packet is also embedded in published
   artifact proof so a future capital discussion starts from the durable 30-day
   evidence boundary, not the live dashboard mood.
+- Published artifact proof carries `workflow_mode` both at the top level and
+  inside `artifact_proof` / `capital_review_packet`. If GitHub Actions ran in
+  read-only artifact mode because Supabase snapshot writes were disabled, the
+  packet keeps `decision: do_not_allocate_capital` and records the mode reason
+  as a capital-review blocker.
 - `persistence.proof_runway` and the top-level `persisted_proof_runway` turn the
   same evidence into an operator timeline: earliest possible capital-review
   date, remaining capture days, remaining resolved live trades, open resolution
