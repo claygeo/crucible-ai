@@ -18,11 +18,13 @@ export async function GET(request: Request) {
       persisted_daily_snapshots: persisted.snapshots,
       persisted_strategy_rollups: persisted.strategy_rollups,
       persisted_proof_summary: persisted.proof_summary,
+      persisted_capture_calendar: persisted.capture_calendar,
       persistence: {
         status: persisted.status,
         message: persisted.message,
         latest_captured_at: persisted.latest_captured_at,
         capture_health: persisted.capture_health,
+        capture_calendar: persisted.capture_calendar,
         proof_summary: persisted.proof_summary,
       },
       description:

@@ -107,6 +107,9 @@ The 30-day proof window now has a durable audit surface:
   request-derived math and stored evidence.
 - `persistence.capture_health` reports the daily recorder status, latest capture
   age, next expected capture, cron expression, and stale threshold.
+- `persistence.capture_calendar` reports the proof window day by day, including
+  complete, partial, and missing capture days plus the number of live strategy
+  rows recorded for each expected snapshot date.
 
 The database table is public-read, service-role-write, and RLS-enabled. Snapshot
 rows are analytics evidence only; they do not create wallets, orders, leverage,
@@ -132,6 +135,12 @@ Each rollup also carries `capture_coverage`, which compares captured snapshot
 dates against the latest up-to-30 scheduled capture dates in the proof window.
 Missing scheduled dates block live strategies from becoming candidates, even
 when the latest global capture is still inside the broader freshness window.
+
+The persisted feed also carries a top-level `capture_calendar`. This is the
+operator-facing evidence ledger: it shows whether each expected proof day has a
+complete live-strategy snapshot set, a partial set, or no capture at all. The
+calendar does not replace per-strategy proof gates; it makes recorder quality
+auditable before anyone reads P&L.
 
 Each rollup also carries `proof_window`, a rolling-window delta from the row
 before the proof window into the latest captured row. The durable gate uses this
