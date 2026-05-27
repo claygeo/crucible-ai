@@ -50,6 +50,13 @@ function proofStatusClass(status: string) {
   return "bg-warn/10 text-warn";
 }
 
+function proofSummaryClass(status: string) {
+  if (status === "candidate") return "text-positive";
+  if (status === "not_qualified" || status === "stale") return "text-rose-400";
+  if (status === "collecting") return "text-warn";
+  return "text-text-muted";
+}
+
 function persistenceStatusClass(status: string) {
   if (status === "available") return "text-positive";
   if (status === "table_missing") return "text-warn";
@@ -124,6 +131,7 @@ export default async function TradingPage({
   const latestPersistedSnapshots = persisted.snapshots.slice(0, 8);
   const persistedRollups = persisted.strategy_rollups.slice(0, 8);
   const captureHealth = persisted.capture_health;
+  const proofSummary = persisted.proof_summary;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -516,7 +524,19 @@ export default async function TradingPage({
               json feed
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Live proof
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${proofSummaryClass(
+                  proofSummary.status
+                )}`}
+              >
+                {proofSummary.status_label}
+              </div>
+            </div>
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Archive
@@ -575,6 +595,20 @@ export default async function TradingPage({
             </div>
           </div>
           <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
+            {proofSummary.best_live_strategy_label ? (
+              <span>
+                best live {proofSummary.best_live_strategy_label}:{" "}
+                <span className={pnlClass(proofSummary.best_live_window_pnl_usd)}>
+                  {dollars(proofSummary.best_live_window_pnl_usd, 0)}
+                </span>{" "}
+                / {pct(proofSummary.best_live_window_roi_on_stake, 1)}
+              </span>
+            ) : null}
+            <span>
+              live {int(proofSummary.live_strategy_count)} / candidates{" "}
+              {int(proofSummary.candidate_count)} / controls{" "}
+              {int(proofSummary.control_count)}
+            </span>
             <span className={captureHealthClass(captureHealth.status)}>
               {captureHealth.message}
             </span>

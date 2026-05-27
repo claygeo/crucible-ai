@@ -17,11 +17,13 @@ export async function GET(request: Request) {
       ...snapshot,
       persisted_daily_snapshots: persisted.snapshots,
       persisted_strategy_rollups: persisted.strategy_rollups,
+      persisted_proof_summary: persisted.proof_summary,
       persistence: {
         status: persisted.status,
         message: persisted.message,
         latest_captured_at: persisted.latest_captured_at,
         capture_health: persisted.capture_health,
+        proof_summary: persisted.proof_summary,
       },
       description:
         "Eivra paper-trading v2. Converts agent probability edges versus market prices into bounded paper tickets. Query params configure analytics only; no real money, no order execution, and no leverage.",
