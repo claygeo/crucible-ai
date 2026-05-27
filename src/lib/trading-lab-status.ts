@@ -37,6 +37,7 @@ export type PaperTradingLabCheck = {
     | "registry_sync"
     | "agent_edge_profitability"
     | "selected_tradability"
+    | "selected_agent_edge_proof_lag"
     | "capital_review";
   label: string;
   status: PaperTradingLabCheckStatus;
@@ -44,6 +45,29 @@ export type PaperTradingLabCheck = {
   current: string;
   target: string;
   detail: string;
+};
+
+export type PaperTradingSelectedAgentEdgeProofLag = {
+  status:
+    | "in_sync"
+    | "live_ahead_of_durable"
+    | "durable_ahead_of_live"
+    | "not_applicable";
+  status_label: string;
+  source_label: string;
+  selected_strategy_id: string;
+  selected_strategy_label: string;
+  agent_id: string | null;
+  agent_name: string | null;
+  min_edge: number;
+  live_skipped_resolved_trades: number;
+  durable_skipped_resolved_trades: number;
+  delta_skipped_resolved_trades: number;
+  live_skipped_resolved_net_pnl_usd: number;
+  durable_skipped_resolved_net_pnl_usd: number;
+  delta_skipped_resolved_net_pnl_usd: number;
+  missed_pnl_counts_as_proof: false;
+  message: string;
 };
 
 export type PaperTradingLabStatus = {
@@ -131,6 +155,7 @@ export type PaperTradingLabStatus = {
       total_missed_pnl_usd: number;
       missed_pnl_counts_as_proof: false;
     };
+    selected_agent_edge_proof_lag: PaperTradingSelectedAgentEdgeProofLag;
   };
   operations: {
     registry_sync_status: PaperTradingStrategyRegistrySync["status"];
@@ -150,6 +175,89 @@ export type PaperTradingLabStatus = {
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function selectedProofLagStatusLabel(
+  status: PaperTradingSelectedAgentEdgeProofLag["status"],
+): string {
+  if (status === "live_ahead_of_durable") return "Live ahead of proof source";
+  if (status === "durable_ahead_of_live") return "Proof source ahead of live";
+  if (status === "not_applicable") return "Not applicable";
+  return "In sync";
+}
+
+function selectedProofLagMessage(args: {
+  status: PaperTradingSelectedAgentEdgeProofLag["status"];
+  sourceLabel: string;
+  deltaTrades: number;
+  deltaPnl: number;
+}): string {
+  if (args.status === "live_ahead_of_durable") {
+    return `The live selected strategy has ${args.deltaTrades} more skipped resolved ticket${args.deltaTrades === 1 ? "" : "s"} than the durable ${args.sourceLabel} proof row. Treat this as proof-source lag; missed P&L still does not count as proof P&L.`;
+  }
+  if (args.status === "durable_ahead_of_live") {
+    return `The durable ${args.sourceLabel} proof row has more skipped resolved leakage than the current selected live replay. Inspect the next capture before relying on the delta.`;
+  }
+  if (args.status === "not_applicable") {
+    return "The selected strategy is not a single canonical agent-edge rule, so there is no direct durable row to compare.";
+  }
+  return `The selected live strategy and durable ${args.sourceLabel} proof row agree on skipped resolved leakage.`;
+}
+
+function buildSelectedAgentEdgeProofLag(args: {
+  selectedStrategy: TradingSnapshot["selected_strategy"];
+  exposureLedger: TradingSnapshot["selected_exposure_ledger"];
+  agentEdgeProof: PaperTradingAgentEdgeProof;
+}): PaperTradingSelectedAgentEdgeProofLag {
+  const selectedAgentId =
+    args.selectedStrategy.agent_ids.length === 1
+      ? args.selectedStrategy.agent_ids[0]
+      : null;
+  const durableRow = selectedAgentId
+    ? (args.agentEdgeProof.rows.find(
+        (row) =>
+          row.agent_id === selectedAgentId &&
+          Math.abs(row.min_edge - args.selectedStrategy.min_edge) < 0.000001,
+      ) ?? null)
+    : null;
+  const liveTrades = args.exposureLedger.skipped_resolved_trades;
+  const durableTrades = durableRow?.skipped_resolved_trades ?? 0;
+  const livePnl = round2(args.exposureLedger.skipped_resolved_net_pnl_usd);
+  const durablePnl = round2(durableRow?.skipped_resolved_net_pnl_usd ?? 0);
+  const deltaTrades = liveTrades - durableTrades;
+  const deltaPnl = round2(livePnl - durablePnl);
+  const status: PaperTradingSelectedAgentEdgeProofLag["status"] =
+    !selectedAgentId
+      ? "not_applicable"
+      : deltaTrades > 0 || deltaPnl > 0
+        ? "live_ahead_of_durable"
+        : deltaTrades < 0 || deltaPnl < 0
+          ? "durable_ahead_of_live"
+          : "in_sync";
+
+  return {
+    status,
+    status_label: selectedProofLagStatusLabel(status),
+    source_label: args.agentEdgeProof.source_label,
+    selected_strategy_id: args.selectedStrategy.id,
+    selected_strategy_label: args.selectedStrategy.label,
+    agent_id: selectedAgentId,
+    agent_name: durableRow?.agent_name ?? null,
+    min_edge: args.selectedStrategy.min_edge,
+    live_skipped_resolved_trades: liveTrades,
+    durable_skipped_resolved_trades: durableTrades,
+    delta_skipped_resolved_trades: deltaTrades,
+    live_skipped_resolved_net_pnl_usd: livePnl,
+    durable_skipped_resolved_net_pnl_usd: durablePnl,
+    delta_skipped_resolved_net_pnl_usd: deltaPnl,
+    missed_pnl_counts_as_proof: false,
+    message: selectedProofLagMessage({
+      status,
+      sourceLabel: args.agentEdgeProof.source_label,
+      deltaTrades: Math.abs(deltaTrades),
+      deltaPnl: Math.abs(deltaPnl),
+    }),
+  };
 }
 
 function statusLabel(status: PaperTradingLabStatusStatus): string {
@@ -316,6 +424,11 @@ export function buildPaperTradingLabStatus(args: {
   const exposureLedger = args.snapshot.selected_exposure_ledger;
   const durableCapacityLeakage = args.agentEdgeProof.capacity_leakage;
   const topMissedAgentEdgeRule = durableCapacityLeakage.top_missed_rule;
+  const selectedAgentEdgeProofLag = buildSelectedAgentEdgeProofLag({
+    selectedStrategy,
+    exposureLedger,
+    agentEdgeProof: args.agentEdgeProof,
+  });
   const leakageStatus = capacityLeakageStatus(
     exposureLedger.skipped_open_signals,
     exposureLedger.skipped_resolved_trades,
@@ -413,6 +526,22 @@ export function buildPaperTradingLabStatus(args: {
         exposureLedger.skipped_resolved_trades > 0
           ? "Skipped resolved P&L is capacity leakage, not proof P&L."
           : "No skipped resolved ticket is inflating proof P&L.",
+    }),
+    check({
+      id: "selected_agent_edge_proof_lag",
+      label: "Selected proof source lag",
+      status:
+        selectedAgentEdgeProofLag.status === "live_ahead_of_durable" ||
+        selectedAgentEdgeProofLag.status === "durable_ahead_of_live"
+          ? "warning"
+          : "pass",
+      current:
+        selectedAgentEdgeProofLag.status === "not_applicable"
+          ? "no direct canonical row"
+          : `live ${selectedAgentEdgeProofLag.live_skipped_resolved_trades} / durable ${selectedAgentEdgeProofLag.durable_skipped_resolved_trades}`,
+      target:
+        "current selected leakage matches the durable agent-edge proof source",
+      detail: selectedAgentEdgeProofLag.message,
     }),
     check({
       id: "capital_review",
@@ -545,6 +674,7 @@ export function buildPaperTradingLabStatus(args: {
         ),
         missed_pnl_counts_as_proof: false,
       },
+      selected_agent_edge_proof_lag: selectedAgentEdgeProofLag,
     },
     operations: {
       registry_sync_status: args.registrySync.status,

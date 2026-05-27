@@ -248,7 +248,11 @@ The 30-day proof window now has a durable audit surface:
   accepted proof P&L separate from skipped resolved P&L, reports
   `missed_pnl_counts_as_proof: false`, summarizes the top canonical agent-edge
   capacity leak from the durable agent-edge proof source, and always carries
-  `real_money_execution_allowed: false`.
+  `real_money_execution_allowed: false`. It also compares the selected live
+  strategy's skipped-resolved leakage against the matching durable agent-edge row
+  as `selected_agent_edge_proof_lag`, so a live replay that sees a resolved miss
+  before the next Supabase/artifact proof capture is labeled as proof-source lag
+  instead of being silently hidden.
 - `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
   the latest paper-proof workflow run, matching artifact bundle, expiry, run
   URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,
