@@ -564,6 +564,13 @@ export type AgentEdgeRuleSummary = {
   max_drawdown_usd: number;
   open_exposure_usd: number;
   open_expected_pnl_usd: number;
+  pending_pnl_counts_as_proof: false;
+  break_even_open_wins_required: number | null;
+  break_even_open_win_rate_required: number | null;
+  worst_case_total_pnl_usd: number;
+  model_expected_total_pnl_usd: number;
+  best_case_total_pnl_usd: number;
+  open_outcome_scenarios: SelectedOpenOutcomeScenarios;
 };
 
 export type AgentEdgeOpenSignalWatchlistRule = {
@@ -2427,7 +2434,7 @@ function buildSelectedBankrollRisk(
   };
 }
 
-function buildSelectedOpenOutcomeScenarios(
+function buildOpenOutcomeScenarios(
   strategy: StrategyVariantSummary,
   selectedTrades: PaperTrade[],
 ): SelectedOpenOutcomeScenarios {
@@ -2546,15 +2553,28 @@ function isAgentEdgeVariant(strategy: StrategyVariantSummary): boolean {
 }
 
 function buildAgentEdgeMatrix(
-  strategies: StrategyVariantSummary[],
+  evaluations: StrategyEvaluation[],
 ): AgentEdgeRuleSummary[] {
   const agentRank = new Map(AGENTS.map((agent, index) => [agent.id, index]));
 
-  return strategies
-    .filter(isAgentEdgeVariant)
-    .map((strategy) => {
+  return evaluations
+    .filter(({ summary }) => isAgentEdgeVariant(summary))
+    .map(({ summary: strategy, acceptedTrades }) => {
       const agentId = strategy.agent_ids[0];
       const agent = AGENTS.find((item) => item.id === agentId);
+      const openOutcomeScenarios = buildOpenOutcomeScenarios(
+        strategy,
+        acceptedTrades,
+      );
+      const worstCase = openOutcomeScenarios.scenarios.find(
+        (scenario) => scenario.id === "worst_case",
+      );
+      const modelExpected = openOutcomeScenarios.scenarios.find(
+        (scenario) => scenario.id === "model_expected",
+      );
+      const bestCase = openOutcomeScenarios.scenarios.find(
+        (scenario) => scenario.id === "best_case",
+      );
 
       return {
         strategy_id: strategy.id,
@@ -2587,6 +2607,18 @@ function buildAgentEdgeMatrix(
         max_drawdown_usd: strategy.max_drawdown_usd,
         open_exposure_usd: strategy.open_exposure_usd,
         open_expected_pnl_usd: strategy.open_expected_pnl_usd,
+        pending_pnl_counts_as_proof: false as const,
+        break_even_open_wins_required:
+          openOutcomeScenarios.break_even_open_wins_required,
+        break_even_open_win_rate_required:
+          openOutcomeScenarios.break_even_open_win_rate_required,
+        worst_case_total_pnl_usd:
+          worstCase?.total_pnl_usd ?? strategy.net_pnl_usd,
+        model_expected_total_pnl_usd:
+          modelExpected?.total_pnl_usd ?? strategy.net_pnl_usd,
+        best_case_total_pnl_usd:
+          bestCase?.total_pnl_usd ?? strategy.net_pnl_usd,
+        open_outcome_scenarios: openOutcomeScenarios,
       };
     })
     .sort(
@@ -3958,7 +3990,7 @@ export async function getTradingSnapshot(
     .slice(0, 24);
   const selectedStrategy = selectedEvaluation.summary;
   const selectedBankrollRisk = buildSelectedBankrollRisk(selectedStrategy);
-  const selectedOpenOutcomeScenarios = buildSelectedOpenOutcomeScenarios(
+  const selectedOpenOutcomeScenarios = buildOpenOutcomeScenarios(
     selectedStrategy,
     selectedTrades,
   );
@@ -3999,7 +4031,7 @@ export async function getTradingSnapshot(
     agent_summaries: agentSummaries,
     live_agent_summaries: liveAgentSummaries,
     scenario_summaries: scenarioSummaries,
-    agent_edge_matrix: buildAgentEdgeMatrix(strategyVariants),
+    agent_edge_matrix: buildAgentEdgeMatrix(evaluatedStrategies),
     agent_edge_watchlist: buildAgentEdgeOpenSignalWatchlist(
       evaluatedStrategies,
       generatedAt,

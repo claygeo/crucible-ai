@@ -109,6 +109,14 @@ Each matrix row also exposes exposure-cap leakage fields:
 make a profitable missed signal visible without counting it as accepted proof
 P&L for that agent/edge rule.
 
+Each row also carries `open_outcome_scenarios` plus convenience totals:
+`break_even_open_wins_required`, `break_even_open_win_rate_required`,
+`worst_case_total_pnl_usd`, `model_expected_total_pnl_usd`, and
+`best_case_total_pnl_usd`. These fields show what unresolved open tickets would
+mean for that canonical rule if they all lose, resolve at model EV, or all win.
+They are guarded by `pending_pnl_counts_as_proof: false`; pending EV remains
+runway context, not realized proof.
+
 ## Exposure Ledger
 
 Each strategy is replayed chronologically through a paper exposure cap before
