@@ -177,6 +177,7 @@ async function main() {
     snapshot,
     persisted,
     agentEdgeProof,
+    publishedArtifactProof,
     registrySync,
     readiness,
     runway,

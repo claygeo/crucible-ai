@@ -4,6 +4,7 @@ import {
   type TradingSnapshot,
 } from "@/lib/trading";
 import type { PaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
+import type { PublishedPaperTradingArtifactProof } from "@/lib/trading-artifacts";
 import type {
   PaperTradingPersistenceRead,
   PaperTradingProofReadiness,
@@ -84,6 +85,18 @@ export type PaperTradingProofAudit = {
     capacity_leakage_missed_pnl_usd: number;
     missed_pnl_counts_as_proof: false;
   };
+  published_artifact_outcome_proof: {
+    status: PublishedPaperTradingArtifactProof["status"];
+    status_label: string;
+    generated_at: string | null;
+    workflow_run_id: string | null;
+    agent_edge_matrix_rows: number;
+    selected_bankroll_risk_available: boolean;
+    selected_open_outcome_scenarios_available: boolean;
+    invalid_agent_edge_outcome_rows: string[];
+    paper_only: true;
+    real_money_execution_allowed: false;
+  };
   readiness: PaperTradingProofReadiness;
   runway: PaperTradingProofRunway;
   failed_checks: string[];
@@ -122,6 +135,35 @@ function check(
   return { id, label, status, current, target, detail };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function finiteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function invalidPublishedOutcomeRows(rows: unknown[]): string[] {
+  return rows.flatMap((row, index) => {
+    if (!isRecord(row)) return [`row_${index}`];
+
+    const scenarios = isRecord(row.open_outcome_scenarios)
+      ? row.open_outcome_scenarios
+      : null;
+    const invalid =
+      row.pending_pnl_counts_as_proof !== false ||
+      !finiteNumber(row.worst_case_total_pnl_usd) ||
+      !finiteNumber(row.model_expected_total_pnl_usd) ||
+      !finiteNumber(row.best_case_total_pnl_usd) ||
+      !scenarios ||
+      scenarios.paper_only !== true ||
+      scenarios.real_money_execution_allowed !== false ||
+      !Array.isArray(scenarios.scenarios);
+
+    return invalid ? [String(row.strategy_id ?? `row_${index}`)] : [];
+  });
+}
+
 function verdictFromChecks(
   checks: PaperTradingProofAuditCheck[],
 ): PaperTradingProofAuditStatus {
@@ -146,6 +188,7 @@ export function buildPaperTradingProofAudit(args: {
   snapshot: TradingSnapshot;
   persisted: PaperTradingPersistenceRead;
   agentEdgeProof: PaperTradingAgentEdgeProof;
+  publishedArtifactProof: PublishedPaperTradingArtifactProof;
   registrySync: PaperTradingStrategyRegistrySync;
   readiness: PaperTradingProofReadiness;
   runway: PaperTradingProofRunway;
@@ -154,6 +197,36 @@ export function buildPaperTradingProofAudit(args: {
   soft?: boolean;
   generatedAt?: string;
 }): PaperTradingProofAudit {
+  const publishedOutcomeRows = args.publishedArtifactProof.agent_edge_matrix;
+  const invalidPublishedRows =
+    invalidPublishedOutcomeRows(publishedOutcomeRows);
+  const expectedPublishedOutcomeRows = args.agentEdgeProof.rule_count;
+  const missingPublishedOutcomeRows =
+    expectedPublishedOutcomeRows > 0 &&
+    publishedOutcomeRows.length < expectedPublishedOutcomeRows;
+  const publishedOutcomeStatus: PaperTradingProofAuditStatus =
+    args.publishedArtifactProof.status === "unavailable"
+      ? "unavailable"
+      : args.publishedArtifactProof.status === "blocked" ||
+          publishedOutcomeRows.length === 0 ||
+          missingPublishedOutcomeRows ||
+          !args.publishedArtifactProof.selected_bankroll_risk ||
+          !args.publishedArtifactProof.selected_open_outcome_scenarios ||
+          invalidPublishedRows.length > 0
+        ? "blocked"
+        : "pass";
+  const publishedOutcomeDetail =
+    invalidPublishedRows.length > 0
+      ? `Invalid pending-outcome proof locks: ${invalidPublishedRows.join(", ")}.`
+      : missingPublishedOutcomeRows
+        ? `Published proof has ${publishedOutcomeRows.length}/${expectedPublishedOutcomeRows} expected agent-edge outcome rows.`
+        : !args.publishedArtifactProof.selected_bankroll_risk
+          ? "Published proof is missing selected bankroll risk context."
+          : !args.publishedArtifactProof.selected_open_outcome_scenarios
+            ? "Published proof is missing selected open-outcome scenarios."
+            : args.publishedArtifactProof.status === "available"
+              ? "Published proof preserves open-ticket downside/upside context without enabling execution."
+              : args.publishedArtifactProof.message;
   const evidenceWindowReady =
     args.persisted.capture_calendar.complete_days >=
       PAPER_TRADING_PROOF_RULES.requiredLiveDays &&
@@ -169,9 +242,11 @@ export function buildPaperTradingProofAudit(args: {
       args.readiness.paper_only &&
         args.runway.paper_only &&
         args.persisted.proof_summary.paper_only &&
+        args.publishedArtifactProof.paper_only &&
         !args.readiness.real_money_execution_allowed &&
         !args.runway.real_money_execution_allowed &&
         !args.persisted.proof_summary.real_money_execution_allowed &&
+        !args.publishedArtifactProof.real_money_execution_allowed &&
         args.agentEdgeProof.paper_only &&
         !args.agentEdgeProof.real_money_execution_allowed
         ? "pass"
@@ -179,6 +254,7 @@ export function buildPaperTradingProofAudit(args: {
       !args.readiness.real_money_execution_allowed &&
         !args.runway.real_money_execution_allowed &&
         !args.persisted.proof_summary.real_money_execution_allowed &&
+        !args.publishedArtifactProof.real_money_execution_allowed &&
         !args.agentEdgeProof.real_money_execution_allowed
         ? "execution disabled"
         : "execution enabled somewhere",
@@ -277,6 +353,14 @@ export function buildPaperTradingProofAudit(args: {
       `${args.agentEdgeProof.profitability_guard.rules_with_profitability_proven}/${args.agentEdgeProof.rule_count} proven rules (${args.agentEdgeProof.positive_unproven_rule_count} positive thin, ${args.agentEdgeProof.unresolved_rule_count} unresolved)`,
       `>= 1 canonical rule clears ${PAPER_TRADING_PROOF_RULES.requiredLiveDays} live days and ${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades} resolved tickets`,
       args.agentEdgeProof.profitability_guard.next_required_action,
+    ),
+    check(
+      "published_artifact_outcome_matrix",
+      "Published outcome matrix",
+      publishedOutcomeStatus,
+      `${publishedOutcomeRows.length} rows / risk ${args.publishedArtifactProof.selected_bankroll_risk ? "yes" : "no"} / scenarios ${args.publishedArtifactProof.selected_open_outcome_scenarios ? "yes" : "no"}`,
+      "latest published artifact archives every agent-edge outcome row with pending P&L excluded from proof",
+      publishedOutcomeDetail,
     ),
     check(
       "window_pnl",
@@ -423,6 +507,24 @@ export function buildPaperTradingProofAudit(args: {
         args.agentEdgeProof.capacity_leakage.skipped_resolved_net_pnl_usd,
       missed_pnl_counts_as_proof:
         args.agentEdgeProof.capacity_leakage.missed_pnl_counts_as_proof,
+    },
+    published_artifact_outcome_proof: {
+      status: args.publishedArtifactProof.status,
+      status_label: args.publishedArtifactProof.status_label,
+      generated_at: args.publishedArtifactProof.generated_at,
+      workflow_run_id: isRecord(args.publishedArtifactProof.workflow_run)
+        ? typeof args.publishedArtifactProof.workflow_run.id === "string"
+          ? args.publishedArtifactProof.workflow_run.id
+          : null
+        : null,
+      agent_edge_matrix_rows: publishedOutcomeRows.length,
+      selected_bankroll_risk_available:
+        args.publishedArtifactProof.selected_bankroll_risk !== null,
+      selected_open_outcome_scenarios_available:
+        args.publishedArtifactProof.selected_open_outcome_scenarios !== null,
+      invalid_agent_edge_outcome_rows: invalidPublishedRows,
+      paper_only: true,
+      real_money_execution_allowed: false,
     },
     readiness: args.readiness,
     runway: args.runway,

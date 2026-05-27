@@ -248,6 +248,9 @@ The 30-day proof window now has a durable audit surface:
   `published_agent_edge_matrix`, `published_selected_bankroll_risk`, and
   `published_selected_open_outcome_scenarios`, making current open-ticket
   scenario math directly comparable with the latest retained artifact proof.
+  The top-level proof audit includes a `published_artifact_outcome_matrix`
+  check, which fails if the retained proof JSON drops those scenario rows or
+  any row stops marking pending P&L as non-proof.
   Scheduled artifact audits publish the same `agent_edge_proof` packet into
   `artifact_proof`, so daily evidence bundles remain self-contained.
 - `GET /api/trading-agent-edge-evidence` builds a per-rule daily evidence
