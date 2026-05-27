@@ -100,6 +100,8 @@ type SnapshotSummaryContext = {
   agent_edge_watchlist: Record<string, unknown> | null;
   agent_edge_runway: Record<string, unknown> | null;
   agent_edge_trade_ledger: Record<string, unknown> | null;
+  agent_edge_attribution: Record<string, unknown> | null;
+  liquidity_review: Record<string, unknown> | null;
   status: "available" | "missing" | "error";
   message: string;
 };
@@ -228,6 +230,12 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function hasPaperOnlyExecutionLock(value: Record<string, unknown>): boolean {
+  return (
+    value.paper_only === true && value.real_money_execution_allowed === false
+  );
+}
+
 function optionalBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
 }
@@ -322,6 +330,8 @@ function readSnapshotSummary(
           agent_edge_watchlist: null,
           agent_edge_runway: null,
           agent_edge_trade_ledger: null,
+          agent_edge_attribution: null,
+          liquidity_review: null,
           status: "missing",
           message: "Snapshot summary file was not found.",
         }
@@ -343,6 +353,8 @@ function readSnapshotSummary(
         agent_edge_watchlist: null,
         agent_edge_runway: null,
         agent_edge_trade_ledger: null,
+        agent_edge_attribution: null,
+        liquidity_review: null,
         status: "error",
         message: "Snapshot summary JSON is not an object.",
       };
@@ -368,6 +380,12 @@ function readSnapshotSummary(
     const agentEdgeTradeLedger = isRecord(parsed.agent_edge_trade_ledger)
       ? parsed.agent_edge_trade_ledger
       : null;
+    const agentEdgeAttribution = isRecord(parsed.agent_edge_attribution)
+      ? parsed.agent_edge_attribution
+      : null;
+    const liquidityReview = isRecord(parsed.liquidity_review)
+      ? parsed.liquidity_review
+      : null;
     return {
       path,
       source: optionalString(parsed.source),
@@ -380,6 +398,8 @@ function readSnapshotSummary(
       agent_edge_watchlist: agentEdgeWatchlist,
       agent_edge_runway: agentEdgeRunway,
       agent_edge_trade_ledger: agentEdgeTradeLedger,
+      agent_edge_attribution: agentEdgeAttribution,
+      liquidity_review: liquidityReview,
       status: resolutionWatch ? "available" : "error",
       message: resolutionWatch
         ? "Snapshot summary resolution context loaded."
@@ -398,6 +418,8 @@ function readSnapshotSummary(
       agent_edge_watchlist: null,
       agent_edge_runway: null,
       agent_edge_trade_ledger: null,
+      agent_edge_attribution: null,
+      liquidity_review: null,
       status: "error",
       message: error instanceof Error ? error.message : String(error),
     };
@@ -907,6 +929,8 @@ async function buildArtifactProof(
   agentEdgeWatchlist: Record<string, unknown> | null,
   agentEdgeRunway: Record<string, unknown> | null,
   agentEdgeTradeLedger: Record<string, unknown> | null,
+  agentEdgeAttribution: Record<string, unknown> | null,
+  liquidityReview: Record<string, unknown> | null,
   workflowMode: WorkflowModeContext | null,
 ) {
   const workflowModePayload =
@@ -942,6 +966,8 @@ async function buildArtifactProof(
       agent_edge_watchlist: agentEdgeWatchlist,
       agent_edge_runway: agentEdgeRunway,
       agent_edge_trade_ledger: agentEdgeTradeLedger,
+      agent_edge_attribution: agentEdgeAttribution,
+      liquidity_review: liquidityReview,
       agent_edge_proof: null,
       agent_edge_proof_matrix: [],
       top_strategy_rollups: [],
@@ -1021,6 +1047,8 @@ async function buildArtifactProof(
     agent_edge_watchlist: agentEdgeWatchlist,
     agent_edge_runway: agentEdgeRunway,
     agent_edge_trade_ledger: agentEdgeTradeLedger,
+    agent_edge_attribution: agentEdgeAttribution,
+    liquidity_review: liquidityReview,
     agent_edge_proof: agentEdgeProof,
     agent_edge_proof_matrix: agentEdgeProofMatrix,
     top_strategy_rollups: strategyRollups
@@ -1210,6 +1238,8 @@ async function buildReport(options: CliOptions, files: string[]) {
     const agentEdgeTradeLedger = latestSnapshotSummary.agent_edge_trade_ledger;
     const agentEdgeWatchlist = latestSnapshotSummary.agent_edge_watchlist;
     const agentEdgeRunway = latestSnapshotSummary.agent_edge_runway;
+    const agentEdgeAttribution = latestSnapshotSummary.agent_edge_attribution;
+    const liquidityReview = latestSnapshotSummary.liquidity_review;
     if (!agentEdgeWatchlist) {
       failedChecks.push({
         path: latestSnapshotSummary.path,
@@ -1267,6 +1297,55 @@ async function buildReport(options: CliOptions, files: string[]) {
           "agent_edge_trade_ledger must keep paper_only=true and real_money_execution_allowed=false.",
       });
     }
+    if (!agentEdgeAttribution) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "agent_edge_attribution",
+        label: "Agent-edge profit attribution",
+        detail: "Snapshot summary is missing agent_edge_attribution.",
+      });
+    } else if (!hasPaperOnlyExecutionLock(agentEdgeAttribution)) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "agent_edge_attribution_paper_only",
+        label: "Agent-edge attribution paper-only lock",
+        detail:
+          "agent_edge_attribution must keep paper_only=true and real_money_execution_allowed=false.",
+      });
+    }
+    if (!liquidityReview) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "liquidity_review",
+        label: "Liquidity review",
+        detail: "Snapshot summary is missing liquidity_review.",
+      });
+    } else {
+      if (
+        !hasPaperOnlyExecutionLock(liquidityReview) ||
+        liquidityReview.capital_review_allowed !== false
+      ) {
+        failedChecks.push({
+          path: latestSnapshotSummary.path,
+          code: "liquidity_review_paper_only",
+          label: "Liquidity review paper-only lock",
+          detail:
+            "liquidity_review must keep paper_only=true, real_money_execution_allowed=false, and capital_review_allowed=false.",
+        });
+      }
+      if (
+        liquidityReview.stress_evidence_counts_as_proof !== false ||
+        !Array.isArray(liquidityReview.stress_rules)
+      ) {
+        failedChecks.push({
+          path: latestSnapshotSummary.path,
+          code: "liquidity_review_stress_proof_lock",
+          label: "Liquidity stress proof lock",
+          detail:
+            "liquidity_review must keep stress_evidence_counts_as_proof=false and include stress_rules.",
+        });
+      }
+    }
   }
   const proof = await buildArtifactProof(
     artifactProofRows,
@@ -1278,6 +1357,8 @@ async function buildReport(options: CliOptions, files: string[]) {
     latestSnapshotSummary?.agent_edge_watchlist ?? null,
     latestSnapshotSummary?.agent_edge_runway ?? null,
     latestSnapshotSummary?.agent_edge_trade_ledger ?? null,
+    latestSnapshotSummary?.agent_edge_attribution ?? null,
+    latestSnapshotSummary?.liquidity_review ?? null,
     workflowMode,
   );
   const capitalReviewPacket = isRecord(proof.capital_review_packet)
@@ -1291,6 +1372,12 @@ async function buildReport(options: CliOptions, files: string[]) {
     : null;
   const agentEdgeRunway = isRecord(proof.agent_edge_runway)
     ? proof.agent_edge_runway
+    : null;
+  const agentEdgeAttribution = isRecord(proof.agent_edge_attribution)
+    ? proof.agent_edge_attribution
+    : null;
+  const liquidityReview = isRecord(proof.liquidity_review)
+    ? proof.liquidity_review
     : null;
   if (proof.status === "available" && !capitalReviewPacket) {
     failedChecks.push({
@@ -1324,6 +1411,22 @@ async function buildReport(options: CliOptions, files: string[]) {
       detail: "Available artifact proof must include agent_edge_runway.",
     });
   }
+  if (proof.status === "available" && !agentEdgeAttribution) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_attribution",
+      label: "Agent-edge profit attribution",
+      detail: "Available artifact proof must include agent_edge_attribution.",
+    });
+  }
+  if (proof.status === "available" && !liquidityReview) {
+    failedChecks.push({
+      path: null,
+      code: "liquidity_review",
+      label: "Liquidity review",
+      detail: "Available artifact proof must include liquidity_review.",
+    });
+  }
   if (
     agentEdgeWatchlist &&
     (agentEdgeWatchlist.paper_only !== true ||
@@ -1348,6 +1451,44 @@ async function buildReport(options: CliOptions, files: string[]) {
       label: "Agent-edge runway paper-only lock",
       detail:
         "agent_edge_runway must keep paper_only=true and real_money_execution_allowed=false.",
+    });
+  }
+  if (
+    agentEdgeAttribution &&
+    !hasPaperOnlyExecutionLock(agentEdgeAttribution)
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_attribution_paper_only",
+      label: "Agent-edge attribution paper-only lock",
+      detail:
+        "agent_edge_attribution must keep paper_only=true and real_money_execution_allowed=false.",
+    });
+  }
+  if (
+    liquidityReview &&
+    (!hasPaperOnlyExecutionLock(liquidityReview) ||
+      liquidityReview.capital_review_allowed !== false)
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "liquidity_review_paper_only",
+      label: "Liquidity review paper-only lock",
+      detail:
+        "liquidity_review must keep paper_only=true, real_money_execution_allowed=false, and capital_review_allowed=false.",
+    });
+  }
+  if (
+    liquidityReview &&
+    (liquidityReview.stress_evidence_counts_as_proof !== false ||
+      !Array.isArray(liquidityReview.stress_rules))
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "liquidity_review_stress_proof_lock",
+      label: "Liquidity stress proof lock",
+      detail:
+        "liquidity_review must keep stress_evidence_counts_as_proof=false and include stress_rules.",
     });
   }
   if (

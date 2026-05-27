@@ -184,9 +184,15 @@ async function main() {
     loadPaperTradingSnapshotHistory,
     persistPaperTradingSnapshot,
   } = await import("../src/lib/trading-snapshots");
+  const { buildPaperTradingLiquidityReview } =
+    await import("../src/lib/trading-liquidity-review");
 
   const controls = parseTradingControls(options.params);
   const snapshot = await getTradingSnapshot(controls);
+  const liquidityReview = buildPaperTradingLiquidityReview(
+    snapshot,
+    snapshot.generated_at,
+  );
   const rows = buildPaperTradingSnapshotRows(snapshot);
   const rowSummary = summarizeRows(rows as Array<Record<string, unknown>>);
   const rowsArtifact = {
@@ -199,6 +205,8 @@ async function main() {
     agent_edge_watchlist: snapshot.agent_edge_watchlist,
     agent_edge_runway: snapshot.agent_edge_runway,
     agent_edge_trade_ledger: snapshot.agent_edge_trade_ledger,
+    agent_edge_attribution: snapshot.agent_edge_attribution,
+    liquidity_review: liquidityReview,
     loaded_env_files: loadedEnvFiles,
     snapshot_date: snapshot.generated_at.slice(0, 10),
     schema_version: "1",
@@ -219,6 +227,8 @@ async function main() {
     agent_edge_watchlist: snapshot.agent_edge_watchlist,
     agent_edge_runway: snapshot.agent_edge_runway,
     agent_edge_trade_ledger: snapshot.agent_edge_trade_ledger,
+    agent_edge_attribution: snapshot.agent_edge_attribution,
+    liquidity_review: liquidityReview,
     loaded_env_files: loadedEnvFiles,
     snapshot_date: snapshot.generated_at.slice(0, 10),
     selected_strategy: {

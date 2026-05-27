@@ -91,6 +91,24 @@ function main() {
   const agentEdgeWatchlist = record(artifactProof.agent_edge_watchlist);
   const agentEdgeRunway = record(artifactProof.agent_edge_runway);
   const agentEdgeTradeLedger = record(artifactProof.agent_edge_trade_ledger);
+  const agentEdgeAttribution = record(artifactProof.agent_edge_attribution);
+  const liquidityReview = record(artifactProof.liquidity_review);
+  if (
+    artifactProof.status === "available" &&
+    Object.keys(agentEdgeAttribution).length === 0
+  ) {
+    throw new Error(
+      "Refusing to publish available artifact proof without agent_edge_attribution.",
+    );
+  }
+  if (
+    artifactProof.status === "available" &&
+    Object.keys(liquidityReview).length === 0
+  ) {
+    throw new Error(
+      "Refusing to publish available artifact proof without liquidity_review.",
+    );
+  }
   if (
     Object.keys(agentEdgeProof).length > 0 &&
     (agentEdgeProof.paper_only !== true ||
@@ -125,6 +143,27 @@ function main() {
   ) {
     throw new Error(
       "Refusing to publish agent_edge_trade_ledger unless it stays paper-only with execution disabled.",
+    );
+  }
+  if (
+    Object.keys(agentEdgeAttribution).length > 0 &&
+    (agentEdgeAttribution.paper_only !== true ||
+      agentEdgeAttribution.real_money_execution_allowed !== false)
+  ) {
+    throw new Error(
+      "Refusing to publish agent_edge_attribution unless it stays paper-only with execution disabled.",
+    );
+  }
+  if (
+    Object.keys(liquidityReview).length > 0 &&
+    (liquidityReview.paper_only !== true ||
+      liquidityReview.real_money_execution_allowed !== false ||
+      liquidityReview.capital_review_allowed !== false ||
+      liquidityReview.stress_evidence_counts_as_proof !== false ||
+      !Array.isArray(liquidityReview.stress_rules))
+  ) {
+    throw new Error(
+      "Refusing to publish liquidity_review unless it stays paper-only and marks stress evidence as non-proof.",
     );
   }
 
@@ -171,6 +210,12 @@ function main() {
       Object.keys(agentEdgeTradeLedger).length > 0
         ? agentEdgeTradeLedger
         : null,
+    agent_edge_attribution:
+      Object.keys(agentEdgeAttribution).length > 0
+        ? agentEdgeAttribution
+        : null,
+    liquidity_review:
+      Object.keys(liquidityReview).length > 0 ? liquidityReview : null,
     artifact_audit: {
       verdict: artifactAudit.verdict ?? null,
       checked_at: artifactAudit.checked_at ?? null,
