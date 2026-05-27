@@ -95,6 +95,7 @@ type SnapshotSummaryContext = {
   resolution_watch: TradingResolutionWatch | null;
   strategy_registry: Record<string, unknown> | null;
   would_trade_today: Record<string, unknown> | null;
+  market_exposure_digest: Record<string, unknown> | null;
   status: "available" | "missing" | "error";
   message: string;
 };
@@ -286,6 +287,7 @@ function readSnapshotSummary(
           resolution_watch: null,
           strategy_registry: null,
           would_trade_today: null,
+          market_exposure_digest: null,
           status: "missing",
           message: "Snapshot summary file was not found.",
         }
@@ -303,6 +305,7 @@ function readSnapshotSummary(
         resolution_watch: null,
         strategy_registry: null,
         would_trade_today: null,
+        market_exposure_digest: null,
         status: "error",
         message: "Snapshot summary JSON is not an object.",
       };
@@ -316,6 +319,9 @@ function readSnapshotSummary(
     const wouldTradeToday = isRecord(parsed.would_trade_today)
       ? parsed.would_trade_today
       : null;
+    const marketExposureDigest = isRecord(parsed.market_exposure_digest)
+      ? parsed.market_exposure_digest
+      : null;
     return {
       path,
       source: optionalString(parsed.source),
@@ -324,6 +330,7 @@ function readSnapshotSummary(
       resolution_watch: resolutionWatch,
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
+      market_exposure_digest: marketExposureDigest,
       status: resolutionWatch ? "available" : "error",
       message: resolutionWatch
         ? "Snapshot summary resolution context loaded."
@@ -338,6 +345,7 @@ function readSnapshotSummary(
       resolution_watch: null,
       strategy_registry: null,
       would_trade_today: null,
+      market_exposure_digest: null,
       status: "error",
       message: error instanceof Error ? error.message : String(error),
     };
@@ -711,6 +719,7 @@ async function buildArtifactProof(
   resolutionWatch: TradingResolutionWatch | null,
   strategyRegistry: Record<string, unknown> | null,
   wouldTradeToday: Record<string, unknown> | null,
+  marketExposureDigest: Record<string, unknown> | null,
 ) {
   if (blocked || proofRows.length === 0) {
     return {
@@ -730,6 +739,7 @@ async function buildArtifactProof(
       resolution_watch: resolutionWatch,
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
+      market_exposure_digest: marketExposureDigest,
       agent_edge_proof_matrix: [],
       top_strategy_rollups: [],
     };
@@ -796,6 +806,7 @@ async function buildArtifactProof(
     resolution_watch: resolutionWatch,
     strategy_registry: strategyRegistry,
     would_trade_today: wouldTradeToday,
+    market_exposure_digest: marketExposureDigest,
     agent_edge_proof_matrix: agentEdgeProofMatrix,
     top_strategy_rollups: strategyRollups
       .slice(0, 12)
@@ -930,6 +941,45 @@ async function buildReport(options: CliOptions, files: string[]) {
         });
       }
     }
+    const marketExposureDigest = latestSnapshotSummary.market_exposure_digest;
+    if (!marketExposureDigest) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "market_exposure_digest",
+        label: "Market exposure digest",
+        detail: "Snapshot summary is missing market_exposure_digest.",
+      });
+    } else {
+      const digestOpenLiveSignals = marketExposureDigest.open_live_signals;
+      const resolutionOpenLiveSignals =
+        latestSnapshotSummary.resolution_watch.open_live_signals;
+
+      if (
+        !isFiniteNumber(digestOpenLiveSignals) ||
+        digestOpenLiveSignals !== resolutionOpenLiveSignals
+      ) {
+        failedChecks.push({
+          path: latestSnapshotSummary.path,
+          code: "market_exposure_resolution_sync",
+          label: "Market exposure resolution sync",
+          detail: `Expected open live signal count ${resolutionOpenLiveSignals}, got ${String(
+            digestOpenLiveSignals,
+          )}.`,
+        });
+      }
+      if (
+        marketExposureDigest.paper_only !== true ||
+        marketExposureDigest.real_money_execution_allowed !== false
+      ) {
+        failedChecks.push({
+          path: latestSnapshotSummary.path,
+          code: "market_exposure_paper_only",
+          label: "Market exposure paper-only lock",
+          detail:
+            "market_exposure_digest must keep paper_only=true and real_money_execution_allowed=false.",
+        });
+      }
+    }
   }
   const proof = await buildArtifactProof(
     artifactProofRows,
@@ -937,6 +987,7 @@ async function buildReport(options: CliOptions, files: string[]) {
     latestSnapshotSummary?.resolution_watch ?? null,
     latestSnapshotSummary?.strategy_registry ?? null,
     latestSnapshotSummary?.would_trade_today ?? null,
+    latestSnapshotSummary?.market_exposure_digest ?? null,
   );
   const capitalReviewPacket = isRecord(proof.capital_review_packet)
     ? proof.capital_review_packet

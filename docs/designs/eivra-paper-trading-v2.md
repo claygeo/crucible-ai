@@ -218,6 +218,11 @@ The 30-day proof window now has a durable audit surface:
   creating an execution path. The feed also imports global resolution-hygiene
   blockers, so it cannot present a clean watchlist while any live paper market
   still needs resolution review.
+- `/api/trading-market-exposure` groups current open live paper tickets by
+  market, source, and category. It exposes multi-agent concentration, top-market
+  exposure share, repeated-signal markets, and paper-only locks so the lab does
+  not confuse many agent tickets on the same market with independent tradable
+  evidence. Snapshot artifacts carry the same digest for public proof review.
 - `/api/trading-capital-review` returns the read-only capital-review packet:
   reviewability status, decision summary, earliest possible review date,
   blockers, readiness items, runway milestones, proof-rule thresholds, and
