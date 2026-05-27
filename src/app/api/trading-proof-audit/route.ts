@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
+import { buildPaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
+import { loadPublishedPaperTradingArtifactProof } from "@/lib/trading-artifacts";
 import { buildPaperTradingProofAudit } from "@/lib/trading-proof-audit";
 import {
   buildPaperTradingProofReadiness,
@@ -13,13 +15,14 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   const controls = parseTradingControls(new URL(request.url).searchParams);
-  const [snapshot, persisted] = await Promise.all([
+  const [snapshot, persisted, publishedArtifactProof] = await Promise.all([
     getTradingSnapshot(controls),
     loadPaperTradingSnapshotHistory(1000),
+    loadPublishedPaperTradingArtifactProof(),
   ]);
   const registrySync = buildPaperTradingStrategyRegistrySync(
     snapshot.strategy_variants,
-    persisted.snapshots
+    persisted.snapshots,
   );
   const readiness = buildPaperTradingProofReadiness({
     persistenceStatus: persisted.status,
@@ -35,9 +38,14 @@ export async function GET(request: Request) {
     captureCalendar: persisted.capture_calendar,
     resolutionWatch: snapshot.resolution_watch,
   });
+  const agentEdgeProof = buildPaperTradingAgentEdgeProof({
+    persistedRows: persisted.agent_edge_proof_matrix,
+    publishedArtifactProof,
+  });
   const audit = buildPaperTradingProofAudit({
     snapshot,
     persisted,
+    agentEdgeProof,
     registrySync,
     readiness,
     runway,
@@ -56,6 +64,6 @@ export async function GET(request: Request) {
         "cache-control": "no-store, max-age=0",
         "access-control-allow-origin": "*",
       },
-    }
+    },
   );
 }
