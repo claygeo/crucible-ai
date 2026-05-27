@@ -168,6 +168,12 @@ The 30-day proof window now has a durable audit surface:
   `persisted_agent_edge_proof_matrix` / `agent_edge_proof_matrix`, a durable
   projection of the canonical Sage, Hawk, Magpie, Echo, Mirror, and Crowd
   5pp/10pp live rules.
+- `/api/trading.json` and `GET /api/trading-snapshots` expose
+  `proof_evidence_sources`, a paper-only source map that separates Supabase
+  persistence, GitHub artifact bundles, live resolution hygiene, and the capital
+  review gate. This keeps artifact-only proof visible when service-role
+  persistence is unavailable, while still reporting
+  `real_money_execution_allowed: false`.
 - `persistence.capture_health` reports the daily recorder status, latest capture
   age, next expected capture, cron expression, and stale threshold.
 - `persistence.capture_calendar` reports the proof window day by day, including

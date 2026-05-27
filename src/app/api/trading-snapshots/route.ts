@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
 import {
+  buildPaperTradingProofEvidenceSources,
   loadPaperTradingSnapshotHistory,
   persistPaperTradingSnapshot,
 } from "@/lib/trading-snapshots";
@@ -28,6 +29,11 @@ function authorized(request: NextRequest): boolean {
 
 export async function GET(request: NextRequest) {
   const history = await loadPaperTradingSnapshotHistory(parseLimit(request));
+  const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
+    persistence: history,
+    proofReadiness: history.proof_readiness,
+    proofRunway: history.proof_runway,
+  });
 
   return NextResponse.json(
     {
@@ -44,11 +50,13 @@ export async function GET(request: NextRequest) {
         proof_summary: history.proof_summary,
         proof_readiness: history.proof_readiness,
         proof_runway: history.proof_runway,
+        proof_evidence_sources: proofEvidenceSources,
         agent_edge_proof_matrix: history.agent_edge_proof_matrix,
       },
       proof_summary: history.proof_summary,
       proof_readiness: history.proof_readiness,
       proof_runway: history.proof_runway,
+      proof_evidence_sources: proofEvidenceSources,
       capture_calendar: history.capture_calendar,
       agent_edge_proof_matrix: history.agent_edge_proof_matrix,
       count: history.snapshots.length,

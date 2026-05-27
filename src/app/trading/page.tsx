@@ -15,6 +15,7 @@ import {
   tradingControlsToQuery,
 } from "@/lib/trading";
 import {
+  buildPaperTradingProofEvidenceSources,
   buildPaperTradingProofReadiness,
   buildPaperTradingProofRunway,
   buildPaperTradingStrategyRegistrySync,
@@ -115,6 +116,15 @@ function readinessStatusClass(status: string) {
 
 function proofRunwayStatusClass(status: string) {
   if (status === "reviewable") return "bg-positive/10 text-positive";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
+  return "bg-warn/10 text-warn";
+}
+
+function proofEvidenceSourceStatusClass(status: string) {
+  if (status === "active" || status === "available" || status === "reviewable") {
+    return "bg-positive/10 text-positive";
+  }
   if (status === "blocked") return "bg-rose-400/10 text-rose-400";
   if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
   return "bg-warn/10 text-warn";
@@ -223,6 +233,12 @@ export default async function TradingPage({
     proofSummary,
     captureHealth,
     captureCalendar,
+    resolutionWatch,
+  });
+  const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
+    persistence: persisted,
+    proofReadiness,
+    proofRunway,
     resolutionWatch,
   });
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
@@ -750,6 +766,82 @@ export default async function TradingPage({
                 age {captureHealth.latest_capture_age_hours.toFixed(1)}h
               </span>
             ) : null}
+          </div>
+          <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="heading text-sm text-text-primary">
+                  Proof evidence sources
+                </h3>
+                <p className="text-xs text-text-muted mt-1">
+                  Supabase persistence and GitHub artifacts are tracked separately
+                  so missing DB writes cannot hide the paper-only proof trail.
+                </p>
+              </div>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofEvidenceSourceStatusClass(
+                  proofEvidenceSources.status
+                )}`}
+              >
+                {proofEvidenceSources.status_label}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full" aria-label="Proof evidence sources">
+                <thead>
+                  <tr className="border-b border-border-subtle text-text-muted">
+                    <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Source</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Status</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Current</th>
+                    <th className="text-left py-2 pl-3 mono text-[10px] uppercase tracking-wider">Target</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle/60">
+                  {proofEvidenceSources.sources.map((source) => (
+                    <tr key={source.id}>
+                      <td className="py-3 pr-3">
+                        <div className="text-sm text-text-primary">
+                          {source.label}
+                        </div>
+                        <div className="text-xs text-text-muted leading-relaxed max-w-xl">
+                          {source.detail}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <span
+                          className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofEvidenceSourceStatusClass(
+                            source.status
+                          )}`}
+                        >
+                          {source.status_label}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {source.current}
+                      </td>
+                      <td className="py-3 pl-3 mono text-left text-text-secondary">
+                        {source.target}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
+              <span>{proofEvidenceSources.artifact_contract.workflow_path}</span>
+              <span>
+                artifact {proofEvidenceSources.artifact_contract.artifact_name_pattern}
+              </span>
+              <span>
+                files {int(proofEvidenceSources.artifact_contract.expected_files.length)}
+              </span>
+              <span>
+                retention {int(proofEvidenceSources.artifact_contract.retention_days)}d
+              </span>
+              <span className="break-all">
+                audit {proofEvidenceSources.artifact_contract.audit_command}
+              </span>
+            </div>
           </div>
           <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">

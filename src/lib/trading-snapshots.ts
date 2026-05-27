@@ -17,8 +17,30 @@ const SNAPSHOT_TABLE = "paper_trading_snapshots";
 const DEFAULT_HISTORY_LIMIT = 1000;
 const REQUIRED_PROOF_DAYS = PAPER_TRADING_PROOF_RULES.requiredLiveDays;
 const SNAPSHOT_CRON_UTC_HOUR = 5;
-const SNAPSHOT_CRON_UTC_MINUTE = 12;
+const SNAPSHOT_CRON_UTC_MINUTE = 22;
 const STALE_AFTER_HOURS = 36;
+const SNAPSHOT_SCHEDULED_TIME_UTC = "05:22";
+
+export const PAPER_TRADING_ARTIFACT_CONTRACT = {
+  repository: "claygeo/eivra",
+  workflow_name: "Paper trading snapshot",
+  workflow_path: ".github/workflows/paper-trading-snapshot.yml",
+  schedule_cron_utc: `${SNAPSHOT_CRON_UTC_MINUTE} ${SNAPSHOT_CRON_UTC_HOUR} * * *`,
+  scheduled_time_utc: SNAPSHOT_SCHEDULED_TIME_UTC,
+  retention_days: 30,
+  artifact_name_pattern: "paper-trading-proof-<run_id>",
+  expected_files: [
+    "paper-snapshot-workflow.json",
+    "paper-snapshot-result.json",
+    "paper-snapshot-rows.json",
+    "paper-audit-result.json",
+    "paper-artifact-audit-result.json",
+  ],
+  download_command:
+    "gh run download <run_id> --repo claygeo/eivra --dir ./paper-artifacts",
+  audit_command: "npm run paper:artifact-audit -- ./paper-artifacts --json",
+  proof_report_file: "paper-artifact-audit-result.json",
+} as const;
 
 export type PaperTradingSnapshotRow = {
   id: string;
@@ -380,6 +402,42 @@ export type PaperTradingProofRunway = {
   milestones: PaperTradingProofRunwayMilestone[];
 };
 
+export type PaperTradingProofEvidenceSourceStatus =
+  | "active"
+  | "available"
+  | "collecting"
+  | "blocked"
+  | "reviewable"
+  | "unavailable";
+
+export type PaperTradingProofEvidenceSource = {
+  id:
+    | "supabase_persistence"
+    | "github_artifacts"
+    | "resolution_hygiene"
+    | "capital_review";
+  label: string;
+  status: PaperTradingProofEvidenceSourceStatus;
+  status_label: string;
+  current: string;
+  target: string;
+  detail: string;
+  evidence: string[];
+};
+
+export type PaperTradingProofEvidenceSources = {
+  status: PaperTradingProofEvidenceSourceStatus;
+  status_label: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  artifact_contract: typeof PAPER_TRADING_ARTIFACT_CONTRACT;
+  sources: PaperTradingProofEvidenceSource[];
+  supabase_persistence: PaperTradingProofEvidenceSource;
+  github_artifacts: PaperTradingProofEvidenceSource;
+  resolution_hygiene: PaperTradingProofEvidenceSource;
+  capital_review: PaperTradingProofEvidenceSource;
+};
+
 function readEnv(name: string): string | undefined {
   const value = process.env[name]?.trim();
   return value ? value : undefined;
@@ -573,7 +631,7 @@ function unavailableCaptureHealth(
     status_label: statusLabel,
     message,
     cron: `${SNAPSHOT_CRON_UTC_MINUTE} ${SNAPSHOT_CRON_UTC_HOUR} * * *`,
-    scheduled_time_utc: "05:12",
+    scheduled_time_utc: SNAPSHOT_SCHEDULED_TIME_UTC,
     stale_after_hours: STALE_AFTER_HOURS,
     latest_captured_at: null,
     latest_capture_age_hours: null,
@@ -590,7 +648,7 @@ export function buildPaperTradingCaptureHealth(
   const nextExpected = nextExpectedCaptureAt(now);
   const base = {
     cron: `${SNAPSHOT_CRON_UTC_MINUTE} ${SNAPSHOT_CRON_UTC_HOUR} * * *`,
-    scheduled_time_utc: "05:12",
+    scheduled_time_utc: SNAPSHOT_SCHEDULED_TIME_UTC,
     stale_after_hours: STALE_AFTER_HOURS,
     latest_captured_at: latestCapturedAt,
     previous_expected_capture_at: previousExpected.toISOString(),
@@ -2260,6 +2318,170 @@ export function buildPaperTradingProofReadiness(args: {
       .length,
     blocked_item_ids: blockedItemIds,
     items,
+  };
+}
+
+function evidenceSourceStatusLabel(
+  status: PaperTradingProofEvidenceSourceStatus
+): string {
+  if (status === "active") return "Active";
+  if (status === "available") return "Available";
+  if (status === "blocked") return "Blocked";
+  if (status === "reviewable") return "Reviewable";
+  if (status === "unavailable") return "Unavailable";
+  return "Collecting";
+}
+
+function proofEvidenceSource(
+  source: Omit<PaperTradingProofEvidenceSource, "status_label">
+): PaperTradingProofEvidenceSource {
+  return {
+    ...source,
+    status_label: evidenceSourceStatusLabel(source.status),
+  };
+}
+
+function capitalEvidenceStatus(
+  proofReadiness: PaperTradingProofReadiness
+): PaperTradingProofEvidenceSourceStatus {
+  if (proofReadiness.ready_for_capital_review) return "reviewable";
+  if (proofReadiness.status === "blocked") return "blocked";
+  if (proofReadiness.status === "unavailable") return "unavailable";
+  return "collecting";
+}
+
+export function buildPaperTradingProofEvidenceSources(args: {
+  persistence: PaperTradingPersistenceRead;
+  proofReadiness: PaperTradingProofReadiness;
+  proofRunway: PaperTradingProofRunway;
+  resolutionWatch?: TradingResolutionWatch | null;
+}): PaperTradingProofEvidenceSources {
+  const rowCount = args.persistence.snapshots.length;
+  const hasPersistedRows = rowCount > 0;
+  const persistenceStatus: PaperTradingProofEvidenceSourceStatus =
+    args.persistence.status === "available"
+      ? hasPersistedRows
+        ? "available"
+        : "collecting"
+      : args.persistence.status === "error" ||
+          args.persistence.status === "table_missing"
+        ? "blocked"
+        : "unavailable";
+  const supabasePersistence = proofEvidenceSource({
+    id: "supabase_persistence",
+    label: "Supabase proof log",
+    status: persistenceStatus,
+    current:
+      args.persistence.status === "available"
+        ? `${rowCount} rows / ${args.persistence.capture_calendar.complete_days} complete days`
+        : args.persistence.status.replace("_", " "),
+    target: `${REQUIRED_PROOF_DAYS} complete days, current strategy registry captured`,
+    detail: hasPersistedRows
+      ? "Dashboard rollups are reading append-only proof rows from Supabase."
+      : args.persistence.status === "available"
+        ? "Supabase is reachable, but the proof log has not accumulated rows yet."
+        : args.persistence.message,
+    evidence: [
+      `latest captured: ${args.persistence.latest_captured_at ?? "none"}`,
+      `capture health: ${args.persistence.capture_health.status_label}`,
+      "registry rows are replayed, not used for execution",
+    ],
+  });
+
+  const githubArtifacts = proofEvidenceSource({
+    id: "github_artifacts",
+    label: "GitHub proof artifacts",
+    status: "active",
+    current: `${PAPER_TRADING_ARTIFACT_CONTRACT.scheduled_time_utc} UTC / ${PAPER_TRADING_ARTIFACT_CONTRACT.retention_days}d retention`,
+    target: "self-contained proof bundle per workflow run",
+    detail:
+      "The scheduled workflow uploads a live proof bundle even when Supabase writes are disabled.",
+    evidence: [
+      PAPER_TRADING_ARTIFACT_CONTRACT.workflow_path,
+      PAPER_TRADING_ARTIFACT_CONTRACT.artifact_name_pattern,
+      PAPER_TRADING_ARTIFACT_CONTRACT.proof_report_file,
+    ],
+  });
+
+  const resolutionStatus: PaperTradingProofEvidenceSourceStatus =
+    args.resolutionWatch === undefined || args.resolutionWatch === null
+      ? "unavailable"
+      : args.resolutionWatch.review_required_live_signals > 0
+        ? "blocked"
+        : args.resolutionWatch.open_live_signals > 0
+          ? "collecting"
+          : "available";
+  const resolutionHygiene = proofEvidenceSource({
+    id: "resolution_hygiene",
+    label: "Resolution hygiene",
+    status: resolutionStatus,
+    current: args.resolutionWatch
+      ? `${args.resolutionWatch.tradable_open_live_signals} tradable / ${args.resolutionWatch.review_required_live_signals} review / ${args.resolutionWatch.open_live_signals} open`
+      : "not checked",
+    target: "0 review-required live paper markets",
+    detail: args.resolutionWatch
+      ? args.resolutionWatch.review_required_live_signals > 0
+        ? "Open EV is split until overdue or unknown-close markets are reviewed."
+        : "Open live paper tickets remain unrealized until markets resolve."
+      : "Current resolution hygiene requires the live trading snapshot context.",
+    evidence: args.resolutionWatch
+      ? [
+          `tradable EV: $${args.resolutionWatch.tradable_open_expected_pnl_usd.toFixed(2)}`,
+          `review EV: $${args.resolutionWatch.review_required_open_expected_pnl_usd.toFixed(2)}`,
+          `next close: ${args.resolutionWatch.next_close_at ?? "unknown"}`,
+        ]
+      : [],
+  });
+
+  const capitalStatus = capitalEvidenceStatus(args.proofReadiness);
+  const capitalReview = proofEvidenceSource({
+    id: "capital_review",
+    label: "Capital review gate",
+    status: capitalStatus,
+    current: args.proofReadiness.status_label,
+    target: "operator review only, execution disabled",
+    detail:
+      args.proofRunway.blocker_summary ||
+      args.proofReadiness.next_required_action,
+    evidence: [
+      args.proofReadiness.next_required_action,
+      `paper only: ${args.proofReadiness.paper_only ? "true" : "false"}`,
+      `real money execution allowed: ${
+        args.proofReadiness.real_money_execution_allowed ? "true" : "false"
+      }`,
+    ],
+  });
+
+  const status: PaperTradingProofEvidenceSourceStatus =
+    capitalReview.status === "reviewable"
+      ? "reviewable"
+      : capitalReview.status === "blocked"
+        ? "blocked"
+        : supabasePersistence.status === "unavailable" &&
+            githubArtifacts.status === "active"
+          ? "active"
+          : capitalReview.status;
+  const sources = [
+    supabasePersistence,
+    githubArtifacts,
+    resolutionHygiene,
+    capitalReview,
+  ];
+
+  return {
+    status,
+    status_label:
+      status === "active"
+        ? "Evidence active"
+        : evidenceSourceStatusLabel(status),
+    paper_only: true,
+    real_money_execution_allowed: false,
+    artifact_contract: PAPER_TRADING_ARTIFACT_CONTRACT,
+    sources,
+    supabase_persistence: supabasePersistence,
+    github_artifacts: githubArtifacts,
+    resolution_hygiene: resolutionHygiene,
+    capital_review: capitalReview,
   };
 }
 
