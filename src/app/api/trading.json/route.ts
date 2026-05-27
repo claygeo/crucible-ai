@@ -128,6 +128,7 @@ export async function GET(request: Request) {
       paper_write_readiness: writeReadiness,
       paper_evidence_sla: evidenceSla,
       paper_agent_edge_proof: agentEdgeProof,
+      paper_agent_edge_attribution: snapshot.agent_edge_attribution,
       paper_liquidity_review: liquidityReview,
       persistence: {
         status: persisted.status,
@@ -151,6 +152,7 @@ export async function GET(request: Request) {
         lab_status: labStatus,
         agent_edge_proof: agentEdgeProof,
         agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
+        agent_edge_attribution: snapshot.agent_edge_attribution,
         liquidity_review: liquidityReview,
       },
       persisted_registry_sync: registrySync,

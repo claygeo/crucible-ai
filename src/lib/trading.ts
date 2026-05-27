@@ -59,6 +59,13 @@ export const PAPER_TRADING_PROOF_RULES = {
   maxDrawdownUsd: 500,
 };
 
+export const PAPER_TRADING_ATTRIBUTION_RULES = {
+  minimumResolvedTradesForAttributionReview:
+    PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
+  topPnlShareConcentrationThreshold: 0.6,
+  topTradeShareConcentrationThreshold: 0.6,
+};
+
 export type TradingControls = {
   sample: TradingSample;
   agent_id: string | null;
@@ -700,6 +707,84 @@ export type AgentEdgeResolvedTradeLedger = {
   rules: AgentEdgeResolvedTradeLedgerRule[];
 };
 
+export type AgentEdgeProfitAttributionStatus =
+  | "diversified"
+  | "concentrated"
+  | "collecting"
+  | "unavailable";
+
+export type AgentEdgeProfitAttributionGroup = {
+  id: string;
+  label: string;
+  resolved_trades: number;
+  wins: number;
+  losses: number;
+  stake_usd: number;
+  net_pnl_usd: number;
+  roi_on_stake: number;
+  avg_pnl_per_trade_usd: number;
+  pnl_share: number;
+  trade_share: number;
+};
+
+export type AgentEdgeProfitAttributionMarket =
+  AgentEdgeProfitAttributionGroup & {
+    market_id: string;
+    market_question: string;
+    market_source: string;
+    market_category: string;
+    market_url: string | null;
+  };
+
+export type AgentEdgeProfitAttributionRule = {
+  strategy_id: string;
+  strategy_label: string;
+  agent_id: string;
+  agent_name: string;
+  min_edge: number;
+  status: AgentEdgeProfitAttributionStatus;
+  status_label: string;
+  resolved_trades: number;
+  required_resolved_trades: number;
+  net_pnl_usd: number;
+  stake_usd: number;
+  roi_on_stake: number;
+  distinct_sources: number;
+  distinct_categories: number;
+  distinct_markets: number;
+  top_source_pnl_share: number;
+  top_category_pnl_share: number;
+  top_market_pnl_share: number;
+  top_market_trade_share: number;
+  concentration_flags: string[];
+  by_source: AgentEdgeProfitAttributionGroup[];
+  by_category: AgentEdgeProfitAttributionGroup[];
+  top_markets: AgentEdgeProfitAttributionMarket[];
+};
+
+export type AgentEdgeProfitAttribution = {
+  schema_version: "1";
+  generated_at: string;
+  status: AgentEdgeProfitAttributionStatus;
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  profit_attribution_review_only: true;
+  rules: typeof PAPER_TRADING_ATTRIBUTION_RULES;
+  rule_count: number;
+  resolved_rule_count: number;
+  profitable_rule_count: number;
+  concentrated_rule_count: number;
+  diversified_rule_count: number;
+  total_resolved_trades: number;
+  total_net_pnl_usd: number;
+  top_rule_strategy_id: string | null;
+  top_rule_label: string | null;
+  rules_by_strategy: AgentEdgeProfitAttributionRule[];
+};
+
 export type DailyEvidenceSnapshot = {
   date: string;
   sample: TradingSample;
@@ -795,6 +880,7 @@ export type TradingSnapshot = {
   agent_edge_watchlist: AgentEdgeOpenSignalWatchlist;
   agent_edge_runway: AgentEdgeProofRunway;
   agent_edge_trade_ledger: AgentEdgeResolvedTradeLedger;
+  agent_edge_attribution: AgentEdgeProfitAttribution;
   strategy_variants: StrategyVariantSummary[];
   strategy_daily_series: StrategyDailyEvidenceSeries[];
   daily_snapshots: DailyEvidenceSnapshot[];
@@ -2779,6 +2865,303 @@ function averageResolvedTradeValue(
   );
 }
 
+function attributionStatusLabel(status: AgentEdgeProfitAttributionStatus) {
+  if (status === "diversified") return "Diversified";
+  if (status === "concentrated") return "Concentrated";
+  if (status === "collecting") return "Collecting";
+  return "Unavailable";
+}
+
+function attributionGroupRow(
+  id: string,
+  label: string,
+  trades: PaperTrade[],
+  totalResolvedTrades: number,
+  totalPositivePnlUsd: number,
+): AgentEdgeProfitAttributionGroup {
+  const stakeUsd = trades.reduce((sum, trade) => sum + trade.stake_usd, 0);
+  const netPnlUsd = trades.reduce(
+    (sum, trade) => sum + (trade.pnl_usd ?? 0),
+    0,
+  );
+  const wins = trades.filter((trade) => trade.won).length;
+  const losses = trades.filter((trade) => trade.won === false).length;
+  return {
+    id,
+    label,
+    resolved_trades: trades.length,
+    wins,
+    losses,
+    stake_usd: round2(stakeUsd),
+    net_pnl_usd: round2(netPnlUsd),
+    roi_on_stake: stakeUsd > 0 ? round4(netPnlUsd / stakeUsd) : 0,
+    avg_pnl_per_trade_usd:
+      trades.length > 0 ? round2(netPnlUsd / trades.length) : 0,
+    pnl_share:
+      totalPositivePnlUsd > 0
+        ? round4(Math.max(0, netPnlUsd) / totalPositivePnlUsd)
+        : 0,
+    trade_share:
+      totalResolvedTrades > 0 ? round4(trades.length / totalResolvedTrades) : 0,
+  };
+}
+
+function attributionRows(
+  trades: PaperTrade[],
+  key: (trade: PaperTrade) => string,
+  label: (trade: PaperTrade) => string,
+): AgentEdgeProfitAttributionGroup[] {
+  const byKey = new Map<string, PaperTrade[]>();
+  for (const trade of trades) {
+    const id = key(trade);
+    byKey.set(id, [...(byKey.get(id) ?? []), trade]);
+  }
+  const totalPositivePnlUsd = [...byKey.values()].reduce(
+    (sum, groupTrades) =>
+      sum +
+      Math.max(
+        0,
+        groupTrades.reduce(
+          (groupSum, trade) => groupSum + (trade.pnl_usd ?? 0),
+          0,
+        ),
+      ),
+    0,
+  );
+  return [...byKey.entries()]
+    .map(([id, groupTrades]) =>
+      attributionGroupRow(
+        id,
+        label(groupTrades[0]),
+        groupTrades,
+        trades.length,
+        totalPositivePnlUsd,
+      ),
+    )
+    .sort(
+      (a, b) =>
+        b.pnl_share - a.pnl_share ||
+        b.net_pnl_usd - a.net_pnl_usd ||
+        b.resolved_trades - a.resolved_trades ||
+        a.label.localeCompare(b.label),
+    );
+}
+
+function attributionMarketRows(
+  trades: PaperTrade[],
+): AgentEdgeProfitAttributionMarket[] {
+  return attributionRows(
+    trades,
+    (trade) => trade.market_id,
+    (trade) => trade.market_question,
+  ).map((row): AgentEdgeProfitAttributionMarket => {
+    const trade = trades.find((item) => item.market_id === row.id);
+    return {
+      ...row,
+      market_id: row.id,
+      market_question: trade?.market_question ?? row.label,
+      market_source: trade?.market_source ?? "unknown",
+      market_category: trade?.market_category ?? "other",
+      market_url: trade?.market_url ?? null,
+    };
+  });
+}
+
+function concentrationFlags(args: {
+  rule: AgentEdgeProfitAttributionRule;
+  topSource: AgentEdgeProfitAttributionGroup | null;
+  topCategory: AgentEdgeProfitAttributionGroup | null;
+  topMarket: AgentEdgeProfitAttributionMarket | null;
+}): string[] {
+  const flags: string[] = [];
+  const pnlThreshold =
+    PAPER_TRADING_ATTRIBUTION_RULES.topPnlShareConcentrationThreshold;
+  const tradeThreshold =
+    PAPER_TRADING_ATTRIBUTION_RULES.topTradeShareConcentrationThreshold;
+  if (args.rule.resolved_trades < args.rule.required_resolved_trades) {
+    return flags;
+  }
+  if (args.rule.net_pnl_usd <= 0) return flags;
+  if (args.topSource && args.topSource.pnl_share >= pnlThreshold) {
+    flags.push(
+      `Top source ${args.topSource.label} contributes ${(args.topSource.pnl_share * 100).toFixed(0)}% of positive P&L.`,
+    );
+  }
+  if (args.topCategory && args.topCategory.pnl_share >= pnlThreshold) {
+    flags.push(
+      `Top category ${args.topCategory.label} contributes ${(args.topCategory.pnl_share * 100).toFixed(0)}% of positive P&L.`,
+    );
+  }
+  if (args.topMarket && args.topMarket.pnl_share >= pnlThreshold) {
+    flags.push(
+      `Top market contributes ${(args.topMarket.pnl_share * 100).toFixed(0)}% of positive P&L.`,
+    );
+  }
+  if (args.topMarket && args.topMarket.trade_share >= tradeThreshold) {
+    flags.push(
+      `Top market contributes ${(args.topMarket.trade_share * 100).toFixed(0)}% of resolved tickets.`,
+    );
+  }
+  return flags;
+}
+
+function buildAgentEdgeProfitAttribution(
+  evaluations: StrategyEvaluation[],
+  generatedAt: string,
+): AgentEdgeProfitAttribution {
+  const rulesByStrategy = evaluations
+    .filter(({ summary }) => isAgentEdgeVariant(summary))
+    .map(({ summary, acceptedTrades }) => {
+      const agentId = summary.agent_ids[0] ?? "unknown";
+      const agent = AGENTS.find((item) => item.id === agentId);
+      const resolvedTrades = acceptedTrades.filter(
+        (trade) => trade.pnl_usd !== null,
+      );
+      const stakeUsd = resolvedTrades.reduce(
+        (sum, trade) => sum + trade.stake_usd,
+        0,
+      );
+      const netPnlUsd = resolvedTrades.reduce(
+        (sum, trade) => sum + (trade.pnl_usd ?? 0),
+        0,
+      );
+      const bySource = attributionRows(
+        resolvedTrades,
+        (trade) => trade.market_source,
+        (trade) => trade.market_source,
+      );
+      const byCategory = attributionRows(
+        resolvedTrades,
+        (trade) => trade.market_category,
+        (trade) => trade.market_category,
+      );
+      const marketRows = attributionMarketRows(resolvedTrades);
+      const topSource = bySource[0] ?? null;
+      const topCategory = byCategory[0] ?? null;
+      const topMarket = marketRows[0] ?? null;
+      const baseRule = {
+        strategy_id: summary.id,
+        strategy_label: summary.label,
+        agent_id: agentId,
+        agent_name: resolvedTrades[0]?.agent_name ?? agent?.name ?? agentId,
+        min_edge: summary.min_edge,
+        status: "collecting" as AgentEdgeProfitAttributionStatus,
+        status_label: "Collecting",
+        resolved_trades: resolvedTrades.length,
+        required_resolved_trades:
+          PAPER_TRADING_ATTRIBUTION_RULES.minimumResolvedTradesForAttributionReview,
+        net_pnl_usd: round2(netPnlUsd),
+        stake_usd: round2(stakeUsd),
+        roi_on_stake: stakeUsd > 0 ? round4(netPnlUsd / stakeUsd) : 0,
+        distinct_sources: bySource.length,
+        distinct_categories: byCategory.length,
+        distinct_markets: marketRows.length,
+        top_source_pnl_share: topSource?.pnl_share ?? 0,
+        top_category_pnl_share: topCategory?.pnl_share ?? 0,
+        top_market_pnl_share: topMarket?.pnl_share ?? 0,
+        top_market_trade_share: topMarket?.trade_share ?? 0,
+        concentration_flags: [],
+        by_source: bySource,
+        by_category: byCategory,
+        top_markets: marketRows.slice(0, 10),
+      };
+      const flags = concentrationFlags({
+        rule: baseRule,
+        topSource,
+        topCategory,
+        topMarket,
+      });
+      const status: AgentEdgeProfitAttributionStatus =
+        resolvedTrades.length === 0 ||
+        resolvedTrades.length <
+          PAPER_TRADING_ATTRIBUTION_RULES.minimumResolvedTradesForAttributionReview
+          ? "collecting"
+          : flags.length > 0
+            ? "concentrated"
+            : "diversified";
+
+      return {
+        ...baseRule,
+        status,
+        status_label: attributionStatusLabel(status),
+        concentration_flags: flags,
+      };
+    })
+    .sort((a, b) => {
+      if (b.resolved_trades !== a.resolved_trades) {
+        return b.resolved_trades - a.resolved_trades;
+      }
+      if (b.net_pnl_usd !== a.net_pnl_usd) return b.net_pnl_usd - a.net_pnl_usd;
+      return `${a.agent_id}-${a.min_edge}`.localeCompare(
+        `${b.agent_id}-${b.min_edge}`,
+      );
+    });
+  const totalResolvedTrades = rulesByStrategy.reduce(
+    (sum, rule) => sum + rule.resolved_trades,
+    0,
+  );
+  const totalNetPnlUsd = rulesByStrategy.reduce(
+    (sum, rule) => sum + rule.net_pnl_usd,
+    0,
+  );
+  const concentratedRules = rulesByStrategy.filter(
+    (rule) => rule.status === "concentrated",
+  );
+  const diversifiedRules = rulesByStrategy.filter(
+    (rule) => rule.status === "diversified",
+  );
+  const topRule = rulesByStrategy[0] ?? null;
+  const status: AgentEdgeProfitAttributionStatus =
+    rulesByStrategy.length === 0
+      ? "unavailable"
+      : concentratedRules.length > 0
+        ? "concentrated"
+        : diversifiedRules.length > 0
+          ? "diversified"
+          : "collecting";
+
+  return {
+    schema_version: "1",
+    generated_at: generatedAt,
+    status,
+    status_label: attributionStatusLabel(status),
+    message:
+      status === "unavailable"
+        ? "No canonical agent-edge attribution rules are available."
+        : status === "concentrated"
+          ? "At least one agent-edge rule has concentrated resolved P&L that needs review."
+          : status === "diversified"
+            ? "At least one agent-edge rule has enough resolved tickets without concentration flags."
+            : "Agent-edge profit attribution is collecting resolved tickets.",
+    next_required_action:
+      status === "unavailable"
+        ? "Capture the canonical agent-edge strategy registry before attribution review."
+        : status === "concentrated"
+          ? "Inspect concentrated source, category, or market P&L before treating a rule as repeatable."
+          : status === "diversified"
+            ? "Review diversified agent-edge rules; execution remains disabled."
+            : "Wait for more live paper markets to resolve before judging profit concentration.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    profit_attribution_review_only: true,
+    rules: PAPER_TRADING_ATTRIBUTION_RULES,
+    rule_count: rulesByStrategy.length,
+    resolved_rule_count: rulesByStrategy.filter(
+      (rule) => rule.resolved_trades > 0,
+    ).length,
+    profitable_rule_count: rulesByStrategy.filter(
+      (rule) => rule.net_pnl_usd > 0,
+    ).length,
+    concentrated_rule_count: concentratedRules.length,
+    diversified_rule_count: diversifiedRules.length,
+    total_resolved_trades: totalResolvedTrades,
+    total_net_pnl_usd: round2(totalNetPnlUsd),
+    top_rule_strategy_id: topRule?.strategy_id ?? null,
+    top_rule_label: topRule?.strategy_label ?? null,
+    rules_by_strategy: rulesByStrategy,
+  };
+}
+
 function buildAgentEdgeTradeLedger(
   evaluations: StrategyEvaluation[],
   generatedAt: string,
@@ -3399,6 +3782,10 @@ export async function getTradingSnapshot(
       generatedAt,
     ),
     agent_edge_trade_ledger: buildAgentEdgeTradeLedger(
+      evaluatedStrategies,
+      generatedAt,
+    ),
+    agent_edge_attribution: buildAgentEdgeProfitAttribution(
       evaluatedStrategies,
       generatedAt,
     ),
