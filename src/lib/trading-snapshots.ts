@@ -2250,7 +2250,7 @@ function proofReadinessNextAction(
     return "Continue paper-only collection until the proof window is complete.";
   }
   if (args.proofSummary.capital_review_status === "reviewable") {
-    return "A durable candidate is ready for operator capital review; execution remains disabled.";
+    return "Add source-level liquidity, spread, fee, and fill-size evidence before operator capital review.";
   }
   return "Do not allocate capital; inspect the durable proof blockers.";
 }
@@ -2449,6 +2449,18 @@ export function buildPaperTradingProofReadiness(args: {
         : "Drawdown is not final until the proof window is complete.",
     ),
     readinessItem(
+      "liquidity_slippage",
+      "Liquidity/slippage evidence",
+      args.proofSummary.capital_review_status === "reviewable"
+        ? "blocked"
+        : "collecting",
+      "not persisted",
+      "source-level spread, depth, fees, fill size, and slippage-adjusted entry",
+      args.proofSummary.capital_review_status === "reviewable"
+        ? "Paper proof is profitable, but capital review is blocked until source-level execution-quality evidence is persisted."
+        : "This becomes a hard blocker before any profitable paper candidate can move to operator capital review.",
+    ),
+    readinessItem(
       "capital_review",
       "Capital review boundary",
       capitalReviewStatus,
@@ -2481,8 +2493,7 @@ export function buildPaperTradingProofReadiness(args: {
       overallStatus === "pass"
         ? "Ready for review"
         : readinessStatusLabel(overallStatus),
-    ready_for_capital_review:
-      args.proofSummary.capital_review_status === "reviewable",
+    ready_for_capital_review: overallStatus === "pass",
     real_money_execution_allowed: false,
     paper_only: true,
     next_required_action: proofReadinessNextAction(args, evidenceWindowReady),
