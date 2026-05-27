@@ -32,8 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://atxtnpgwrcesifejltah.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_HgRUYgzIEdElWBYLM-DbKQ_yiZLFeL0' }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       NEXT_PUBLIC_USE_DEMO_DATA: "false"
       SNAPSHOT_MIN_EDGE: ${{ github.event_name == 'workflow_dispatch' && inputs.min_edge || '0.1' }}
@@ -52,7 +52,6 @@ jobs:
 
           missing=()
           [[ -n "${NEXT_PUBLIC_SUPABASE_URL:-}" ]] || missing+=(NEXT_PUBLIC_SUPABASE_URL)
-          [[ -n "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]] || missing+=(NEXT_PUBLIC_SUPABASE_ANON_KEY)
           [[ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]] || missing+=(SUPABASE_SERVICE_ROLE_KEY)
 
           if (( ${#missing[@]} > 0 )); then

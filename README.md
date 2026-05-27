@@ -202,11 +202,12 @@ The 30-day paper-trading lab has two daily capture paths:
 - Netlify scheduled function: `netlify/functions/paper-trading-snapshot.ts` posts to `/api/trading-snapshots` at `05:12 UTC` and requires `CRON_SHARED_SECRET` in the deployed site env.
 - GitHub Actions fallback: `.github/workflows/paper-trading-snapshot.yml` runs `scripts/paper-trading-snapshot.ts --write` at `05:22 UTC`, then uploads the snapshot and soft-audit JSON artifacts for that run.
 
-The GitHub workflow does not depend on the deployed frontend. It needs repository secrets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. It sets `NEXT_PUBLIC_USE_DEMO_DATA=false` and the snapshot script refuses to write demo-sourced rows unless `--allow-demo-write` is passed manually.
+The GitHub workflow does not depend on the deployed frontend. It uses the public Supabase URL and publishable anon key from this repo by default, with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` available as optional repository-secret overrides. Non-dry-run writes require the repository secret `SUPABASE_SERVICE_ROLE_KEY`. It sets `NEXT_PUBLIC_USE_DEMO_DATA=false` and the snapshot script refuses to write demo-sourced rows unless `--allow-demo-write` is passed manually.
 
-Non-dry-run GitHub captures fail before checkout if any required Supabase secret
-is missing. Manual `workflow_dispatch` dry runs are safe without secrets and
-exercise the same snapshot and audit artifact path without inserting rows.
+Non-dry-run GitHub captures fail before checkout if `SUPABASE_SERVICE_ROLE_KEY`
+is missing. Manual `workflow_dispatch` dry runs are safe without service-role
+access and exercise the same snapshot and audit artifact path without inserting
+rows.
 
 ## Stack
 
