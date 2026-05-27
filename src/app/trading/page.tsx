@@ -3934,6 +3934,16 @@ export default async function TradingPage({
                           </td>
                           <td className="py-3 px-3 mono text-right text-text-secondary">
                             {int(rule.open_signals)}
+                            {rule.open_signals > 0 ? (
+                              <div className="mt-1 text-[10px] text-text-muted">
+                                BE{" "}
+                                {rule.break_even_open_wins_required === null
+                                  ? "n/a"
+                                  : `${int(
+                                      rule.break_even_open_wins_required
+                                    )}/${int(rule.open_signals)}`}
+                              </div>
+                            ) : null}
                           </td>
                           <td className="py-3 px-3 text-right">
                             {runwayRule ? (
@@ -3980,6 +3990,12 @@ export default async function TradingPage({
                             )}`}
                           >
                             {dollars(rule.resolved_net_pnl_usd, 0)}
+                            {rule.pending_pnl_counts_as_proof === false &&
+                            rule.open_signals > 0 ? (
+                              <div className="mt-1 text-[10px] text-text-muted">
+                                pending not proof
+                              </div>
+                            ) : null}
                           </td>
                           <td
                             className={`py-3 px-3 mono text-right ${pnlClass(
@@ -4003,6 +4019,16 @@ export default async function TradingPage({
                             )}`}
                           >
                             {dollars(rule.open_expected_pnl_usd, 0)}
+                            {rule.open_signals > 0 ? (
+                              <div
+                                className={`mt-1 text-[10px] ${pnlClass(
+                                  rule.model_expected_total_pnl_usd
+                                )}`}
+                              >
+                                total{" "}
+                                {dollars(rule.model_expected_total_pnl_usd, 0)}
+                              </div>
+                            ) : null}
                           </td>
                         </tr>
                       );
