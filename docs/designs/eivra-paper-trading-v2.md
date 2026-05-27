@@ -139,8 +139,9 @@ The 30-day proof window now has a durable audit surface:
 - `persistence.proof_readiness` and the top-level
   `persisted_proof_readiness` turn the durable evidence into explicit
   pass/collecting/blocked gates: archive availability, paper-only lock, capture
-  freshness, registry sync, 30-day capture window, resolved-trade minimum,
-  positive window P&L/ROI, drawdown, and capital-review boundary.
+  freshness, registry sync, current resolution hygiene, 30-day capture window,
+  resolved-trade minimum, positive window P&L/ROI, drawdown, and
+  capital-review boundary.
 
 The database table is public-read, service-role-write, and RLS-enabled. Snapshot
 rows are analytics evidence only; they do not create wallets, orders, leverage,
@@ -208,6 +209,9 @@ coverage, resolved trades, rolling-window P&L, drawdown, and blockers.
 The dashboard also renders a proof-readiness checklist above the persisted
 tables. This is the operator surface for "what is blocking real-money review
 right now"; it never enables execution and always keeps `paper_only: true`.
+When loaded through `/api/trading.json`, the checklist includes the current
+resolution backlog so overdue live paper markets are visible before open EV is
+mistaken for realized P&L.
 
 Capture health is `fresh` while the latest persisted row is less than 36 hours
 old. It becomes `stale` after that window, which makes a missed daily snapshot

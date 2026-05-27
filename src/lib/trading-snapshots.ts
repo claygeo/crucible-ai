@@ -6,6 +6,7 @@ import type {
   StrategyDailyEvidenceSeries,
   StrategyVariantSummary,
   TradingControls,
+  TradingResolutionWatch,
   TradingSample,
   TradingSnapshot,
   TradingSource,
@@ -1444,6 +1445,7 @@ function proofReadinessNextAction(
     captureHealth: PaperTradingCaptureHealth;
     captureCalendar: PaperTradingCaptureCalendar;
     registrySync?: PaperTradingStrategyRegistrySync | null;
+    resolutionWatch?: TradingResolutionWatch | null;
   },
   evidenceWindowReady: boolean
 ): string {
@@ -1455,6 +1457,11 @@ function proofReadinessNextAction(
   }
   if (args.registrySync && args.registrySync.status === "pending_capture") {
     return "Wait for the next daily snapshot to capture the current strategy registry.";
+  }
+  if (args.resolutionWatch && args.resolutionWatch.overdue_live_signals > 0) {
+    const label =
+      args.resolutionWatch.overdue_live_signals === 1 ? "market" : "markets";
+    return `Investigate ${args.resolutionWatch.overdue_live_signals} overdue live paper ${label} before trusting open EV.`;
   }
   if (
     args.captureCalendar.missing_days > 0 ||
@@ -1486,6 +1493,7 @@ export function buildPaperTradingProofReadiness(args: {
   captureHealth: PaperTradingCaptureHealth;
   captureCalendar: PaperTradingCaptureCalendar;
   registrySync?: PaperTradingStrategyRegistrySync | null;
+  resolutionWatch?: TradingResolutionWatch | null;
 }): PaperTradingProofReadiness {
   const registryStatus: PaperTradingProofReadinessStatus = !args.registrySync
     ? "unavailable"
@@ -1529,6 +1537,31 @@ export function buildPaperTradingProofReadiness(args: {
             args.proofSummary.status === "stale"
           ? "blocked"
           : "collecting";
+  const resolutionItem =
+    args.resolutionWatch === undefined
+      ? null
+      : readinessItem(
+          "resolution_hygiene",
+          "Resolution hygiene",
+          !args.resolutionWatch
+            ? "unavailable"
+            : args.resolutionWatch.overdue_live_signals > 0
+              ? "blocked"
+              : args.resolutionWatch.open_live_signals > 0
+                ? "collecting"
+                : "pass",
+          !args.resolutionWatch
+            ? "not checked"
+            : `${args.resolutionWatch.overdue_live_signals} overdue / ${args.resolutionWatch.open_live_signals} open`,
+          "0 overdue live paper markets",
+          !args.resolutionWatch
+            ? "Only /api/trading.json can inspect the current live resolution backlog."
+            : args.resolutionWatch.overdue_live_signals > 0
+              ? "Overdue open markets must be checked before treating open EV as credible."
+              : args.resolutionWatch.open_live_signals > 0
+                ? "Open live tickets are waiting for market resolution; they are not realized profit."
+                : "No open live paper tickets are waiting for resolution."
+        );
 
   const items = [
     readinessItem(
@@ -1647,6 +1680,9 @@ export function buildPaperTradingProofReadiness(args: {
         "A candidate can become reviewable, but this app never enables execution."
     ),
   ];
+  if (resolutionItem) {
+    items.splice(4, 0, resolutionItem);
+  }
 
   const overallStatus: PaperTradingProofReadinessStatus =
     args.persistenceStatus !== "available" || args.proofSummary.status === "unavailable"

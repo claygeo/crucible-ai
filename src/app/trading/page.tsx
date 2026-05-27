@@ -186,6 +186,7 @@ export default async function TradingPage({
     captureHealth,
     captureCalendar,
     registrySync,
+    resolutionWatch,
   });
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")

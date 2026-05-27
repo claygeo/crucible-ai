@@ -25,6 +25,7 @@ export async function GET(request: Request) {
     captureHealth: persisted.capture_health,
     captureCalendar: persisted.capture_calendar,
     registrySync,
+    resolutionWatch: snapshot.resolution_watch,
   });
 
   return NextResponse.json(
