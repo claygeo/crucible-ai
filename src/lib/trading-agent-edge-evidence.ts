@@ -1,5 +1,6 @@
 import { PAPER_TRADING_PROOF_RULES } from "@/lib/trading";
 import type { PaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
+import type { PublishedPaperTradingArtifactProof } from "@/lib/trading-artifacts";
 import type {
   DurableProofStatus,
   PaperTradingCaptureCalendarDay,
@@ -253,13 +254,98 @@ function latestCapturedAt(
   );
 }
 
-export function buildPaperTradingAgentEdgeEvidenceTimeline(args: {
-  persistence: PaperTradingPersistenceRead;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isAgentEdgeEvidenceRule(
+  value: unknown,
+): value is PaperTradingAgentEdgeEvidenceRule {
+  return (
+    isRecord(value) &&
+    typeof value.strategy_id === "string" &&
+    typeof value.agent_id === "string" &&
+    typeof value.min_edge === "number" &&
+    Array.isArray(value.recent_days)
+  );
+}
+
+function artifactEvidenceTimeline(
+  value: unknown,
+): PaperTradingAgentEdgeEvidenceTimeline | null {
+  if (
+    !isRecord(value) ||
+    value.schema_version !== "1" ||
+    value.paper_only !== true ||
+    value.real_money_execution_allowed !== false ||
+    !Array.isArray(value.rules)
+  ) {
+    return null;
+  }
+  const rules = value.rules.filter(isAgentEdgeEvidenceRule);
+  if (rules.length !== value.rules.length) return null;
+  return {
+    ...(value as PaperTradingAgentEdgeEvidenceTimeline),
+    rules,
+    selected_rule: isAgentEdgeEvidenceRule(value.selected_rule)
+      ? value.selected_rule
+      : null,
+  };
+}
+
+function withSelectedRule(args: {
+  timeline: PaperTradingAgentEdgeEvidenceTimeline;
   agentEdgeProof: PaperTradingAgentEdgeProof;
+  persistenceStatus: PaperTradingPersistenceRead["status"];
   selectedAgentId?: string | null;
   selectedMinEdge?: number | null;
   generatedAt?: string;
 }): PaperTradingAgentEdgeEvidenceTimeline {
+  const selectedRule =
+    args.selectedAgentId && typeof args.selectedMinEdge === "number"
+      ? (args.timeline.rules.find(
+          (rule) =>
+            rule.agent_id === args.selectedAgentId &&
+            rule.min_edge === args.selectedMinEdge,
+        ) ?? null)
+      : null;
+  return {
+    ...args.timeline,
+    generated_at: args.generatedAt ?? args.timeline.generated_at,
+    source: args.agentEdgeProof.source,
+    source_label: args.agentEdgeProof.source_label,
+    proof_source_status: args.agentEdgeProof.status,
+    persistence_status: args.persistenceStatus,
+    selected_rule: selectedRule,
+  };
+}
+
+export function buildPaperTradingAgentEdgeEvidenceTimeline(args: {
+  persistence: PaperTradingPersistenceRead;
+  agentEdgeProof: PaperTradingAgentEdgeProof;
+  publishedArtifactProof?: PublishedPaperTradingArtifactProof | null;
+  selectedAgentId?: string | null;
+  selectedMinEdge?: number | null;
+  generatedAt?: string;
+}): PaperTradingAgentEdgeEvidenceTimeline {
+  const publishedArtifactTimeline = artifactEvidenceTimeline(
+    args.publishedArtifactProof?.agent_edge_evidence,
+  );
+  if (
+    args.persistence.snapshots.length === 0 &&
+    args.agentEdgeProof.source === "published_artifact" &&
+    publishedArtifactTimeline
+  ) {
+    return withSelectedRule({
+      timeline: publishedArtifactTimeline,
+      agentEdgeProof: args.agentEdgeProof,
+      persistenceStatus: args.persistence.status,
+      selectedAgentId: args.selectedAgentId,
+      selectedMinEdge: args.selectedMinEdge,
+      generatedAt: args.generatedAt,
+    });
+  }
+
   const calendarDays = args.persistence.capture_calendar.days;
   const snapshotIndex = buildSnapshotIndex(args.persistence.snapshots);
   const rules = args.agentEdgeProof.rows.map((row) => {
