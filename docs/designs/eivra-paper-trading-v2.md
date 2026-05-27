@@ -127,9 +127,15 @@ dates against the latest up-to-30 scheduled capture dates in the proof window.
 Missing scheduled dates block live strategies from becoming candidates, even
 when the latest global capture is still inside the broader freshness window.
 
-The dashboard and public JSON feed load a 360-row persisted history window. That
+Each rollup also carries `proof_window`, a rolling-window delta from the row
+before the proof window into the latest captured row. The durable gate uses this
+window's resolved trades, resolved P&L, ROI, and drawdown instead of all-time
+cumulative totals, so old wins cannot make a strategy pass a fresh 30-day test.
+
+The dashboard and public JSON feed load a 500-row persisted history window. That
 is intentionally larger than 30 days because the daily writer stores multiple
-strategy rows per capture, and same-day manual probes can add duplicate rows.
+strategy rows per capture, same-day manual probes can add duplicate rows, and
+the proof-window delta needs the baseline row before the 30-day window.
 
 Capture health is `fresh` while the latest persisted row is less than 36 hours
 old. It becomes `stale` after that window, which makes a missed daily snapshot

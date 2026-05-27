@@ -95,7 +95,7 @@ export default async function TradingPage({
   const controls = parseTradingControls(await searchParams);
   const [snapshot, persisted] = await Promise.all([
     getTradingSnapshot(controls),
-    loadPaperTradingSnapshotHistory(360),
+    loadPaperTradingSnapshotHistory(500),
   ]);
   const leader = snapshot.agent_summaries[0];
   const liveResolved =
@@ -116,7 +116,7 @@ export default async function TradingPage({
   );
   const selectedQuery = tradingControlsToQuery(snapshot.controls);
   const jsonHref = `/api/trading.json?${selectedQuery}`;
-  const snapshotJsonHref = "/api/trading-snapshots?limit=360";
+  const snapshotJsonHref = "/api/trading-snapshots?limit=500";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
   ).sort((a, b) => a - b);
@@ -604,7 +604,7 @@ export default async function TradingPage({
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Proof</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Resolved</th>
                       <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Skipped</th>
-                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">P&amp;L</th>
+                      <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Window P&amp;L</th>
                       <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Open risk</th>
                     </tr>
                   </thead>
@@ -612,6 +612,7 @@ export default async function TradingPage({
                     {persistedRollups.map((rollup) => {
                       const durableGate = rollup.durable_proof_gate;
                       const coverage = rollup.capture_coverage;
+                      const proofWindow = rollup.proof_window;
                       return (
                         <tr key={rollup.strategy_id}>
                           <td className="py-3 pr-3">
@@ -621,6 +622,10 @@ export default async function TradingPage({
                             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                               latest {rollup.latest_snapshot_date ?? "-"} /{" "}
                               {rollup.source} / {rollup.sample.replace("_", " ")}
+                            </div>
+                            <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                              window {proofWindow.start_snapshot_date ?? "-"} -{" "}
+                              {proofWindow.end_snapshot_date ?? "-"}
                             </div>
                           </td>
                           <td className="py-3 px-3 mono text-right text-text-secondary">
@@ -671,9 +676,12 @@ export default async function TradingPage({
                             )}`}
                           >
                             {dollars(durableGate.resolved_net_pnl_usd, 0)}
+                            <div className="mt-1 text-[10px] text-text-muted">
+                              {pct(durableGate.resolved_roi_on_stake, 1)}
+                            </div>
                           </td>
                           <td className="py-3 pl-3 mono text-right text-text-secondary">
-                            {dollars(rollup.latest_open_exposure_usd, 0)}
+                            {dollars(proofWindow.latest_open_exposure_usd, 0)}
                           </td>
                         </tr>
                       );
