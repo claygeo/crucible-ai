@@ -188,6 +188,12 @@ The 30-day proof window now has a durable audit surface:
   agent/edge rules have resolved profit versus unresolved open EV.
   Scheduled artifact audits publish the same `agent_edge_proof` packet into
   `artifact_proof`, so daily evidence bundles remain self-contained.
+- `GET /api/trading-agent-edge-trades` exposes the paper-only resolved-ticket
+  ledger behind those canonical rules. It lists the exact resolved paper tickets
+  per agent/edge rule, P&L, ROI, forecast probability, entry price, side, and
+  market link. The workflow snapshot summary and published artifact proof carry
+  the same `agent_edge_trade_ledger`, so a future profitable-rule claim can be
+  audited back to individual resolved tickets rather than only rollup totals.
 - `/api/trading.json` and `GET /api/trading-snapshots` expose
   `proof_evidence_sources`, a paper-only source map that separates Supabase
   persistence, GitHub artifact bundles, live resolution hygiene, and the capital

@@ -196,6 +196,7 @@ async function main() {
     strategy_registry: snapshot.strategy_registry,
     would_trade_today: snapshot.would_trade_today,
     market_exposure_digest: snapshot.market_exposure_digest,
+    agent_edge_trade_ledger: snapshot.agent_edge_trade_ledger,
     loaded_env_files: loadedEnvFiles,
     snapshot_date: snapshot.generated_at.slice(0, 10),
     schema_version: "1",
@@ -213,6 +214,7 @@ async function main() {
     strategy_registry: snapshot.strategy_registry,
     would_trade_today: snapshot.would_trade_today,
     market_exposure_digest: snapshot.market_exposure_digest,
+    agent_edge_trade_ledger: snapshot.agent_edge_trade_ledger,
     loaded_env_files: loadedEnvFiles,
     snapshot_date: snapshot.generated_at.slice(0, 10),
     selected_strategy: {
