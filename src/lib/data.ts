@@ -30,12 +30,17 @@ import {
 // ────────────────────────────────────────────────────────────────────────────
 
 let _client: ReturnType<typeof createClient> | null = null;
+function readEnv(name: string): string | undefined {
+  const value = process.env[name]?.trim();
+  return value ? value : undefined;
+}
+
 function sb() {
   if (_client) return _client;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = readEnv("NEXT_PUBLIC_SUPABASE_URL");
   // Prefer service role on server (bypasses RLS, faster); fall back to anon.
   const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    readEnv("SUPABASE_SERVICE_ROLE_KEY") ?? readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
   if (!url || !key) return null;
   try {
     _client = createClient(url, key, {
