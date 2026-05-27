@@ -321,6 +321,7 @@ export default async function TradingPage({
   const agentEdgeRows = snapshot.agent_edge_matrix;
   const evidenceRows = snapshot.selected_daily_snapshots;
   const selectedStrategy = snapshot.selected_strategy;
+  const selectedBankrollRisk = snapshot.selected_bankroll_risk;
   const selectedProof = selectedStrategy.proof_gate;
   const exposureLedger = snapshot.selected_exposure_ledger;
   const skippedExposureEntries = exposureLedger.recent_entries.filter(
@@ -1096,7 +1097,7 @@ export default async function TradingPage({
               </Link>
             </div>
           </form>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 border-t border-border-subtle pt-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-3 border-t border-border-subtle pt-4">
             <div className="lg:col-span-2">
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Selected strategy
@@ -1129,6 +1130,27 @@ export default async function TradingPage({
                 {dollars(selectedStrategy.open_expected_pnl_usd, 0)}
               </div>
             </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Open loss
+              </div>
+              <div className={`heading text-xl mt-1 ${pnlClass(selectedBankrollRisk.worst_case_open_loss_usd)}`}>
+                {dollars(selectedBankrollRisk.worst_case_open_loss_usd, 0)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Worst bankroll
+              </div>
+              <div className="heading text-xl text-text-primary mt-1">
+                {dollars(selectedBankrollRisk.bankroll_after_worst_case_usd, 0)}
+              </div>
+            </div>
+          </div>
+          <div className="mono text-[11px] text-text-muted border-t border-border-subtle pt-3">
+            Open exposure is {pct(selectedBankrollRisk.open_exposure_pct_of_bankroll, 1)} of selected bankroll;
+            remaining paper capacity is {dollars(selectedBankrollRisk.remaining_open_capacity_usd, 0)}.
+            This is analytics only; real-money execution remains disabled.
           </div>
         </section>
 

@@ -495,6 +495,24 @@ export type StrategyVariantSummary = {
   proof_gate: StrategyProofGate;
 };
 
+export type SelectedBankrollRisk = {
+  bankroll_usd: number;
+  realized_pnl_usd: number;
+  realized_equity_usd: number;
+  open_exposure_usd: number;
+  open_expected_pnl_usd: number;
+  worst_case_open_loss_usd: number;
+  worst_case_total_pnl_usd: number;
+  bankroll_after_worst_case_usd: number;
+  open_exposure_pct_of_bankroll: number;
+  max_open_exposure_usd: number;
+  max_open_exposure_pct_of_bankroll: number;
+  remaining_open_capacity_usd: number;
+  remaining_bankroll_after_open_loss_pct: number;
+  paper_only: true;
+  real_money_execution_allowed: false;
+};
+
 export type AgentEdgeRuleSummary = {
   strategy_id: string;
   strategy_label: string;
@@ -872,6 +890,7 @@ export type TradingSnapshot = {
   backfill_totals: TradingTotals;
   resolution_watch: TradingResolutionWatch;
   selected_strategy: StrategyVariantSummary;
+  selected_bankroll_risk: SelectedBankrollRisk;
   proof_gates: StrategyProofGate[];
   selected_exposure_ledger: ExposureLedgerSummary;
   selected_open_signals: PaperTrade[];
@@ -2344,6 +2363,44 @@ function summarizeStrategyFromTrades(
   };
 }
 
+function buildSelectedBankrollRisk(
+  strategy: StrategyVariantSummary,
+): SelectedBankrollRisk {
+  const bankrollUsd = strategy.bankroll_usd;
+  const openExposureUsd = strategy.open_exposure_usd;
+  const realizedPnlUsd = strategy.net_pnl_usd;
+  const worstCaseTotalPnlUsd = realizedPnlUsd - openExposureUsd;
+  const bankrollAfterWorstCaseUsd = bankrollUsd + worstCaseTotalPnlUsd;
+
+  return {
+    bankroll_usd: bankrollUsd,
+    realized_pnl_usd: realizedPnlUsd,
+    realized_equity_usd: round2(bankrollUsd + realizedPnlUsd),
+    open_exposure_usd: openExposureUsd,
+    open_expected_pnl_usd: strategy.open_expected_pnl_usd,
+    worst_case_open_loss_usd: round2(-openExposureUsd),
+    worst_case_total_pnl_usd: round2(worstCaseTotalPnlUsd),
+    bankroll_after_worst_case_usd: round2(bankrollAfterWorstCaseUsd),
+    open_exposure_pct_of_bankroll:
+      bankrollUsd > 0 ? round4(openExposureUsd / bankrollUsd) : 0,
+    max_open_exposure_usd: strategy.exposure_ledger.max_open_exposure_usd,
+    max_open_exposure_pct_of_bankroll:
+      bankrollUsd > 0
+        ? round4(strategy.exposure_ledger.max_open_exposure_usd / bankrollUsd)
+        : 0,
+    remaining_open_capacity_usd: round2(
+      Math.max(
+        0,
+        strategy.exposure_ledger.max_open_exposure_usd - openExposureUsd,
+      ),
+    ),
+    remaining_bankroll_after_open_loss_pct:
+      bankrollUsd > 0 ? round4(bankrollAfterWorstCaseUsd / bankrollUsd) : 0,
+    paper_only: true,
+    real_money_execution_allowed: false,
+  };
+}
+
 function isAgentEdgeVariant(strategy: StrategyVariantSummary): boolean {
   return (
     strategy.sample === "live_only" &&
@@ -3769,6 +3826,7 @@ export async function getTradingSnapshot(
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
     .slice(0, 24);
   const selectedStrategy = selectedEvaluation.summary;
+  const selectedBankrollRisk = buildSelectedBankrollRisk(selectedStrategy);
   const resolutionWatch = buildResolutionWatch(
     liveTrades,
     new Date(generatedAt),
@@ -3793,6 +3851,7 @@ export async function getTradingSnapshot(
     backfill_totals: summarizeTotals(backfillTrades),
     resolution_watch: resolutionWatch,
     selected_strategy: selectedStrategy,
+    selected_bankroll_risk: selectedBankrollRisk,
     proof_gates: [selectedStrategy, ...strategyVariants].map(
       (strategy) => strategy.proof_gate,
     ),
