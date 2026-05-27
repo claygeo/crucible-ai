@@ -163,6 +163,11 @@ export type PaperTradingStrategyProofRollup = {
 export type PaperTradingProofSummary = {
   status: DurableProofStatus | "unavailable";
   status_label: string;
+  capital_review_status: "blocked" | "reviewable" | "unavailable";
+  capital_review_status_label: string;
+  real_money_execution_allowed: false;
+  paper_only: true;
+  capital_review_blockers: string[];
   live_strategy_count: number;
   candidate_count: number;
   collecting_count: number;
@@ -688,6 +693,16 @@ function emptyPaperTradingProofSummary(
   return {
     status,
     status_label: statusLabel,
+    capital_review_status:
+      status === "unavailable" ? "unavailable" : "blocked",
+    capital_review_status_label:
+      status === "unavailable" ? "Unavailable" : "Blocked",
+    real_money_execution_allowed: false,
+    paper_only: true,
+    capital_review_blockers:
+      status === "unavailable"
+        ? ["Persisted paper proof log is unavailable."]
+        : ["No live strategy has passed the durable proof gate."],
     live_strategy_count: 0,
     candidate_count: 0,
     collecting_count: 0,
@@ -757,6 +772,17 @@ export function buildPaperTradingProofSummary(
           : status === "not_qualified"
             ? "No candidate"
             : "Collecting",
+    capital_review_status: candidates.length > 0 ? "reviewable" : "blocked",
+    capital_review_status_label:
+      candidates.length > 0 ? "Reviewable" : "Blocked",
+    real_money_execution_allowed: false,
+    paper_only: true,
+    capital_review_blockers:
+      candidates.length > 0
+        ? []
+        : bestLive.durable_proof_gate.blockers.length > 0
+          ? bestLive.durable_proof_gate.blockers
+          : ["No live strategy has passed the durable proof gate."],
     live_strategy_count: liveRollups.length,
     candidate_count: candidates.length,
     collecting_count: collecting.length,

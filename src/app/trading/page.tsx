@@ -51,9 +51,9 @@ function proofStatusClass(status: string) {
 }
 
 function proofSummaryClass(status: string) {
-  if (status === "candidate") return "text-positive";
+  if (status === "candidate" || status === "reviewable") return "text-positive";
   if (status === "not_qualified" || status === "stale") return "text-rose-400";
-  if (status === "collecting") return "text-warn";
+  if (status === "collecting" || status === "blocked") return "text-warn";
   return "text-text-muted";
 }
 
@@ -527,14 +527,14 @@ export default async function TradingPage({
           <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                Live proof
+                Capital review
               </div>
               <div
                 className={`heading text-2xl mt-1 ${proofSummaryClass(
-                  proofSummary.status
+                  proofSummary.capital_review_status
                 )}`}
               >
-                {proofSummary.status_label}
+                {proofSummary.capital_review_status_label}
               </div>
             </div>
             <div>
@@ -595,6 +595,12 @@ export default async function TradingPage({
             </div>
           </div>
           <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
+            <span className={proofSummaryClass(proofSummary.status)}>
+              live proof {proofSummary.status_label}
+            </span>
+            <span className={proofSummaryClass(proofSummary.capital_review_status)}>
+              real-money execution disabled
+            </span>
             {proofSummary.best_live_strategy_label ? (
               <span>
                 best live {proofSummary.best_live_strategy_label}:{" "}
