@@ -168,6 +168,12 @@ The 30-day proof window now has a durable audit surface:
   are disabled. Same-day reruns are deduped by `snapshot_date`, keeping the
   newest `generated_at` artifact and recording ignored duplicate bundles in the
   audit report.
+- `/api/trading-artifacts`, `/api/trading.json`, `/api/trading-snapshots`, and
+  `/api/trading-evidence-sla` expose `paper_artifact_history` /
+  `artifact_history`: retained bundle count, selected distinct proof days,
+  same-day reruns ignored, days remaining to 30, and the latest snapshot date.
+  The dashboard renders the same status next to the GitHub proof workflow so the
+  artifact-only trail is operator-visible while Supabase writes remain disabled.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.

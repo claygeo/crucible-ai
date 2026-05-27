@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
 import {
+  buildPaperTradingArtifactHistory,
   buildPaperTradingEvidenceSla,
   buildPaperTradingWriteReadiness,
   loadPaperTradingArtifactWorkflowStatus,
@@ -31,6 +32,9 @@ export async function GET(request: Request) {
     artifactWorkflow,
     publishedArtifactProof,
   });
+  const artifactHistory = buildPaperTradingArtifactHistory({
+    publishedArtifactProof,
+  });
   const evidenceSla = buildPaperTradingEvidenceSla({
     persistence: persisted,
     publishedArtifactProof,
@@ -47,6 +51,7 @@ export async function GET(request: Request) {
       current_resolution_watch: snapshot.resolution_watch,
       github_artifact_workflow: artifactWorkflow,
       published_artifact_proof: publishedArtifactProof,
+      paper_artifact_history: artifactHistory,
       paper_write_readiness: writeReadiness,
       description:
         "Read-only Eivra paper evidence SLA. It reports whether the 30-day proof capture trail is healthy, degraded, or blocked; it never enables real-money execution.",

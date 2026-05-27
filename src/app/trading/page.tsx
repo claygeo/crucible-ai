@@ -5,6 +5,7 @@ import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
 import { buildPaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
 import {
+  buildPaperTradingArtifactHistory,
   buildPaperTradingEvidenceSla,
   buildPaperTradingWriteReadiness,
   loadPaperTradingArtifactWorkflowStatus,
@@ -170,6 +171,12 @@ function evidenceSlaStatusClass(status: string) {
   return "bg-text-muted/10 text-text-muted";
 }
 
+function artifactHistoryStatusClass(status: string) {
+  if (status === "complete") return "bg-positive/10 text-positive";
+  if (status === "collecting") return "bg-accent/10 text-accent";
+  return "bg-text-muted/10 text-text-muted";
+}
+
 function proofEvidenceSourceStatusClass(status: string) {
   if (status === "active" || status === "available" || status === "reviewable") {
     return "bg-positive/10 text-positive";
@@ -304,6 +311,9 @@ export default async function TradingPage({
   });
   const writeReadiness = buildPaperTradingWriteReadiness({
     artifactWorkflow,
+    publishedArtifactProof,
+  });
+  const artifactHistory = buildPaperTradingArtifactHistory({
     publishedArtifactProof,
   });
   const evidenceSla = buildPaperTradingEvidenceSla({
@@ -1455,6 +1465,28 @@ export default async function TradingPage({
               </div>
               <div>
                 <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Artifact history
+                </div>
+                <div className="mt-1">
+                  <span
+                    className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${artifactHistoryStatusClass(
+                      artifactHistory.status
+                    )}`}
+                  >
+                    {artifactHistory.status_label}
+                  </span>
+                </div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted mt-2">
+                  {int(artifactHistory.complete_artifact_days)}/
+                  {int(artifactHistory.proof_window_days)} days /{" "}
+                  {int(artifactHistory.retained_artifact_count)} retained
+                </div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted mt-1">
+                  {int(artifactHistory.ignored_duplicate_artifact_count)} same-day reruns ignored
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                   Artifact action
                 </div>
                 <div className="text-sm text-text-primary mt-1 leading-relaxed">
@@ -1472,6 +1504,15 @@ export default async function TradingPage({
               </span>
               <span>
                 retention {int(proofEvidenceSources.artifact_contract.retention_days)}d
+              </span>
+              <span>
+                artifact history {int(artifactHistory.complete_artifact_days)}/
+                {int(artifactHistory.proof_window_days)} days
+              </span>
+              <span>
+                retained {int(artifactHistory.retained_artifact_count)} /
+                selected {int(artifactHistory.selected_artifact_count)} /
+                deduped {int(artifactHistory.ignored_duplicate_artifact_count)}
               </span>
               <span className="break-all">
                 audit {proofEvidenceSources.artifact_contract.audit_command}
