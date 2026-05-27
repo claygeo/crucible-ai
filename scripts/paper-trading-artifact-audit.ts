@@ -128,6 +128,14 @@ type StrategyRollupSummary = {
   blockers: string[];
 };
 
+type IgnoredDuplicateArtifact = {
+  snapshot_date: string;
+  ignored_path: string;
+  ignored_generated_at: string | null;
+  selected_path: string;
+  selected_generated_at: string | null;
+};
+
 function parseArgs(argv: string[]): CliOptions {
   const inputs: string[] = [];
   let allowDemo = false;
@@ -804,6 +812,67 @@ function summarizeStrategyRollup(
   };
 }
 
+function artifactGeneratedAtMillis(scan: ArtifactScan): number {
+  const generatedAt = scan.audit.generated_at;
+  if (!generatedAt) return Number.NEGATIVE_INFINITY;
+  const parsed = Date.parse(generatedAt);
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+}
+
+function selectLatestArtifactScans(scans: ArtifactScan[]): {
+  selectedScans: ArtifactScan[];
+  ignoredDuplicateArtifacts: IgnoredDuplicateArtifact[];
+} {
+  const bySnapshotDate = new Map<string, ArtifactScan>();
+  const undatedScans: ArtifactScan[] = [];
+
+  for (const scan of scans) {
+    const snapshotDate = scan.audit.snapshot_date;
+    if (!snapshotDate) {
+      undatedScans.push(scan);
+      continue;
+    }
+
+    const current = bySnapshotDate.get(snapshotDate);
+    if (
+      !current ||
+      artifactGeneratedAtMillis(scan) > artifactGeneratedAtMillis(current)
+    ) {
+      bySnapshotDate.set(snapshotDate, scan);
+    }
+  }
+
+  const selectedScans = [
+    ...undatedScans,
+    ...[...bySnapshotDate.values()].sort((a, b) =>
+      a.audit.path.localeCompare(b.audit.path),
+    ),
+  ];
+  const selectedPaths = new Set(selectedScans.map((scan) => scan.audit.path));
+  const ignoredDuplicateArtifacts = scans
+    .filter(
+      (scan) => scan.audit.snapshot_date && !selectedPaths.has(scan.audit.path),
+    )
+    .map((scan) => {
+      const snapshotDate = scan.audit.snapshot_date as string;
+      const selected = bySnapshotDate.get(snapshotDate);
+      return {
+        snapshot_date: snapshotDate,
+        ignored_path: scan.audit.path,
+        ignored_generated_at: scan.audit.generated_at,
+        selected_path: selected?.audit.path ?? "",
+        selected_generated_at: selected?.audit.generated_at ?? null,
+      };
+    })
+    .sort((a, b) =>
+      `${a.snapshot_date}-${a.ignored_path}`.localeCompare(
+        `${b.snapshot_date}-${b.ignored_path}`,
+      ),
+    );
+
+  return { selectedScans, ignoredDuplicateArtifacts };
+}
+
 async function buildArtifactProof(
   proofRows: PaperTradingSnapshotRow[],
   blocked: boolean,
@@ -930,16 +999,20 @@ async function buildArtifactProof(
 async function buildReport(options: CliOptions, files: string[]) {
   const workflowMode = readWorkflowMode(options.workflowPath);
   const scans = files.map((file) => scanArtifact(file, options));
+  const { selectedScans, ignoredDuplicateArtifacts } =
+    selectLatestArtifactScans(scans);
   const artifactAudits = scans.map((scan) => scan.audit);
-  const failedChecks: FailedCheck[] = artifactAudits.flatMap((artifact) =>
-    artifact.checks
-      .filter((item) => item.status === "fail")
-      .map((item) => ({
-        path: artifact.path,
-        code: item.code,
-        label: item.label,
-        detail: item.detail,
-      })),
+  const selectedArtifactAudits = selectedScans.map((scan) => scan.audit);
+  const failedChecks: FailedCheck[] = selectedArtifactAudits.flatMap(
+    (artifact) =>
+      artifact.checks
+        .filter((item) => item.status === "fail")
+        .map((item) => ({
+          path: artifact.path,
+          code: item.code,
+          label: item.label,
+          detail: item.detail,
+        })),
   );
   const snapshotDates = artifactAudits
     .map((artifact) => artifact.snapshot_date)
@@ -949,6 +1022,11 @@ async function buildReport(options: CliOptions, files: string[]) {
     (date, index) => snapshotDates.indexOf(date) !== index,
   );
   const uniqueSnapshotDates = [...new Set(snapshotDates)];
+  const selectedSnapshotDates = selectedArtifactAudits
+    .map((artifact) => artifact.snapshot_date)
+    .filter((date): date is string => Boolean(date))
+    .sort();
+  const uniqueSelectedSnapshotDates = [...new Set(selectedSnapshotDates)];
 
   if (files.length === 0) {
     failedChecks.push({
@@ -966,7 +1044,7 @@ async function buildReport(options: CliOptions, files: string[]) {
       detail: workflowMode.message,
     });
   }
-  for (const scan of scans) {
+  for (const scan of selectedScans) {
     const summary = scan.snapshotSummary;
     if (!summary || summary.status === "available") continue;
     if (options.snapshotSummaryPath) {
@@ -978,19 +1056,11 @@ async function buildReport(options: CliOptions, files: string[]) {
       });
     }
   }
-  if (duplicateSnapshotDates.length > 0) {
-    failedChecks.push({
-      path: null,
-      code: "duplicate_snapshot_dates",
-      label: "Unique snapshot dates",
-      detail: [...new Set(duplicateSnapshotDates)].sort().join(", "),
-    });
-  }
 
   const latestSnapshotDate =
-    uniqueSnapshotDates[uniqueSnapshotDates.length - 1] ?? null;
+    uniqueSelectedSnapshotDates[uniqueSelectedSnapshotDates.length - 1] ?? null;
   const completeArtifactDays = new Set(
-    artifactAudits
+    selectedArtifactAudits
       .filter(
         (artifact) =>
           artifact.snapshot_date &&
@@ -1000,8 +1070,10 @@ async function buildReport(options: CliOptions, files: string[]) {
       .map((artifact) => artifact.snapshot_date as string),
   );
   const artifactProofRows =
-    failedChecks.length === 0 ? scans.flatMap((scan) => scan.proofRows) : [];
-  const snapshotSummaries = scans
+    failedChecks.length === 0
+      ? selectedScans.flatMap((scan) => scan.proofRows)
+      : [];
+  const snapshotSummaries = selectedScans
     .map((scan) => scan.snapshotSummary)
     .filter((summary): summary is SnapshotSummaryContext => Boolean(summary));
   const latestSnapshotSummary =
@@ -1205,50 +1277,57 @@ async function buildReport(options: CliOptions, files: string[]) {
     artifact_file_name: ARTIFACT_FILE_NAME,
     allow_demo: options.allowDemo,
     min_live_rows: options.minLiveRows,
-    artifact_count: files.length,
+    artifact_count: selectedScans.length,
+    discovered_artifact_count: files.length,
     artifact_paths: files,
-    snapshot_dates: uniqueSnapshotDates,
+    selected_artifact_paths: selectedScans.map((scan) => scan.audit.path),
+    snapshot_dates: uniqueSelectedSnapshotDates,
     duplicate_snapshot_dates: [...new Set(duplicateSnapshotDates)].sort(),
-    coverage_days: uniqueSnapshotDates.length,
+    ignored_duplicate_artifacts: ignoredDuplicateArtifacts,
+    coverage_days: uniqueSelectedSnapshotDates.length,
     complete_artifact_days: completeArtifactDays.size,
     latest_snapshot_date: latestSnapshotDate,
-    row_count: artifactAudits.reduce(
+    row_count: selectedArtifactAudits.reduce(
       (sum, artifact) => sum + artifact.actual_row_count,
       0,
     ),
-    live_row_count: artifactAudits.reduce(
+    live_row_count: selectedArtifactAudits.reduce(
       (sum, artifact) => sum + artifact.live_row_count,
       0,
     ),
-    control_row_count: artifactAudits.reduce(
+    control_row_count: selectedArtifactAudits.reduce(
       (sum, artifact) => sum + artifact.control_row_count,
       0,
     ),
-    selected_query_row_count: artifactAudits.reduce(
+    selected_query_row_count: selectedArtifactAudits.reduce(
       (sum, artifact) => sum + artifact.selected_query_row_count,
       0,
     ),
     sources: [
       ...new Set(
-        artifactAudits.map((artifact) => artifact.source).filter(Boolean),
+        selectedArtifactAudits
+          .map((artifact) => artifact.source)
+          .filter(Boolean),
       ),
     ].sort(),
     schema_versions: [
       ...new Set(
-        artifactAudits
+        selectedArtifactAudits
           .map((artifact) => artifact.schema_version)
           .filter(Boolean),
       ),
     ].sort(),
     missing_fields: [
-      ...new Set(artifactAudits.flatMap((artifact) => artifact.missing_fields)),
+      ...new Set(
+        selectedArtifactAudits.flatMap((artifact) => artifact.missing_fields),
+      ),
     ].sort(),
     failed_checks: failedChecks,
     workflow_mode: workflowMode,
     snapshot_summaries: snapshotSummaries,
     latest_snapshot_summary: latestSnapshotSummary,
     artifact_proof: proof,
-    artifacts: artifactAudits,
+    artifacts: selectedArtifactAudits,
     exit_code: failedChecks.length === 0 || options.soft ? 0 : 1,
   };
 }

@@ -161,6 +161,13 @@ The 30-day proof window now has a durable audit surface:
   same artifact bundle, artifact proof readiness also imports its live
   resolution-hygiene context so review-required open markets block the
   artifact-only capital gate.
+- The scheduled workflow also downloads retained successful
+  `paper-trading-proof-<run_id>` bundles before publishing the latest public
+  proof JSON. Artifact-only mode therefore rolls up the current capture plus
+  prior retained captures into the same 30-day proof logic while Supabase writes
+  are disabled. Same-day reruns are deduped by `snapshot_date`, keeping the
+  newest `generated_at` artifact and recording ignored duplicate bundles in the
+  audit report.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.
