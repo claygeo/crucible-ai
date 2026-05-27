@@ -247,6 +247,14 @@ export type PaperTradingAgentEdgeProofRow = {
   missing_capture_days: number;
   resolved_trades: number;
   required_resolved_trades: number;
+  skipped_trades: number;
+  skipped_open_signals: number;
+  skipped_resolved_trades: number;
+  skipped_profitable_resolved_trades: number;
+  skipped_loss_resolved_trades: number;
+  skipped_resolved_net_pnl_usd: number;
+  skipped_expected_open_pnl_usd: number;
+  missed_pnl_counts_as_proof: false;
   win_rate: number;
   avg_pnl_per_trade_usd: number;
   daily_profit_factor: number | null;
@@ -1844,6 +1852,7 @@ export function buildPaperTradingAgentEdgeProofMatrix(
       const gate = rollup.durable_proof_gate;
       const proofWindow = rollup.proof_window;
       const proofQuality = rollup.proof_quality;
+      const exposureLedger = rollup.latest_snapshot.exposure_ledger;
 
       return {
         strategy_id: rollup.strategy_id,
@@ -1858,6 +1867,20 @@ export function buildPaperTradingAgentEdgeProofMatrix(
         missing_capture_days: gate.missing_capture_days,
         resolved_trades: gate.resolved_trades,
         required_resolved_trades: gate.required_resolved_trades,
+        skipped_trades: exposureLedger.skipped_trades ?? 0,
+        skipped_open_signals: exposureLedger.skipped_open_signals ?? 0,
+        skipped_resolved_trades: exposureLedger.skipped_resolved_trades ?? 0,
+        skipped_profitable_resolved_trades:
+          exposureLedger.skipped_profitable_resolved_trades ?? 0,
+        skipped_loss_resolved_trades:
+          exposureLedger.skipped_loss_resolved_trades ?? 0,
+        skipped_resolved_net_pnl_usd: round2(
+          exposureLedger.skipped_resolved_net_pnl_usd ?? 0,
+        ),
+        skipped_expected_open_pnl_usd: round2(
+          exposureLedger.skipped_expected_open_pnl_usd ?? 0,
+        ),
+        missed_pnl_counts_as_proof: false as const,
         win_rate: proofQuality.win_rate,
         avg_pnl_per_trade_usd: proofQuality.avg_pnl_per_trade_usd,
         daily_profit_factor: proofQuality.daily_profit_factor,

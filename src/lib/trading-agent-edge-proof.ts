@@ -72,6 +72,30 @@ export type PaperTradingAgentEdgeProfitabilityGuard = {
   blockers: string[];
 };
 
+export type PaperTradingAgentEdgeCapacityLeakage = {
+  status:
+    | "none"
+    | "open_only"
+    | "resolved_missed_profit"
+    | "resolved_missed_loss"
+    | "resolved_mixed";
+  status_label: string;
+  message: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  missed_pnl_counts_as_proof: false;
+  rules_with_skips: number;
+  rules_with_skipped_resolved: number;
+  rules_with_profitable_skipped_resolved: number;
+  skipped_open_signals: number;
+  skipped_resolved_trades: number;
+  skipped_profitable_resolved_trades: number;
+  skipped_loss_resolved_trades: number;
+  skipped_resolved_net_pnl_usd: number;
+  skipped_expected_open_pnl_usd: number;
+  top_missed_rule: PaperTradingAgentEdgeProofLeaderboardRow | null;
+};
+
 export type PaperTradingAgentEdgeProof = {
   schema_version: "1";
   generated_at: string;
@@ -89,6 +113,7 @@ export type PaperTradingAgentEdgeProof = {
   positive_unproven_rule_count: number;
   unresolved_rule_count: number;
   profitability_guard: PaperTradingAgentEdgeProfitabilityGuard;
+  capacity_leakage: PaperTradingAgentEdgeCapacityLeakage;
   latest_snapshot_date: string | null;
   latest_captured_at: string | null;
   best_resolved_rule: PaperTradingAgentEdgeProofLeaderboardRow | null;
@@ -194,6 +219,22 @@ function normalizeArtifactAgentEdgeRow(
     missing_capture_days: numberValue(record.missing_capture_days),
     resolved_trades: numberValue(record.resolved_trades),
     required_resolved_trades: numberValue(record.required_resolved_trades),
+    skipped_trades: numberValue(record.skipped_trades),
+    skipped_open_signals: numberValue(record.skipped_open_signals),
+    skipped_resolved_trades: numberValue(record.skipped_resolved_trades),
+    skipped_profitable_resolved_trades: numberValue(
+      record.skipped_profitable_resolved_trades,
+    ),
+    skipped_loss_resolved_trades: numberValue(
+      record.skipped_loss_resolved_trades,
+    ),
+    skipped_resolved_net_pnl_usd: numberValue(
+      record.skipped_resolved_net_pnl_usd,
+    ),
+    skipped_expected_open_pnl_usd: numberValue(
+      record.skipped_expected_open_pnl_usd,
+    ),
+    missed_pnl_counts_as_proof: false as const,
     win_rate: numberValue(record.win_rate),
     avg_pnl_per_trade_usd: numberValue(record.avg_pnl_per_trade_usd),
     daily_profit_factor: nullableNumber(record.daily_profit_factor),
@@ -445,6 +486,107 @@ function buildProfitabilityGuard(
   };
 }
 
+function capacityLeakageStatus(
+  skippedOpenSignals: number,
+  skippedResolvedTrades: number,
+  skippedProfitableResolvedTrades: number,
+  skippedLossResolvedTrades: number,
+): PaperTradingAgentEdgeCapacityLeakage["status"] {
+  if (skippedResolvedTrades === 0) {
+    return skippedOpenSignals > 0 ? "open_only" : "none";
+  }
+  if (skippedProfitableResolvedTrades > 0 && skippedLossResolvedTrades > 0) {
+    return "resolved_mixed";
+  }
+  if (skippedProfitableResolvedTrades > 0) return "resolved_missed_profit";
+  if (skippedLossResolvedTrades > 0) return "resolved_missed_loss";
+  return "resolved_mixed";
+}
+
+function capacityLeakageStatusLabel(
+  status: PaperTradingAgentEdgeCapacityLeakage["status"],
+): string {
+  if (status === "open_only") return "Open capacity pressure";
+  if (status === "resolved_missed_profit") return "Missed profitable resolves";
+  if (status === "resolved_missed_loss") return "Missed loss resolves";
+  if (status === "resolved_mixed") return "Mixed missed resolves";
+  return "No leakage";
+}
+
+function buildCapacityLeakage(
+  rows: PaperTradingAgentEdgeProofLeaderboardRow[],
+): PaperTradingAgentEdgeCapacityLeakage {
+  const skippedOpenSignals = rows.reduce(
+    (sum, row) => sum + row.skipped_open_signals,
+    0,
+  );
+  const skippedResolvedTrades = rows.reduce(
+    (sum, row) => sum + row.skipped_resolved_trades,
+    0,
+  );
+  const skippedProfitableResolvedTrades = rows.reduce(
+    (sum, row) => sum + row.skipped_profitable_resolved_trades,
+    0,
+  );
+  const skippedLossResolvedTrades = rows.reduce(
+    (sum, row) => sum + row.skipped_loss_resolved_trades,
+    0,
+  );
+  const skippedResolvedNetPnlUsd = rows.reduce(
+    (sum, row) => sum + row.skipped_resolved_net_pnl_usd,
+    0,
+  );
+  const skippedExpectedOpenPnlUsd = rows.reduce(
+    (sum, row) => sum + row.skipped_expected_open_pnl_usd,
+    0,
+  );
+  const topMissedRule =
+    rows
+      .filter((row) => row.skipped_resolved_trades > 0)
+      .slice()
+      .sort(
+        (a, b) =>
+          b.skipped_resolved_net_pnl_usd - a.skipped_resolved_net_pnl_usd ||
+          b.skipped_resolved_trades - a.skipped_resolved_trades,
+      )[0] ?? null;
+  const status = capacityLeakageStatus(
+    skippedOpenSignals,
+    skippedResolvedTrades,
+    skippedProfitableResolvedTrades,
+    skippedLossResolvedTrades,
+  );
+
+  return {
+    status,
+    status_label: capacityLeakageStatusLabel(status),
+    message:
+      skippedResolvedTrades > 0
+        ? "Some canonical agent-edge signals were skipped by exposure caps and later resolved; this is capacity leakage, not proof P&L."
+        : skippedOpenSignals > 0
+          ? "Some canonical agent-edge signals are currently skipped by exposure caps before resolution."
+          : "No canonical agent-edge capacity leakage is visible in the selected proof source.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    missed_pnl_counts_as_proof: false as const,
+    rules_with_skips: rows.filter((row) => row.skipped_trades > 0).length,
+    rules_with_skipped_resolved: rows.filter(
+      (row) => row.skipped_resolved_trades > 0,
+    ).length,
+    rules_with_profitable_skipped_resolved: rows.filter(
+      (row) => row.skipped_profitable_resolved_trades > 0,
+    ).length,
+    skipped_open_signals: skippedOpenSignals,
+    skipped_resolved_trades: skippedResolvedTrades,
+    skipped_profitable_resolved_trades: skippedProfitableResolvedTrades,
+    skipped_loss_resolved_trades: skippedLossResolvedTrades,
+    skipped_resolved_net_pnl_usd:
+      Math.round(skippedResolvedNetPnlUsd * 100) / 100,
+    skipped_expected_open_pnl_usd:
+      Math.round(skippedExpectedOpenPnlUsd * 100) / 100,
+    top_missed_rule: topMissedRule,
+  };
+}
+
 export function buildPaperTradingAgentEdgeProof(args: {
   persistedRows: PaperTradingAgentEdgeProofRow[];
   publishedArtifactProof: PublishedPaperTradingArtifactProof;
@@ -504,6 +646,7 @@ export function buildPaperTradingAgentEdgeProofFromRows(args: {
     (row) => row.profitability_status === "unresolved",
   ).length;
   const profitabilityGuard = buildProfitabilityGuard(rows, args.source);
+  const capacityLeakage = buildCapacityLeakage(rows);
   const bestResolvedRule =
     rows
       .filter((row) => row.resolved_trades > 0)
@@ -554,6 +697,7 @@ export function buildPaperTradingAgentEdgeProofFromRows(args: {
     positive_unproven_rule_count: positiveUnprovenRuleCount,
     unresolved_rule_count: unresolvedRuleCount,
     profitability_guard: profitabilityGuard,
+    capacity_leakage: capacityLeakage,
     latest_snapshot_date: latestDate(rows),
     latest_captured_at: latestCapturedAt(rows),
     best_resolved_rule: bestResolvedRule,
