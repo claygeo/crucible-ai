@@ -264,6 +264,15 @@ The 30-day proof window now has a durable audit surface:
   and the projected paper-only P&L that would land after Eivra's resolver and a
   fresh snapshot catch up. It is an operator evidence surface only; it does not
   write market outcomes, scores, orders, or execution flags.
+- `POST /api/trading-resolution-catchup` is the authorized resolver catch-up
+  write path. It defaults to `dry_run=true`; with `dry_run=false` and the cron
+  secret, it updates provider-resolved market rows, inserts missing score rows,
+  refreshes agent stats, and logs a `system_events` record. It remains paper-only
+  and never creates orders, wallets, leverage, or execution flags.
+- `netlify/functions/paper-trading-resolution-catchup.ts` runs the authorized
+  catch-up daily at 05:02 UTC, before the 05:12 UTC Netlify snapshot and the
+  05:22 UTC GitHub fallback artifact capture. This keeps stale live resolutions
+  from blocking the next 30-day proof snapshot.
 - `/api/trading-strategy-registry` returns the paper-only strategy lab manifest:
   every canonical rule under observation, the selected URL-configured rule, proof
   gates, configurable controls, and execution-disabled invariants. Snapshot
