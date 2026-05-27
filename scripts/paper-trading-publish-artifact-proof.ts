@@ -88,6 +88,16 @@ function main() {
     );
   }
   const agentEdgeProof = record(artifactProof.agent_edge_proof);
+  const selectedBankrollRisk = record(artifactProof.selected_bankroll_risk);
+  const selectedOpenOutcomeScenarios = record(
+    artifactProof.selected_open_outcome_scenarios,
+  );
+  const agentEdgeMatrix = Array.isArray(artifactProof.agent_edge_matrix)
+    ? artifactProof.agent_edge_matrix.filter(
+        (row): row is Record<string, unknown> =>
+          Boolean(row) && typeof row === "object" && !Array.isArray(row),
+      )
+    : [];
   const agentEdgeWatchlist = record(artifactProof.agent_edge_watchlist);
   const agentEdgeRunway = record(artifactProof.agent_edge_runway);
   const agentEdgeTradeLedger = record(artifactProof.agent_edge_trade_ledger);
@@ -125,6 +135,44 @@ function main() {
   ) {
     throw new Error(
       "Refusing to publish agent_edge_proof unless it stays paper-only with execution disabled.",
+    );
+  }
+  if (
+    Object.keys(selectedBankrollRisk).length > 0 &&
+    (selectedBankrollRisk.paper_only !== true ||
+      selectedBankrollRisk.real_money_execution_allowed !== false)
+  ) {
+    throw new Error(
+      "Refusing to publish selected_bankroll_risk unless it stays paper-only with execution disabled.",
+    );
+  }
+  if (
+    Object.keys(selectedOpenOutcomeScenarios).length > 0 &&
+    (selectedOpenOutcomeScenarios.paper_only !== true ||
+      selectedOpenOutcomeScenarios.real_money_execution_allowed !== false ||
+      !Array.isArray(selectedOpenOutcomeScenarios.scenarios))
+  ) {
+    throw new Error(
+      "Refusing to publish selected_open_outcome_scenarios unless it stays paper-only and includes scenarios.",
+    );
+  }
+  const invalidAgentEdgeOutcomeRows = agentEdgeMatrix.filter((row) => {
+    const scenarios = record(row.open_outcome_scenarios);
+    return (
+      row.pending_pnl_counts_as_proof !== false ||
+      typeof row.worst_case_total_pnl_usd !== "number" ||
+      typeof row.model_expected_total_pnl_usd !== "number" ||
+      typeof row.best_case_total_pnl_usd !== "number" ||
+      scenarios.paper_only !== true ||
+      scenarios.real_money_execution_allowed !== false ||
+      !Array.isArray(scenarios.scenarios)
+    );
+  });
+  if (invalidAgentEdgeOutcomeRows.length > 0) {
+    throw new Error(
+      `Refusing to publish agent_edge_matrix with invalid pending-outcome proof locks: ${invalidAgentEdgeOutcomeRows
+        .map((row) => String(row.strategy_id ?? "unknown"))
+        .join(", ")}.`,
     );
   }
   if (
@@ -221,6 +269,15 @@ function main() {
     workflow_mode: workflowMode,
     agent_edge_proof:
       Object.keys(agentEdgeProof).length > 0 ? agentEdgeProof : null,
+    selected_bankroll_risk:
+      Object.keys(selectedBankrollRisk).length > 0
+        ? selectedBankrollRisk
+        : null,
+    selected_open_outcome_scenarios:
+      Object.keys(selectedOpenOutcomeScenarios).length > 0
+        ? selectedOpenOutcomeScenarios
+        : null,
+    agent_edge_matrix: agentEdgeMatrix,
     agent_edge_watchlist:
       Object.keys(agentEdgeWatchlist).length > 0 ? agentEdgeWatchlist : null,
     agent_edge_runway:
