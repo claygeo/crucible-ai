@@ -47,6 +47,33 @@ export type PaperTradingLabCheck = {
   detail: string;
 };
 
+export type PaperTradingLabOperatingPlanStatus =
+  | "reviewable"
+  | "collecting"
+  | "attention"
+  | "blocked"
+  | "unavailable";
+
+export type PaperTradingLabOperatingPlan = {
+  status: PaperTradingLabOperatingPlanStatus;
+  status_label: string;
+  primary_action: string;
+  primary_reason: string;
+  primary_check_id: PaperTradingLabCheck["id"] | "operator_review";
+  secondary_actions: string[];
+  evidence_day: {
+    complete_days: number;
+    required_days: number;
+    days_remaining_to_30: number;
+    latest_snapshot_date: string | null;
+    latest_captured_at: string | null;
+  };
+  earliest_capital_review_date: string | null;
+  capital_review_allowed: boolean;
+  paper_only: true;
+  real_money_execution_allowed: false;
+};
+
 export type PaperTradingSelectedAgentEdgeProofLag = {
   status:
     | "in_sync"
@@ -77,6 +104,7 @@ export type PaperTradingLabStatus = {
   status_label: string;
   message: string;
   next_required_action: string;
+  operating_plan: PaperTradingLabOperatingPlan;
   execution_recommendation:
     | "keep_paper_trading"
     | "operator_review_only"
@@ -362,24 +390,116 @@ function capitalCheckStatus(
   return "collecting";
 }
 
-function nextAction(
-  status: PaperTradingLabStatusStatus,
-  checks: PaperTradingLabCheck[],
-  evidenceSla: PaperTradingEvidenceSla,
-  capitalReviewPacket: PaperTradingCapitalReviewPacket,
+function operatingPlanStatusLabel(
+  status: PaperTradingLabOperatingPlanStatus,
 ): string {
-  const blocker = checks.find(
+  if (status === "reviewable") return "Ready for operator review";
+  if (status === "attention") return "Needs attention";
+  if (status === "blocked") return "Blocked";
+  if (status === "unavailable") return "Unavailable";
+  return "Keep collecting";
+}
+
+function uniqueActions(actions: string[]): string[] {
+  return actions
+    .map((action) => action.trim())
+    .filter((action) => action.length > 0)
+    .filter((action, index, list) => list.indexOf(action) === index);
+}
+
+function buildOperatingPlan(args: {
+  status: PaperTradingLabStatusStatus;
+  checks: PaperTradingLabCheck[];
+  evidenceSla: PaperTradingEvidenceSla;
+  proofRunway: PaperTradingProofRunway;
+  capitalReviewPacket: PaperTradingCapitalReviewPacket;
+  agentEdgeProof: PaperTradingAgentEdgeProof;
+}): PaperTradingLabOperatingPlan {
+  const blocker = args.checks.find(
     (item) => item.status === "blocked" || item.status === "unavailable",
   );
-  if (blocker) return blocker.detail;
+  const warningActions = uniqueActions(
+    args.checks
+      .filter((item) => item.status === "warning")
+      .map((item) => `${item.label}: ${item.detail}`),
+  ).slice(0, 4);
+  const evidenceSlaCheck =
+    args.checks.find((item) => item.id === "evidence_sla") ?? null;
 
-  const warning = checks.find((item) => item.status === "warning");
-  if (warning) return warning.detail;
+  let operatingStatus: PaperTradingLabOperatingPlanStatus = warningActions.length
+    ? "attention"
+    : "collecting";
+  let primaryAction = args.evidenceSla.next_required_action;
+  let primaryReason =
+    "The 30-day proof window is the gating evidence source for any future capital discussion.";
+  let primaryCheckId: PaperTradingLabOperatingPlan["primary_check_id"] =
+    "capture_window";
 
-  if (status === "reviewable") {
-    return capitalReviewPacket.decision_summary;
+  if (blocker) {
+    operatingStatus =
+      blocker.status === "unavailable" ? "unavailable" : "blocked";
+    primaryAction = blocker.detail;
+    primaryReason = `${blocker.label} is preventing the paper lab from producing trustworthy evidence.`;
+    primaryCheckId = blocker.id;
+  } else if (args.status === "reviewable") {
+    operatingStatus = "reviewable";
+    primaryAction = args.capitalReviewPacket.decision_summary;
+    primaryReason =
+      "The paper proof gates are reviewable; execution still remains disabled in this app.";
+    primaryCheckId = "operator_review";
+  } else if (evidenceSlaCheck?.status === "warning") {
+    primaryAction = evidenceSlaCheck.detail;
+    primaryReason =
+      "The evidence SLA has a warning, so repair or account for that before treating the proof window as clean.";
+    primaryCheckId = "evidence_sla";
+  } else if (
+    args.evidenceSla.days_remaining_to_30 > 0 ||
+    args.evidenceSla.status === "collecting"
+  ) {
+    primaryAction = args.evidenceSla.next_required_action;
+    primaryReason =
+      "Daily capture coverage is still filling, so warnings are secondary unless they block capture quality.";
+    primaryCheckId = "capture_window";
+  } else if (args.agentEdgeProof.profitability_guard.status !== "reviewable") {
+    primaryAction =
+      args.agentEdgeProof.profitability_guard.next_required_action;
+    primaryReason =
+      "The capture window is no longer the limiting factor; resolved rule-level profitability is.";
+    primaryCheckId = "agent_edge_profitability";
+  } else if (args.proofRunway.status !== "reviewable") {
+    primaryAction =
+      args.proofRunway.blocker_summary ||
+      args.capitalReviewPacket.next_required_action;
+    primaryReason =
+      "The proof runway still has a milestone that must clear before operator review.";
+    primaryCheckId = "capital_review";
+  } else {
+    primaryAction = args.capitalReviewPacket.next_required_action;
+    primaryReason =
+      "The remaining gate is the capital-review boundary; no execution path is enabled.";
+    primaryCheckId = "capital_review";
   }
-  return evidenceSla.next_required_action;
+
+  return {
+    status: operatingStatus,
+    status_label: operatingPlanStatusLabel(operatingStatus),
+    primary_action: primaryAction,
+    primary_reason: primaryReason,
+    primary_check_id: primaryCheckId,
+    secondary_actions: warningActions,
+    evidence_day: {
+      complete_days: args.evidenceSla.complete_days,
+      required_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+      days_remaining_to_30: args.evidenceSla.days_remaining_to_30,
+      latest_snapshot_date: args.evidenceSla.latest_snapshot_date,
+      latest_captured_at: args.evidenceSla.latest_captured_at,
+    },
+    earliest_capital_review_date:
+      args.capitalReviewPacket.earliest_capital_review_date,
+    capital_review_allowed: args.capitalReviewPacket.capital_review_allowed,
+    paper_only: true,
+    real_money_execution_allowed: false,
+  };
 }
 
 function labStatusFromChecks(args: {
@@ -567,6 +687,14 @@ export function buildPaperTradingLabStatus(args: {
   const warnings = checks
     .filter((item) => item.status === "warning")
     .map((item) => `${item.label}: ${item.detail}`);
+  const operatingPlan = buildOperatingPlan({
+    status,
+    checks,
+    evidenceSla: args.evidenceSla,
+    proofRunway: args.proofRunway,
+    capitalReviewPacket: args.capitalReviewPacket,
+    agentEdgeProof: args.agentEdgeProof,
+  });
 
   return {
     schema_version: "1",
@@ -574,12 +702,8 @@ export function buildPaperTradingLabStatus(args: {
     status,
     status_label: statusLabel(status),
     message: labStatusMessage(status),
-    next_required_action: nextAction(
-      status,
-      checks,
-      args.evidenceSla,
-      args.capitalReviewPacket,
-    ),
+    next_required_action: operatingPlan.primary_action,
+    operating_plan: operatingPlan,
     execution_recommendation:
       status === "reviewable"
         ? "operator_review_only"

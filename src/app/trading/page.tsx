@@ -211,6 +211,14 @@ function labStatusClass(status: string) {
   return "bg-text-muted/10 text-text-muted";
 }
 
+function operatingPlanStatusClass(status: string) {
+  if (status === "reviewable") return "bg-positive/10 text-positive";
+  if (status === "attention") return "bg-warn/10 text-warn";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
+  return "bg-accent/10 text-accent";
+}
+
 function labCheckStatusClass(status: string) {
   if (status === "pass") return "bg-positive/10 text-positive";
   if (status === "warning") return "bg-warn/10 text-warn";
@@ -454,6 +462,7 @@ export default async function TradingPage({
     agentEdgeProof,
     resolutionCatchupPreview,
   });
+  const operatingPlan = labStatus.operating_plan;
   const selectedProofLag =
     labStatus.tradability.selected_agent_edge_proof_lag;
   const latestArtifactRun = artifactWorkflow.latest_successful_artifact_run;
@@ -1221,9 +1230,40 @@ export default async function TradingPage({
             </div>
           ) : null}
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 border-t border-border-subtle pt-4">
-            <p className="text-sm text-text-secondary leading-relaxed">
-              {labStatus.message} {labStatus.next_required_action}
-            </p>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${operatingPlanStatusClass(
+                    operatingPlan.status
+                  )}`}
+                >
+                  {operatingPlan.status_label}
+                </span>
+                <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  day {int(operatingPlan.evidence_day.complete_days)}/
+                  {int(operatingPlan.evidence_day.required_days)}
+                </span>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  primary action
+                </div>
+                <p className="text-sm text-text-primary leading-relaxed mt-1">
+                  {operatingPlan.primary_action}
+                </p>
+                <p className="text-xs text-text-muted leading-relaxed mt-2">
+                  {operatingPlan.primary_reason}
+                </p>
+              </div>
+              {operatingPlan.secondary_actions.length > 0 ? (
+                <div className="text-xs text-text-secondary leading-relaxed">
+                  <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                    watch
+                  </span>{" "}
+                  {operatingPlan.secondary_actions.slice(0, 2).join(" ")}
+                </div>
+              ) : null}
+            </div>
             <div className="grid sm:grid-cols-2 gap-2">
               {labStatus.checks.slice(0, 9).map((item) => (
                 <div
