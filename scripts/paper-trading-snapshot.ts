@@ -195,6 +195,7 @@ async function main() {
     controls,
     strategy_registry: snapshot.strategy_registry,
     would_trade_today: snapshot.would_trade_today,
+    market_exposure_digest: snapshot.market_exposure_digest,
     loaded_env_files: loadedEnvFiles,
     snapshot_date: snapshot.generated_at.slice(0, 10),
     schema_version: "1",
@@ -211,6 +212,7 @@ async function main() {
     controls,
     strategy_registry: snapshot.strategy_registry,
     would_trade_today: snapshot.would_trade_today,
+    market_exposure_digest: snapshot.market_exposure_digest,
     loaded_env_files: loadedEnvFiles,
     snapshot_date: snapshot.generated_at.slice(0, 10),
     selected_strategy: {

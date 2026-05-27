@@ -139,6 +139,12 @@ function wouldTradeStatusClass(status: string) {
   return "bg-text-muted/10 text-text-muted";
 }
 
+function marketExposureStatusClass(status: string) {
+  if (status === "concentrated") return "bg-warn/10 text-warn";
+  if (status === "observing") return "bg-accent/10 text-accent";
+  return "bg-text-muted/10 text-text-muted";
+}
+
 function capitalReviewPacketStatusClass(status: string) {
   if (status === "reviewable_paper_candidate") {
     return "bg-positive/10 text-positive";
@@ -220,6 +226,7 @@ export default async function TradingPage({
   const livePnlPending = snapshot.totals.live_resolved_trades === 0;
   const resolutionWatch = snapshot.resolution_watch;
   const wouldTradeToday = snapshot.would_trade_today;
+  const marketExposureDigest = snapshot.market_exposure_digest;
   const liveLeader = snapshot.live_agent_summaries[0];
   const liveStrategyRows = snapshot.strategy_variants.filter(
     (strategy) => strategy.sample === "live_only"
@@ -241,6 +248,8 @@ export default async function TradingPage({
     `/api/trading-strategy-registry?${selectedQuery}`;
   const wouldTradeTodayJsonHref =
     `/api/trading-would-trade-today?${selectedQuery}`;
+  const marketExposureJsonHref =
+    `/api/trading-market-exposure?${selectedQuery}`;
   const publishedProofHref = "/paper-trading/latest-artifact-proof.json";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
@@ -546,6 +555,157 @@ export default async function TradingPage({
                         )}`}
                       >
                         {dollars(strategy.tradable_open_expected_pnl_usd, 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section className="panel px-5 py-5 flex flex-col gap-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="heading text-base text-text-primary">
+                Market exposure digest
+              </h2>
+              <p className="text-xs text-text-muted mt-1">
+                Groups open live paper tickets so repeated agent exposure is visible.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href={marketExposureJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                json feed
+              </Link>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${marketExposureStatusClass(
+                  marketExposureDigest.status
+                )}`}
+              >
+                {marketExposureDigest.status_label}
+              </span>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Markets
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(marketExposureDigest.unique_open_markets)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Signals
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(marketExposureDigest.open_live_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Multi-agent
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(marketExposureDigest.multi_agent_markets)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Top share
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${
+                  marketExposureDigest.status === "concentrated"
+                    ? "text-warn"
+                    : "text-text-primary"
+                }`}
+              >
+                {pct(marketExposureDigest.top_market_exposure_share, 1)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Open risk
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {dollars(marketExposureDigest.total_open_exposure_usd, 0)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Open EV
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${pnlClass(
+                  marketExposureDigest.total_open_expected_pnl_usd
+                )}`}
+              >
+                {dollars(marketExposureDigest.total_open_expected_pnl_usd, 0)}
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
+            <span>{marketExposureDigest.message}</span>
+            <span>threshold {pct(marketExposureDigest.concentration_threshold, 0)}</span>
+            <span>review only</span>
+            <span>real money: disabled</span>
+          </div>
+          {marketExposureDigest.top_markets.length === 0 ? (
+            <div className="text-sm text-text-muted mono">
+              [no open live paper markets]
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full" aria-label="Market exposure digest">
+                <thead>
+                  <tr className="border-b border-border-subtle text-text-muted">
+                    <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Market</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Signals</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Agents</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Risk</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Share</th>
+                    <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">EV</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle/60">
+                  {marketExposureDigest.top_markets.slice(0, 8).map((market) => (
+                    <tr key={market.market_id}>
+                      <td className="py-3 pr-3">
+                        <Link
+                          href={`/markets/${market.market_id}`}
+                          className="text-sm text-text-primary hover:text-accent transition-colors line-clamp-2"
+                        >
+                          {market.market_question}
+                        </Link>
+                        <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                          {market.market_source} / {market.market_category} /{" "}
+                          {market.sides.join("+")}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {int(market.signal_count)}
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {int(market.agent_count)}
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {dollars(market.open_exposure_usd, 0)}
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {pct(market.exposure_share, 1)}
+                      </td>
+                      <td
+                        className={`py-3 pl-3 mono text-right ${pnlClass(
+                          market.open_expected_pnl_usd
+                        )}`}
+                      >
+                        {dollars(market.open_expected_pnl_usd, 0)}
                       </td>
                     </tr>
                   ))}

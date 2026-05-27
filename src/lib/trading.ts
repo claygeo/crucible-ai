@@ -317,6 +317,78 @@ export type PaperTradingWouldTradeFeed = {
   top_strategies: PaperTradingWouldTradeStrategy[];
 };
 
+export type PaperTradingMarketExposureSignal = {
+  prediction_id: string;
+  agent_id: string;
+  agent_name: string;
+  side: TradeSide;
+  stake_usd: number;
+  expected_pnl_usd: number;
+  edge: number;
+  abs_edge: number;
+  created_at: string;
+  close_status: ResolutionWatchSignal["close_status"];
+  tradability_status: ResolutionWatchSignal["tradability_status"];
+};
+
+export type PaperTradingMarketExposureRow = {
+  market_id: string;
+  market_question: string;
+  market_source: string;
+  market_category: string;
+  market_url: string | null;
+  market_closes_at: string | null;
+  signal_count: number;
+  agent_count: number;
+  agents: string[];
+  sides: TradeSide[];
+  open_exposure_usd: number;
+  open_expected_pnl_usd: number;
+  exposure_share: number;
+  expected_pnl_share: number;
+  max_abs_edge: number;
+  avg_abs_edge: number;
+  review_required_signals: number;
+  tradable_signals: number;
+  top_signals: PaperTradingMarketExposureSignal[];
+};
+
+export type PaperTradingExposureBreakdownRow = {
+  id: string;
+  label: string;
+  market_count: number;
+  signal_count: number;
+  open_exposure_usd: number;
+  open_expected_pnl_usd: number;
+  exposure_share: number;
+};
+
+export type PaperTradingMarketExposureDigest = {
+  schema_version: "1";
+  generated_at: string;
+  status: "no_open_live_signals" | "observing" | "concentrated";
+  status_label: string;
+  message: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  concentration_review_only: true;
+  concentration_threshold: number;
+  open_live_signals: number;
+  unique_open_markets: number;
+  multi_signal_markets: number;
+  multi_agent_markets: number;
+  review_required_markets: number;
+  total_open_exposure_usd: number;
+  total_open_expected_pnl_usd: number;
+  top_market_exposure_usd: number;
+  top_market_expected_pnl_usd: number;
+  top_market_exposure_share: number;
+  top_market_signal_share: number;
+  by_source: PaperTradingExposureBreakdownRow[];
+  by_category: PaperTradingExposureBreakdownRow[];
+  top_markets: PaperTradingMarketExposureRow[];
+};
+
 export type ProofGateStatus =
   | "collecting"
   | "candidate"
@@ -503,6 +575,7 @@ export type TradingSnapshot = {
   controls: TradingControls;
   strategy_registry: PaperTradingStrategyRegistry;
   would_trade_today: PaperTradingWouldTradeFeed;
+  market_exposure_digest: PaperTradingMarketExposureDigest;
   totals: TradingTotals;
   live_totals: TradingTotals;
   backfill_totals: TradingTotals;
@@ -1455,6 +1528,219 @@ function buildWouldTradeTodayFeed(
   };
 }
 
+const MARKET_CONCENTRATION_THRESHOLD = 0.35;
+
+function marketExposureSignal(
+  trade: PaperTrade,
+  now: Date,
+): PaperTradingMarketExposureSignal {
+  const classification = classifyOpenLiveTrade(trade, now);
+
+  return {
+    prediction_id: trade.prediction_id,
+    agent_id: trade.agent_id,
+    agent_name: trade.agent_name,
+    side: trade.side,
+    stake_usd: trade.stake_usd,
+    expected_pnl_usd: trade.expected_pnl_usd,
+    edge: trade.edge,
+    abs_edge: trade.abs_edge,
+    created_at: trade.created_at,
+    close_status: classification.close_status,
+    tradability_status: classification.tradability_status,
+  };
+}
+
+function exposureBreakdownRows(
+  markets: PaperTradingMarketExposureRow[],
+  key: "market_source" | "market_category",
+  totalExposureUsd: number,
+): PaperTradingExposureBreakdownRow[] {
+  const byKey = new Map<string, PaperTradingMarketExposureRow[]>();
+  for (const market of markets) {
+    const value = market[key];
+    byKey.set(value, [...(byKey.get(value) ?? []), market]);
+  }
+
+  return [...byKey.entries()]
+    .map(([id, rows]) => {
+      const openExposureUsd = round2(
+        rows.reduce((sum, row) => sum + row.open_exposure_usd, 0),
+      );
+      return {
+        id,
+        label: id,
+        market_count: rows.length,
+        signal_count: rows.reduce((sum, row) => sum + row.signal_count, 0),
+        open_exposure_usd: openExposureUsd,
+        open_expected_pnl_usd: round2(
+          rows.reduce((sum, row) => sum + row.open_expected_pnl_usd, 0),
+        ),
+        exposure_share:
+          totalExposureUsd > 0 ? round4(openExposureUsd / totalExposureUsd) : 0,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.open_exposure_usd - a.open_exposure_usd ||
+        b.signal_count - a.signal_count ||
+        a.label.localeCompare(b.label),
+    );
+}
+
+function buildMarketExposureDigest(
+  liveTrades: PaperTrade[],
+  generatedAt: string,
+): PaperTradingMarketExposureDigest {
+  const now = new Date(generatedAt);
+  const openLiveTrades = liveTrades.filter((trade) => trade.pnl_usd === null);
+  const totalOpenExposureUsd = round2(
+    openLiveTrades.reduce((sum, trade) => sum + trade.stake_usd, 0),
+  );
+  const totalOpenExpectedPnlUsd = round2(
+    openLiveTrades.reduce((sum, trade) => sum + trade.expected_pnl_usd, 0),
+  );
+  const byMarket = new Map<string, PaperTrade[]>();
+
+  for (const trade of openLiveTrades) {
+    byMarket.set(trade.market_id, [
+      ...(byMarket.get(trade.market_id) ?? []),
+      trade,
+    ]);
+  }
+
+  const markets = [...byMarket.entries()]
+    .map(([marketId, trades]): PaperTradingMarketExposureRow => {
+      const first = trades[0];
+      const signals = trades
+        .map((trade) => marketExposureSignal(trade, now))
+        .sort(
+          (a, b) =>
+            b.expected_pnl_usd - a.expected_pnl_usd ||
+            b.abs_edge - a.abs_edge ||
+            Date.parse(a.created_at) - Date.parse(b.created_at),
+        );
+      const openExposureUsd = round2(
+        trades.reduce((sum, trade) => sum + trade.stake_usd, 0),
+      );
+      const openExpectedPnlUsd = round2(
+        trades.reduce((sum, trade) => sum + trade.expected_pnl_usd, 0),
+      );
+      const agents = [
+        ...new Set(trades.map((trade) => trade.agent_name)),
+      ].sort();
+      const sides = [...new Set(trades.map((trade) => trade.side))].sort();
+      const reviewRequiredSignals = signals.filter(
+        (signal) => signal.tradability_status === "needs_review",
+      ).length;
+
+      return {
+        market_id: marketId,
+        market_question: first.market_question,
+        market_source: first.market_source,
+        market_category: first.market_category,
+        market_url: first.market_url,
+        market_closes_at: first.market_closes_at,
+        signal_count: trades.length,
+        agent_count: agents.length,
+        agents,
+        sides,
+        open_exposure_usd: openExposureUsd,
+        open_expected_pnl_usd: openExpectedPnlUsd,
+        exposure_share:
+          totalOpenExposureUsd > 0
+            ? round4(openExposureUsd / totalOpenExposureUsd)
+            : 0,
+        expected_pnl_share:
+          totalOpenExpectedPnlUsd > 0
+            ? round4(openExpectedPnlUsd / totalOpenExpectedPnlUsd)
+            : 0,
+        max_abs_edge: round4(
+          trades.reduce((max, trade) => Math.max(max, trade.abs_edge), 0),
+        ),
+        avg_abs_edge:
+          trades.length > 0
+            ? round4(
+                trades.reduce((sum, trade) => sum + trade.abs_edge, 0) /
+                  trades.length,
+              )
+            : 0,
+        review_required_signals: reviewRequiredSignals,
+        tradable_signals: signals.length - reviewRequiredSignals,
+        top_signals: signals.slice(0, 6),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.open_exposure_usd - a.open_exposure_usd ||
+        b.signal_count - a.signal_count ||
+        b.open_expected_pnl_usd - a.open_expected_pnl_usd ||
+        a.market_question.localeCompare(b.market_question),
+    );
+
+  const topMarket = markets[0] ?? null;
+  const topMarketExposureShare = topMarket?.exposure_share ?? 0;
+  const status: PaperTradingMarketExposureDigest["status"] =
+    openLiveTrades.length === 0
+      ? "no_open_live_signals"
+      : topMarketExposureShare >= MARKET_CONCENTRATION_THRESHOLD
+        ? "concentrated"
+        : "observing";
+
+  return {
+    schema_version: "1",
+    generated_at: generatedAt,
+    status,
+    status_label:
+      status === "concentrated"
+        ? "Concentrated"
+        : status === "observing"
+          ? "Observing"
+          : "No open live signals",
+    message:
+      status === "concentrated"
+        ? `Top market carries ${(topMarketExposureShare * 100).toFixed(
+            1,
+          )}% of open live paper exposure; treat ticket count as concentrated evidence.`
+        : status === "observing"
+          ? "Open live paper exposure is grouped by market so repeated agent bets are visible before review."
+          : "No open live paper exposure is currently grouped by market.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    concentration_review_only: true,
+    concentration_threshold: MARKET_CONCENTRATION_THRESHOLD,
+    open_live_signals: openLiveTrades.length,
+    unique_open_markets: markets.length,
+    multi_signal_markets: markets.filter((market) => market.signal_count > 1)
+      .length,
+    multi_agent_markets: markets.filter((market) => market.agent_count > 1)
+      .length,
+    review_required_markets: markets.filter(
+      (market) => market.review_required_signals > 0,
+    ).length,
+    total_open_exposure_usd: totalOpenExposureUsd,
+    total_open_expected_pnl_usd: totalOpenExpectedPnlUsd,
+    top_market_exposure_usd: topMarket?.open_exposure_usd ?? 0,
+    top_market_expected_pnl_usd: topMarket?.open_expected_pnl_usd ?? 0,
+    top_market_exposure_share: topMarketExposureShare,
+    top_market_signal_share:
+      openLiveTrades.length > 0 && topMarket
+        ? round4(topMarket.signal_count / openLiveTrades.length)
+        : 0,
+    by_source: exposureBreakdownRows(
+      markets,
+      "market_source",
+      totalOpenExposureUsd,
+    ),
+    by_category: exposureBreakdownRows(
+      markets,
+      "market_category",
+      totalOpenExposureUsd,
+    ),
+    top_markets: markets.slice(0, 12),
+  };
+}
+
 function summarizeAgentsForTrades(trades: PaperTrade[]): AgentTradingSummary[] {
   const resolvedTrades = trades.filter((t) => t.pnl_usd !== null);
   return AGENTS.map((agent) => summarizeAgent(agent.id, resolvedTrades, 0))
@@ -2186,6 +2472,7 @@ export async function getTradingSnapshot(
       resolutionWatch,
       generatedAt,
     ),
+    market_exposure_digest: buildMarketExposureDigest(liveTrades, generatedAt),
     totals: summarizeTotals(allTrades),
     live_totals: summarizeTotals(liveTrades),
     backfill_totals: summarizeTotals(backfillTrades),
