@@ -237,6 +237,9 @@ The 30-day proof window now has a durable audit surface:
   before they are treated as repeatable agent-edge profit. The dashboard renders
   the same review-only attribution table beside the agent-edge ledger, and
   `/api/trading.json` exposes `paper_agent_edge_attribution` for public audit.
+  Snapshot summaries and published artifact proof carry the same
+  `agent_edge_attribution`, so concentration review is preserved in daily
+  evidence bundles.
 - `GET /api/trading-agent-edge-watchlist` exposes the paper-only open-signal
   ledger for those same canonical rules. It records tradable versus
   review-required open live paper tickets, exposure, open EV, close timing, and
@@ -291,7 +294,9 @@ The 30-day proof window now has a durable audit surface:
   whether a future profitable-looking agent/edge rule is robust or fragile
   after conservative friction, but they are explicitly marked
   `stress_evidence_counts_as_proof: false` until real source-level liquidity
-  snapshots exist.
+  snapshots exist. Snapshot summaries and published artifact proof carry the
+  same `liquidity_review`, including the friction stress rows, so the daily
+  proof bundle preserves why execution-quality evidence is still blocked.
 - `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
   the latest paper-proof workflow run, matching artifact bundle, expiry, run
   URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,
@@ -303,8 +308,9 @@ The 30-day proof window now has a durable audit surface:
   `paper-artifact-audit-result.json`. The public JSON contains the sanitized
   artifact proof rollup, proof readiness/runway, agent-edge proof matrix, and
   top strategy rollups with `paper_only: true` and
-  `real_money_execution_allowed: false`; raw snapshot rows stay in the GitHub
-  artifact bundle.
+  `real_money_execution_allowed: false`. It also publishes
+  `agent_edge_attribution` and `liquidity_review`, while raw snapshot rows stay
+  in the GitHub artifact bundle.
 - `persistence.capture_health` reports the daily recorder status, latest capture
   age, next expected capture, cron expression, and stale threshold.
 - `persistence.capture_calendar` reports the proof window day by day, including
