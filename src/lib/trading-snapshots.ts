@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { AGENTS } from "@/lib/agents";
 import { AGENT_EDGE_GATES, PAPER_TRADING_PROOF_RULES } from "@/lib/trading";
 import type {
+  ResolutionWatchSignal,
   StrategyDailyEvidenceSeries,
   StrategyVariantSummary,
   TradingControls,
@@ -268,6 +269,23 @@ export type PaperTradingProofReadinessStatus =
   | "blocked"
   | "unavailable";
 
+export type PaperTradingProofReadinessEvidence = {
+  kind: "resolution_signal";
+  prediction_id: string;
+  market_id: string;
+  market_question: string;
+  agent_id: string;
+  agent_name: string;
+  side: ResolutionWatchSignal["side"];
+  stake_usd: number;
+  expected_pnl_usd: number;
+  market_closes_at: string | null;
+  created_at: string;
+  close_status: ResolutionWatchSignal["close_status"];
+  days_until_close: number | null;
+  age_days: number;
+};
+
 export type PaperTradingProofReadinessItem = {
   id: string;
   label: string;
@@ -276,6 +294,7 @@ export type PaperTradingProofReadinessItem = {
   current: string;
   target: string;
   detail: string;
+  evidence: PaperTradingProofReadinessEvidence[];
 };
 
 export type PaperTradingProofReadiness = {
@@ -285,6 +304,11 @@ export type PaperTradingProofReadiness = {
   real_money_execution_allowed: false;
   paper_only: true;
   next_required_action: string;
+  passed_item_count: number;
+  collecting_item_count: number;
+  blocked_item_count: number;
+  unavailable_item_count: number;
+  blocked_item_ids: string[];
   items: PaperTradingProofReadinessItem[];
 };
 
@@ -1425,7 +1449,8 @@ function readinessItem(
   status: PaperTradingProofReadinessStatus,
   current: string,
   target: string,
-  detail: string
+  detail: string,
+  evidence: PaperTradingProofReadinessEvidence[] = []
 ): PaperTradingProofReadinessItem {
   return {
     id,
@@ -1435,6 +1460,28 @@ function readinessItem(
     current,
     target,
     detail,
+    evidence,
+  };
+}
+
+function resolutionSignalEvidence(
+  signal: ResolutionWatchSignal
+): PaperTradingProofReadinessEvidence {
+  return {
+    kind: "resolution_signal",
+    prediction_id: signal.prediction_id,
+    market_id: signal.market_id,
+    market_question: signal.market_question,
+    agent_id: signal.agent_id,
+    agent_name: signal.agent_name,
+    side: signal.side,
+    stake_usd: signal.stake_usd,
+    expected_pnl_usd: signal.expected_pnl_usd,
+    market_closes_at: signal.market_closes_at,
+    created_at: signal.created_at,
+    close_status: signal.close_status,
+    days_until_close: signal.days_until_close,
+    age_days: signal.age_days,
   };
 }
 
@@ -1537,6 +1584,11 @@ export function buildPaperTradingProofReadiness(args: {
             args.proofSummary.status === "stale"
           ? "blocked"
           : "collecting";
+  const overdueResolutionEvidence =
+    args.resolutionWatch?.signals
+      .filter((signal) => signal.close_status === "overdue")
+      .slice(0, 5)
+      .map(resolutionSignalEvidence) ?? [];
   const resolutionItem =
     args.resolutionWatch === undefined
       ? null
@@ -1560,7 +1612,8 @@ export function buildPaperTradingProofReadiness(args: {
               ? "Overdue open markets must be checked before treating open EV as credible."
               : args.resolutionWatch.open_live_signals > 0
                 ? "Open live tickets are waiting for market resolution; they are not realized profit."
-                : "No open live paper tickets are waiting for resolution."
+                : "No open live paper tickets are waiting for resolution.",
+          overdueResolutionEvidence
         );
 
   const items = [
@@ -1692,6 +1745,9 @@ export function buildPaperTradingProofReadiness(args: {
         : args.proofSummary.capital_review_status === "reviewable"
           ? "pass"
           : "collecting";
+  const blockedItemIds = items
+    .filter((item) => item.status === "blocked")
+    .map((item) => item.id);
 
   return {
     status: overallStatus,
@@ -1704,6 +1760,13 @@ export function buildPaperTradingProofReadiness(args: {
     real_money_execution_allowed: false,
     paper_only: true,
     next_required_action: proofReadinessNextAction(args, evidenceWindowReady),
+    passed_item_count: items.filter((item) => item.status === "pass").length,
+    collecting_item_count: items.filter((item) => item.status === "collecting")
+      .length,
+    blocked_item_count: blockedItemIds.length,
+    unavailable_item_count: items.filter((item) => item.status === "unavailable")
+      .length,
+    blocked_item_ids: blockedItemIds,
     items,
   };
 }

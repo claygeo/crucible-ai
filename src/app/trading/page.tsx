@@ -744,6 +744,33 @@ export default async function TradingPage({
                         <div className="text-xs text-text-muted leading-relaxed max-w-xl">
                           {item.detail}
                         </div>
+                        {item.evidence.length > 0 ? (
+                          <div className="mt-2 flex flex-col gap-1.5">
+                            <div className="mono text-[10px] uppercase tracking-wider text-warn">
+                              Blocking evidence
+                            </div>
+                            {item.evidence.map((evidence) => (
+                              <Link
+                                key={`${evidence.kind}-${evidence.prediction_id}`}
+                                href={`/markets/${evidence.market_id}`}
+                                className="block border-l border-warn/50 pl-3 hover:border-warn transition-colors"
+                              >
+                                <span className="block text-xs text-text-primary leading-relaxed max-w-xl line-clamp-2">
+                                  {evidence.market_question}
+                                </span>
+                                <span className="block mono text-[10px] uppercase tracking-wider text-text-muted">
+                                  {evidence.agent_name} {evidence.side} /{" "}
+                                  {dollars(evidence.stake_usd, 0)} stake / EV{" "}
+                                  {dollars(evidence.expected_pnl_usd, 2)} / close{" "}
+                                  {evidence.market_closes_at
+                                    ? relativeTime(evidence.market_closes_at)
+                                    : "unknown"}{" "}
+                                  / open {evidence.age_days.toFixed(1)}d
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        ) : null}
                       </td>
                       <td className="py-3 px-3 text-right">
                         <span
