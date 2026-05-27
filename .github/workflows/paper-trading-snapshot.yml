@@ -17,6 +17,7 @@ on:
         default: "0.1"
 
 permissions:
+  actions: read
   contents: write
 
 env:
@@ -119,6 +120,48 @@ jobs:
           npx tsx scripts/paper-trading-proof-audit.ts --soft --json \
             | tee paper-audit-result.json
 
+      - name: Download retained proof artifact history
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p paper-artifact-history
+          downloaded=0
+
+          if ! gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow paper-trading-snapshot.yml \
+            --branch main \
+            --status success \
+            --limit 35 \
+            --json databaseId \
+            --jq '.[].databaseId' > paper-artifact-history-runs.txt; then
+            printf '::warning title=Proof artifact history unavailable::Could not list prior paper proof workflow runs; publishing current capture only.\n'
+            exit 0
+          fi
+
+          while IFS= read -r run_id; do
+            [[ -n "$run_id" ]] || continue
+            [[ "$run_id" != "$GITHUB_RUN_ID" ]] || continue
+
+            target="paper-artifact-history/$run_id"
+            mkdir -p "$target"
+
+            if gh run download "$run_id" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "paper-trading-proof-$run_id" \
+              --dir "$target"; then
+              downloaded=$((downloaded + 1))
+            else
+              printf '::notice title=Proof artifact unavailable::Skipping prior paper proof artifact for run %s.\n' "$run_id"
+            fi
+          done < paper-artifact-history-runs.txt
+
+          echo "Downloaded $downloaded retained proof artifact bundle(s)."
+
       - name: Run artifact proof rollup
         if: always()
         shell: bash
@@ -130,11 +173,17 @@ jobs:
             exit 1
           fi
 
-          npx tsx scripts/paper-trading-artifact-audit.ts \
-            --file paper-snapshot-rows.json \
-            --snapshot-summary paper-snapshot-result.json \
-            --workflow paper-snapshot-workflow.json \
-            --json \
+          audit_args=(
+            --file paper-snapshot-rows.json
+            --workflow paper-snapshot-workflow.json
+            --json
+          )
+
+          if find paper-artifact-history -name paper-snapshot-rows.json -type f | grep -q .; then
+            audit_args+=(--dir paper-artifact-history)
+          fi
+
+          npx tsx scripts/paper-trading-artifact-audit.ts "${audit_args[@]}" \
             | tee paper-artifact-audit-result.json
 
       - name: Publish latest public proof JSON

@@ -138,11 +138,20 @@ function main() {
       checked_at: artifactAudit.checked_at ?? null,
       exit_code: artifactAudit.exit_code ?? null,
       artifact_count: artifactAudit.artifact_count ?? null,
+      discovered_artifact_count:
+        artifactAudit.discovered_artifact_count ??
+        artifactAudit.artifact_count ??
+        null,
+      selected_artifact_paths: artifactAudit.selected_artifact_paths ?? [],
       latest_snapshot_date: artifactAudit.latest_snapshot_date ?? null,
       row_count: artifactAudit.row_count ?? null,
       live_row_count: artifactAudit.live_row_count ?? null,
       control_row_count: artifactAudit.control_row_count ?? null,
       selected_query_row_count: artifactAudit.selected_query_row_count ?? null,
+      snapshot_dates: artifactAudit.snapshot_dates ?? [],
+      duplicate_snapshot_dates: artifactAudit.duplicate_snapshot_dates ?? [],
+      ignored_duplicate_artifacts:
+        artifactAudit.ignored_duplicate_artifacts ?? [],
       sources: artifactAudit.sources ?? [],
       schema_versions: artifactAudit.schema_versions ?? [],
       failed_checks: artifactAudit.failed_checks ?? [],
