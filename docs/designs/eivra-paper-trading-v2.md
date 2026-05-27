@@ -212,6 +212,11 @@ The 30-day proof window now has a durable audit surface:
   visible without becoming proof P&L.
   Scheduled artifact audits publish the same `agent_edge_proof` packet into
   `artifact_proof`, so daily evidence bundles remain self-contained.
+- `GET /api/trading-agent-edge-evidence` builds a per-rule daily evidence
+  timeline from persisted paper snapshot rows. It exposes rule-day coverage,
+  latest daily deltas, missing captures, resolved-ticket progress, and the same
+  `missed_pnl_counts_as_proof: false` guard so the dashboard can audit how each
+  agent/edge rule is progressing across the 30-day window.
 - `GET /api/trading-agent-edge-trades` exposes the paper-only resolved-ticket
   ledger behind those canonical rules. It lists the exact resolved paper tickets
   per agent/edge rule, P&L, ROI, forecast probability, entry price, side, and
