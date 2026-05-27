@@ -123,6 +123,10 @@ The 30-day proof window now has a durable audit surface:
 - `GET /api/trading-snapshots` returns the persisted proof log.
 - `POST /api/trading-snapshots` writes the current capped snapshot and requires
   `CRON_SHARED_SECRET`.
+- `npm run paper:snapshot` builds the exact same snapshot rows locally as a
+  dry-run recovery path. `npm run paper:snapshot:write` inserts them directly
+  with `SUPABASE_SERVICE_ROLE_KEY`; it refuses to write demo-sourced rows unless
+  `--allow-demo-write` is passed explicitly.
 - A Netlify scheduled function runs the writer once per day on published deploys.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
