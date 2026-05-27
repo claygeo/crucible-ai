@@ -210,7 +210,10 @@ Downloaded artifact directories can be checked offline with
 `npm run paper:artifact-audit -- ./paper-artifacts --json` after
 `gh run download <run_id> --repo claygeo/eivra --dir ./paper-artifacts`. The
 artifact audit fails non-v1, demo-sourced, malformed, duplicate-day, or
-under-covered proof rows before the files are counted as evidence.
+under-covered proof rows before the files are counted as evidence. When the
+artifact checks pass, the same command also emits `artifact_proof`: a read-only
+strategy rollup, agent-edge matrix, readiness, and runway report built from the
+downloaded rows with the same proof logic used by persisted Supabase snapshots.
 
 ## Stack
 

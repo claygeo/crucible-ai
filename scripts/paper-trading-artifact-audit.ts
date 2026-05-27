@@ -1,5 +1,9 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { basename, join, resolve } from "path";
+import type {
+  PaperTradingSnapshotRow,
+  PaperTradingStrategyProofRollup,
+} from "../src/lib/trading-snapshots";
 
 const ARTIFACT_FILE_NAME = "paper-snapshot-rows.json";
 const DEFAULT_MIN_LIVE_ROWS = 15;
@@ -75,6 +79,28 @@ type FailedCheck = {
   detail: string;
 };
 
+type ArtifactScan = {
+  audit: ArtifactAudit;
+  proofRows: PaperTradingSnapshotRow[];
+};
+
+type StrategyRollupSummary = {
+  strategy_id: string;
+  strategy_label: string;
+  sample: string;
+  durable_status: string;
+  evidence_grade: string;
+  captured_days: number;
+  resolved_trades: number;
+  window_pnl_usd: number;
+  window_roi_on_stake: number;
+  max_drawdown_usd: number;
+  open_exposure_usd: number;
+  open_expected_pnl_usd: number;
+  latest_snapshot_date: string | null;
+  blockers: string[];
+};
+
 function parseArgs(argv: string[]): CliOptions {
   const inputs: string[] = [];
   let allowDemo = false;
@@ -139,6 +165,10 @@ Options:
   --soft                     Always exit 0 after printing the report.
   --allow-demo               Do not fail demo-sourced artifacts.
   --min-live-rows <number>   Minimum live strategy rows required per artifact. Default ${DEFAULT_MIN_LIVE_ROWS}.
+
+The report also includes artifact_proof: a read-only strategy proof rollup built
+from valid artifact rows with the same paper-only logic used by persisted
+Supabase snapshots.
 `);
 }
 
@@ -234,9 +264,10 @@ function collectMissingFields(
     .map((field) => `${prefix}.${field}`);
 }
 
-function auditArtifact(path: string, options: CliOptions): ArtifactAudit {
+function scanArtifact(path: string, options: CliOptions): ArtifactScan {
   const checks: Check[] = [];
   const missingFields: string[] = [];
+  const proofRows: PaperTradingSnapshotRow[] = [];
   let parsed: unknown;
 
   try {
@@ -250,7 +281,7 @@ function auditArtifact(path: string, options: CliOptions): ArtifactAudit {
       false,
       error instanceof Error ? error.message : String(error),
     );
-    return emptyArtifactAudit(path, checks);
+    return emptyArtifactScan(path, checks);
   }
 
   if (!isRecord(parsed)) {
@@ -261,7 +292,7 @@ function auditArtifact(path: string, options: CliOptions): ArtifactAudit {
       false,
       "Top-level JSON is not an object.",
     );
-    return emptyArtifactAudit(path, checks);
+    return emptyArtifactScan(path, checks);
   }
 
   missingFields.push(
@@ -445,6 +476,8 @@ function auditArtifact(path: string, options: CliOptions): ArtifactAudit {
         missingFields.push(`${rowPrefix}.daily_series.days`);
       }
     }
+
+    proofRows.push(hydrateArtifactRow(row, generatedAt, snapshotDate, index));
   });
 
   check(
@@ -474,44 +507,171 @@ function auditArtifact(path: string, options: CliOptions): ArtifactAudit {
   );
 
   return {
-    path,
-    source,
-    generated_at: generatedAt,
-    snapshot_date: snapshotDate,
-    schema_version: schemaVersion,
-    declared_row_count: declaredRowCount,
-    actual_row_count: rows.length,
-    live_row_count: liveRowCount,
-    control_row_count: controlRowCount,
-    selected_query_row_count: selectedQueryRowCount,
-    strategy_ids: [...strategyIds].sort((a, b) => a.localeCompare(b)),
-    missing_fields: [...new Set(missingFields)].sort((a, b) =>
-      a.localeCompare(b),
-    ),
-    checks,
+    audit: {
+      path,
+      source,
+      generated_at: generatedAt,
+      snapshot_date: snapshotDate,
+      schema_version: schemaVersion,
+      declared_row_count: declaredRowCount,
+      actual_row_count: rows.length,
+      live_row_count: liveRowCount,
+      control_row_count: controlRowCount,
+      selected_query_row_count: selectedQueryRowCount,
+      strategy_ids: [...strategyIds].sort((a, b) => a.localeCompare(b)),
+      missing_fields: [...new Set(missingFields)].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+      checks,
+    },
+    proofRows,
   };
 }
 
-function emptyArtifactAudit(path: string, checks: Check[]): ArtifactAudit {
+function emptyArtifactScan(path: string, checks: Check[]): ArtifactScan {
   return {
-    path,
-    source: null,
-    generated_at: null,
-    snapshot_date: null,
-    schema_version: null,
-    declared_row_count: null,
-    actual_row_count: 0,
-    live_row_count: 0,
-    control_row_count: 0,
-    selected_query_row_count: 0,
-    strategy_ids: [],
-    missing_fields: [],
-    checks,
+    audit: {
+      path,
+      source: null,
+      generated_at: null,
+      snapshot_date: null,
+      schema_version: null,
+      declared_row_count: null,
+      actual_row_count: 0,
+      live_row_count: 0,
+      control_row_count: 0,
+      selected_query_row_count: 0,
+      strategy_ids: [],
+      missing_fields: [],
+      checks,
+    },
+    proofRows: [],
   };
 }
 
-function buildReport(options: CliOptions, files: string[]) {
-  const artifactAudits = files.map((file) => auditArtifact(file, options));
+function hydrateArtifactRow(
+  row: Record<string, unknown>,
+  generatedAt: string | null,
+  artifactSnapshotDate: string | null,
+  index: number,
+): PaperTradingSnapshotRow {
+  const snapshotDate =
+    optionalString(row.snapshot_date) ?? artifactSnapshotDate ?? "unknown";
+  const strategyId = optionalString(row.strategy_id) ?? `unknown-${index}`;
+  const capturedAt =
+    optionalString(row.captured_at) ??
+    generatedAt ??
+    `${snapshotDate}T00:00:00.000Z`;
+  return {
+    ...row,
+    id: optionalString(row.id) ?? `${snapshotDate}-${strategyId}-${index}`,
+    captured_at: capturedAt,
+  } as PaperTradingSnapshotRow;
+}
+
+function summarizeStrategyRollup(
+  rollup: PaperTradingStrategyProofRollup,
+): StrategyRollupSummary {
+  return {
+    strategy_id: rollup.strategy_id,
+    strategy_label: rollup.strategy_label,
+    sample: rollup.sample,
+    durable_status: rollup.durable_proof_gate.status,
+    evidence_grade: rollup.proof_quality.evidence_grade,
+    captured_days: rollup.capture_coverage.captured_days,
+    resolved_trades: rollup.proof_window.resolved_trades,
+    window_pnl_usd: rollup.proof_window.resolved_net_pnl_usd,
+    window_roi_on_stake: rollup.proof_window.resolved_roi_on_stake,
+    max_drawdown_usd: rollup.proof_window.max_drawdown_usd,
+    open_exposure_usd: rollup.proof_window.latest_open_exposure_usd,
+    open_expected_pnl_usd: rollup.proof_window.latest_open_expected_pnl_usd,
+    latest_snapshot_date: rollup.latest_snapshot_date,
+    blockers: rollup.durable_proof_gate.blockers,
+  };
+}
+
+async function buildArtifactProof(
+  proofRows: PaperTradingSnapshotRow[],
+  blocked: boolean,
+) {
+  if (blocked || proofRows.length === 0) {
+    return {
+      status: "unavailable",
+      message: blocked
+        ? "Artifact proof rollup skipped because artifact checks failed."
+        : "No artifact rows are available for proof rollup.",
+      paper_only: true,
+      real_money_execution_allowed: false,
+      latest_captured_at: null,
+      proof_summary: null,
+      proof_readiness: null,
+      proof_runway: null,
+      capture_health: null,
+      capture_calendar: null,
+      agent_edge_proof_matrix: [],
+      top_strategy_rollups: [],
+    };
+  }
+
+  const {
+    buildPaperTradingAgentEdgeProofMatrix,
+    buildPaperTradingCaptureCalendar,
+    buildPaperTradingCaptureHealth,
+    buildPaperTradingProofReadiness,
+    buildPaperTradingProofRunway,
+    buildPaperTradingProofSummary,
+    buildPaperTradingStrategyRollups,
+  } = await import("../src/lib/trading-snapshots");
+  const sortedRows = proofRows
+    .slice()
+    .sort((a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at));
+  const latestCapturedAt = sortedRows[0]?.captured_at ?? null;
+  const captureHealth = buildPaperTradingCaptureHealth(latestCapturedAt);
+  const captureCalendar = buildPaperTradingCaptureCalendar(
+    sortedRows,
+    captureHealth,
+  );
+  const strategyRollups = buildPaperTradingStrategyRollups(
+    sortedRows,
+    captureHealth,
+  );
+  const agentEdgeProofMatrix =
+    buildPaperTradingAgentEdgeProofMatrix(strategyRollups);
+  const proofSummary = buildPaperTradingProofSummary(strategyRollups);
+  const proofReadiness = buildPaperTradingProofReadiness({
+    persistenceStatus: "available",
+    proofSummary,
+    captureHealth,
+    captureCalendar,
+  });
+  const proofRunway = buildPaperTradingProofRunway({
+    proofSummary,
+    captureHealth,
+    captureCalendar,
+  });
+
+  return {
+    status: "available",
+    message:
+      "Artifact rows were rolled up with the same paper-only proof logic used for persisted snapshots.",
+    paper_only: true,
+    real_money_execution_allowed: false,
+    latest_captured_at: latestCapturedAt,
+    proof_summary: proofSummary,
+    proof_readiness: proofReadiness,
+    proof_runway: proofRunway,
+    capture_health: captureHealth,
+    capture_calendar: captureCalendar,
+    agent_edge_proof_matrix: agentEdgeProofMatrix,
+    top_strategy_rollups: strategyRollups
+      .slice(0, 12)
+      .map(summarizeStrategyRollup),
+  };
+}
+
+async function buildReport(options: CliOptions, files: string[]) {
+  const scans = files.map((file) => scanArtifact(file, options));
+  const artifactAudits = scans.map((scan) => scan.audit);
   const failedChecks: FailedCheck[] = artifactAudits.flatMap((artifact) =>
     artifact.checks
       .filter((item) => item.status === "fail")
@@ -560,6 +720,12 @@ function buildReport(options: CliOptions, files: string[]) {
       )
       .map((artifact) => artifact.snapshot_date as string),
   );
+  const artifactProofRows =
+    failedChecks.length === 0 ? scans.flatMap((scan) => scan.proofRows) : [];
+  const proof = await buildArtifactProof(
+    artifactProofRows,
+    failedChecks.length > 0,
+  );
 
   return {
     verdict: failedChecks.length === 0 ? "pass" : "blocked",
@@ -606,6 +772,7 @@ function buildReport(options: CliOptions, files: string[]) {
       ...new Set(artifactAudits.flatMap((artifact) => artifact.missing_fields)),
     ].sort(),
     failed_checks: failedChecks,
+    artifact_proof: proof,
     artifacts: artifactAudits,
     exit_code: failedChecks.length === 0 || options.soft ? 0 : 1,
   };
@@ -615,19 +782,17 @@ function emit(_json: boolean, value: unknown) {
   console.log(JSON.stringify(value, null, 2));
 }
 
-function main() {
+async function main() {
   const options = parseArgs(process.argv.slice(2));
   const files = discoverArtifactFiles(options.inputs);
-  const report = buildReport(options, files);
+  const report = await buildReport(options, files);
   emit(options.json, report);
   if (report.exit_code !== 0) {
     process.exitCode = report.exit_code;
   }
 }
 
-try {
-  main();
-} catch (error) {
+main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
-}
+});
