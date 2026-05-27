@@ -77,6 +77,7 @@ export type PublishedPaperTradingArtifactProof = {
   proof_summary: Record<string, unknown> | null;
   proof_readiness: Record<string, unknown> | null;
   proof_runway: Record<string, unknown> | null;
+  strategy_registry: Record<string, unknown> | null;
   agent_edge_proof_matrix: unknown[];
   top_strategy_rollups: unknown[];
   error: string | null;
@@ -382,6 +383,7 @@ function unavailablePublishedProof(
     proof_summary: null,
     proof_readiness: null,
     proof_runway: null,
+    strategy_registry: null,
     agent_edge_proof_matrix: [],
     top_strategy_rollups: [],
     error,
@@ -407,6 +409,7 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
     const proofReadiness = objectOrNull(artifactProof?.proof_readiness);
     const proofRunway = objectOrNull(artifactProof?.proof_runway);
     const proofSummary = objectOrNull(artifactProof?.proof_summary);
+    const strategyRegistry = objectOrNull(artifactProof?.strategy_registry);
     const paperOnly =
       proof.paper_only === true && artifactProof?.paper_only === true;
     const executionDisabled =
@@ -464,6 +467,7 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
       proof_summary: proofSummary,
       proof_readiness: proofReadiness,
       proof_runway: proofRunway,
+      strategy_registry: strategyRegistry,
       agent_edge_proof_matrix: arrayOrEmpty(
         artifactProof?.agent_edge_proof_matrix,
       ),

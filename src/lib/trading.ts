@@ -377,12 +377,55 @@ export type StrategyDailyEvidenceSeries = {
   days: DailyEvidenceSnapshot[];
 };
 
+export type PaperTradingStrategyRegistryEntry = {
+  id: string;
+  label: string;
+  description: string;
+  is_custom: boolean;
+  sample: TradingSample;
+  min_edge: number;
+  stake_mode: StakeMode;
+  flat_stake_usd: number;
+  max_stake_usd: number;
+  max_open_exposure_usd: number;
+  agent_ids: string[];
+  category: string | null;
+  side: TradeSide | null;
+  proof_scope: "live_candidate" | "control";
+  paper_only: true;
+  real_money_execution_allowed: false;
+};
+
+export type PaperTradingStrategyRegistry = {
+  schema_version: "1";
+  generated_at: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  config: typeof PAPER_TRADING_CONFIG;
+  proof_rules: typeof PAPER_TRADING_PROOF_RULES;
+  agent_edge_gates: number[];
+  strategy_count: number;
+  live_strategy_count: number;
+  control_strategy_count: number;
+  configurable_controls: {
+    samples: readonly string[];
+    stake_modes: readonly string[];
+    sides: readonly string[];
+    categories: readonly string[];
+    min_edges: readonly number[];
+    default_controls: TradingControls;
+  };
+  selected_strategy: PaperTradingStrategyRegistryEntry;
+  entries: PaperTradingStrategyRegistryEntry[];
+};
+
 export type TradingSnapshot = {
   generated_at: string;
   source: TradingSource;
   schema_version: "1";
   config: typeof PAPER_TRADING_CONFIG;
   controls: TradingControls;
+  strategy_registry: PaperTradingStrategyRegistry;
   totals: TradingTotals;
   live_totals: TradingTotals;
   backfill_totals: TradingTotals;
@@ -633,6 +676,67 @@ function strategyFromControls(controls: TradingControls): StrategyDefinition {
     category: controls.category ?? undefined,
     side: controls.side ?? undefined,
     isCustom: true,
+  };
+}
+
+function strategyRegistryEntry(
+  strategy: StrategyDefinition,
+): PaperTradingStrategyRegistryEntry {
+  const strategyConfig = configForStrategy(strategy);
+
+  return {
+    id: strategy.id,
+    label: strategy.label,
+    description: strategy.description,
+    is_custom: Boolean(strategy.isCustom),
+    sample: strategy.sample,
+    min_edge: strategy.minEdge,
+    stake_mode: strategy.stakeMode,
+    flat_stake_usd: strategyConfig.flatStakeUsd,
+    max_stake_usd: strategyConfig.maxStakeUsd,
+    max_open_exposure_usd: strategyConfig.maxOpenExposureUsd,
+    agent_ids: strategy.agentIds ?? [],
+    category: strategy.category ?? null,
+    side: strategy.side ?? null,
+    proof_scope: strategy.sample === "live_only" ? "live_candidate" : "control",
+    paper_only: true,
+    real_money_execution_allowed: false,
+  };
+}
+
+export function buildPaperTradingStrategyRegistry(
+  controls: TradingControls = DEFAULT_TRADING_CONTROLS,
+  generatedAt = new Date().toISOString(),
+): PaperTradingStrategyRegistry {
+  const selectedStrategy = strategyRegistryEntry(
+    strategyFromControls(controls),
+  );
+  const entries = STRATEGY_DEFINITIONS.map(strategyRegistryEntry);
+  const liveStrategyCount = entries.filter(
+    (entry) => entry.proof_scope === "live_candidate",
+  ).length;
+
+  return {
+    schema_version: "1",
+    generated_at: generatedAt,
+    paper_only: true,
+    real_money_execution_allowed: false,
+    config: PAPER_TRADING_CONFIG,
+    proof_rules: PAPER_TRADING_PROOF_RULES,
+    agent_edge_gates: [...AGENT_EDGE_GATES],
+    strategy_count: entries.length,
+    live_strategy_count: liveStrategyCount,
+    control_strategy_count: entries.length - liveStrategyCount,
+    configurable_controls: {
+      samples: TRADING_SAMPLE_OPTIONS,
+      stake_modes: TRADING_STAKE_MODE_OPTIONS,
+      sides: TRADING_SIDE_OPTIONS,
+      categories: TRADING_CATEGORY_OPTIONS,
+      min_edges: TRADING_MIN_EDGE_OPTIONS,
+      default_controls: DEFAULT_TRADING_CONTROLS,
+    },
+    selected_strategy: selectedStrategy,
+    entries,
   };
 }
 
@@ -1676,6 +1780,7 @@ async function loadPredictionRows(): Promise<{
 export async function getTradingSnapshot(
   controls: TradingControls = DEFAULT_TRADING_CONTROLS,
 ): Promise<TradingSnapshot> {
+  const generatedAt = new Date().toISOString();
   const { source, rows } = await loadPredictionRows();
   const selectedDefinition = strategyFromControls(controls);
   const allTrades = rows
@@ -1746,11 +1851,12 @@ export async function getTradingSnapshot(
   const selectedStrategy = selectedEvaluation.summary;
 
   return {
-    generated_at: new Date().toISOString(),
+    generated_at: generatedAt,
     source,
     schema_version: "1",
     config: PAPER_TRADING_CONFIG,
     controls,
+    strategy_registry: buildPaperTradingStrategyRegistry(controls, generatedAt),
     totals: summarizeTotals(allTrades),
     live_totals: summarizeTotals(liveTrades),
     backfill_totals: summarizeTotals(backfillTrades),

@@ -221,6 +221,8 @@ export default async function TradingPage({
   const snapshotJsonHref = "/api/trading-snapshots?limit=1000";
   const auditJsonHref = `/api/trading-proof-audit?${selectedQuery}`;
   const artifactJsonHref = "/api/trading-artifacts";
+  const strategyRegistryJsonHref =
+    `/api/trading-strategy-registry?${selectedQuery}`;
   const publishedProofHref = "/paper-trading/latest-artifact-proof.json";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
@@ -803,6 +805,14 @@ export default async function TradingPage({
               {int(proofSummary.candidate_count)} / controls{" "}
               {int(proofSummary.control_count)}
             </span>
+            <Link
+              href={strategyRegistryJsonHref}
+              className="text-accent hover:text-text-primary transition-colors"
+            >
+              strategy registry{" "}
+              {int(snapshot.strategy_registry.live_strategy_count)} live /{" "}
+              {int(snapshot.strategy_registry.control_strategy_count)} control
+            </Link>
             <span className={captureHealthClass(captureHealth.status)}>
               {captureHealth.message}
             </span>
