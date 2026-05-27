@@ -217,6 +217,12 @@ The 30-day proof window now has a durable audit surface:
   latest daily deltas, missing captures, resolved-ticket progress, and the same
   `missed_pnl_counts_as_proof: false` guard so the dashboard can audit how each
   agent/edge rule is progressing across the 30-day window.
+- `GET /api/trading-agent-edge-dossier` composes the selected canonical
+  agent/edge rule into one paper-only review packet: durable proof gates, daily
+  evidence, resolved ticket ledger, runway, and open-signal watchlist. It keeps
+  `real_money_execution_allowed: false`, separates open proof checks from hard
+  failures, and exists only to make operator review easier after enough evidence
+  accumulates.
 - `GET /api/trading-agent-edge-trades` exposes the paper-only resolved-ticket
   ledger behind those canonical rules. It lists the exact resolved paper tickets
   per agent/edge rule, P&L, ROI, forecast probability, entry price, side, and
