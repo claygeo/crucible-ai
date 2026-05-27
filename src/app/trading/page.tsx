@@ -329,6 +329,12 @@ export default async function TradingPage({
   });
   const profitabilityGuard = agentEdgeProof.profitability_guard;
   const agentEdgeTradeLedger = snapshot.agent_edge_trade_ledger;
+  const agentEdgeLedgerByRule = new Map(
+    agentEdgeTradeLedger.rules.map((rule) => [
+      `${rule.agent_id}-${rule.min_edge}`,
+      rule,
+    ]),
+  );
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -1274,7 +1280,8 @@ export default async function TradingPage({
             >
               resolved ticket ledger {agentEdgeTradeLedger.status_label.toLowerCase()} /{" "}
               {int(agentEdgeTradeLedger.total_resolved_trades)} trades /{" "}
-              {dollars(agentEdgeTradeLedger.total_net_pnl_usd, 0)}
+              {dollars(agentEdgeTradeLedger.total_net_pnl_usd, 0)} / above BE{" "}
+              {int(agentEdgeTradeLedger.above_break_even_rule_count)}
             </Link>
             <span className={registrySyncClass(registrySync.status)}>
               registry {registrySync.status_label.toLowerCase()}{" "}
@@ -2875,6 +2882,9 @@ export default async function TradingPage({
                   <tbody className="divide-y divide-border-subtle/60">
                     {agentEdgeRows.map((rule) => {
                       const agent = AGENTS.find((item) => item.id === rule.agent_id);
+                      const ledgerRule = agentEdgeLedgerByRule.get(
+                        `${rule.agent_id}-${rule.min_edge}`
+                      );
                       const hueTxt = agent ? HUE_TO_TEXT[agent.hue] : "text-text-primary";
                       const hueBg = agent ? HUE_TO_BG[agent.hue] : "bg-accent";
 
@@ -2906,6 +2916,12 @@ export default async function TradingPage({
                           </td>
                           <td className="py-3 px-3 mono text-right text-text-secondary">
                             {int(rule.resolved_trades)}
+                            {ledgerRule && ledgerRule.break_even_win_rate !== null ? (
+                              <div className="mt-1 text-[10px] text-text-muted">
+                                {pct(ledgerRule.win_rate, 0)} win / BE{" "}
+                                {pct(ledgerRule.break_even_win_rate, 0)}
+                              </div>
+                            ) : null}
                           </td>
                           <td className="py-3 px-3 mono text-right text-text-secondary">
                             {int(rule.open_signals)}
@@ -2926,6 +2942,15 @@ export default async function TradingPage({
                             )}`}
                           >
                             {pct(rule.resolved_roi_on_stake, 1)}
+                            {ledgerRule && ledgerRule.win_rate_edge !== null ? (
+                              <div
+                                className={`mt-1 text-[10px] ${pnlClass(
+                                  ledgerRule.win_rate_edge
+                                )}`}
+                              >
+                                BE edge {pct(ledgerRule.win_rate_edge, 1)}
+                              </div>
+                            ) : null}
                           </td>
                           <td
                             className={`py-3 pl-3 mono text-right ${pnlClass(

@@ -529,9 +529,22 @@ export type AgentEdgeResolvedTradeLedgerRule = {
   resolved_trades: number;
   wins: number;
   losses: number;
+  win_rate: number;
   stake_usd: number;
   net_pnl_usd: number;
   roi_on_stake: number;
+  avg_entry_price: number;
+  avg_probability: number;
+  avg_model_probability_correct: number;
+  avg_abs_edge: number;
+  avg_profit_if_correct_usd: number;
+  avg_loss_if_wrong_usd: number;
+  avg_pnl_per_trade_usd: number;
+  payoff_ratio: number | null;
+  break_even_win_rate: number | null;
+  win_rate_edge: number | null;
+  model_probability_edge_to_break_even: number | null;
+  above_break_even: boolean;
   latest_resolved_at: string | null;
   recent_resolved_trades: AgentEdgeResolvedTradeLedgerEntry[];
 };
@@ -548,6 +561,8 @@ export type AgentEdgeResolvedTradeLedger = {
   rule_count: number;
   resolved_rule_count: number;
   profitable_rule_count: number;
+  above_break_even_rule_count: number;
+  below_break_even_rule_count: number;
   total_resolved_trades: number;
   total_net_pnl_usd: number;
   latest_resolved_at: string | null;
@@ -2138,6 +2153,16 @@ function buildAgentEdgeTradeEntry(
   };
 }
 
+function averageResolvedTradeValue(
+  trades: PaperTrade[],
+  selector: (trade: PaperTrade) => number,
+): number {
+  if (trades.length === 0) return 0;
+  return round4(
+    trades.reduce((sum, trade) => sum + selector(trade), 0) / trades.length,
+  );
+}
+
 function buildAgentEdgeTradeLedger(
   evaluations: StrategyEvaluation[],
   generatedAt: string,
@@ -2162,6 +2187,41 @@ function buildAgentEdgeTradeLedger(
         (sum, trade) => sum + (trade.pnl_usd ?? 0),
         0,
       );
+      const wins = resolvedTrades.filter((trade) => trade.won).length;
+      const losses = resolvedTrades.filter(
+        (trade) => trade.won === false,
+      ).length;
+      const winRate =
+        resolvedTrades.length > 0 ? round4(wins / resolvedTrades.length) : 0;
+      const avgModelProbabilityCorrect = averageResolvedTradeValue(
+        resolvedTrades,
+        (trade) =>
+          trade.side === "YES" ? trade.probability : 1 - trade.probability,
+      );
+      const avgProfitIfCorrectUsd = averageResolvedTradeValue(
+        resolvedTrades,
+        (trade) => trade.profit_if_correct_usd,
+      );
+      const avgLossIfWrongUsd = averageResolvedTradeValue(
+        resolvedTrades,
+        (trade) => trade.stake_usd,
+      );
+      const payoffRatio =
+        avgLossIfWrongUsd > 0
+          ? round4(avgProfitIfCorrectUsd / avgLossIfWrongUsd)
+          : null;
+      const breakEvenWinRate =
+        avgProfitIfCorrectUsd + avgLossIfWrongUsd > 0
+          ? round4(
+              avgLossIfWrongUsd / (avgProfitIfCorrectUsd + avgLossIfWrongUsd),
+            )
+          : null;
+      const winRateEdge =
+        breakEvenWinRate === null ? null : round4(winRate - breakEvenWinRate);
+      const modelProbabilityEdgeToBreakEven =
+        breakEvenWinRate === null
+          ? null
+          : round4(avgModelProbabilityCorrect - breakEvenWinRate);
 
       return {
         strategy_id: summary.id,
@@ -2170,11 +2230,36 @@ function buildAgentEdgeTradeLedger(
         agent_name: resolvedTrades[0]?.agent_name ?? agent?.name ?? agentId,
         min_edge: summary.min_edge,
         resolved_trades: resolvedTrades.length,
-        wins: resolvedTrades.filter((trade) => trade.won).length,
-        losses: resolvedTrades.filter((trade) => trade.won === false).length,
+        wins,
+        losses,
+        win_rate: winRate,
         stake_usd: round2(stakeUsd),
         net_pnl_usd: round2(netPnlUsd),
         roi_on_stake: stakeUsd > 0 ? round4(netPnlUsd / stakeUsd) : 0,
+        avg_entry_price: averageResolvedTradeValue(
+          resolvedTrades,
+          (trade) => trade.market_price,
+        ),
+        avg_probability: averageResolvedTradeValue(
+          resolvedTrades,
+          (trade) => trade.probability,
+        ),
+        avg_model_probability_correct: avgModelProbabilityCorrect,
+        avg_abs_edge: averageResolvedTradeValue(
+          resolvedTrades,
+          (trade) => trade.abs_edge,
+        ),
+        avg_profit_if_correct_usd: round2(avgProfitIfCorrectUsd),
+        avg_loss_if_wrong_usd: round2(avgLossIfWrongUsd),
+        avg_pnl_per_trade_usd:
+          resolvedTrades.length > 0
+            ? round2(netPnlUsd / resolvedTrades.length)
+            : 0,
+        payoff_ratio: payoffRatio,
+        break_even_win_rate: breakEvenWinRate,
+        win_rate_edge: winRateEdge,
+        model_probability_edge_to_break_even: modelProbabilityEdgeToBreakEven,
+        above_break_even: winRateEdge !== null && winRateEdge > 0,
         latest_resolved_at: resolvedAtForLedger(resolvedTrades[0] ?? null),
         recent_resolved_trades: resolvedTrades
           .slice(0, 12)
@@ -2195,6 +2280,10 @@ function buildAgentEdgeTradeLedger(
     0,
   );
   const totalNetPnlUsd = rules.reduce((sum, rule) => sum + rule.net_pnl_usd, 0);
+  const aboveBreakEvenRules = rules.filter((rule) => rule.above_break_even);
+  const belowBreakEvenRules = rules.filter(
+    (rule) => rule.resolved_trades > 0 && !rule.above_break_even,
+  );
   const latestResolvedAt =
     rules
       .map((rule) => rule.latest_resolved_at)
@@ -2235,6 +2324,8 @@ function buildAgentEdgeTradeLedger(
     resolved_rule_count: rules.filter((rule) => rule.resolved_trades > 0)
       .length,
     profitable_rule_count: rules.filter((rule) => rule.net_pnl_usd > 0).length,
+    above_break_even_rule_count: aboveBreakEvenRules.length,
+    below_break_even_rule_count: belowBreakEvenRules.length,
     total_resolved_trades: totalResolvedTrades,
     total_net_pnl_usd: round2(totalNetPnlUsd),
     latest_resolved_at: latestResolvedAt,

@@ -194,8 +194,10 @@ The 30-day proof window now has a durable audit surface:
 - `GET /api/trading-agent-edge-trades` exposes the paper-only resolved-ticket
   ledger behind those canonical rules. It lists the exact resolved paper tickets
   per agent/edge rule, P&L, ROI, forecast probability, entry price, side, and
-  market link. The workflow snapshot summary and published artifact proof carry
-  the same `agent_edge_trade_ledger`, so a future profitable-rule claim can be
+  market link. Each rule also carries payoff ratio, break-even win rate,
+  realized win-rate edge above/below break-even, and average P&L per resolved
+  ticket. The workflow snapshot summary and published artifact proof carry the
+  same `agent_edge_trade_ledger`, so a future profitable-rule claim can be
   audited back to individual resolved tickets rather than only rollup totals.
 - `/api/trading.json` and `GET /api/trading-snapshots` expose
   `proof_evidence_sources`, a paper-only source map that separates Supabase
