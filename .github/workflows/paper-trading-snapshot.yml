@@ -132,6 +132,7 @@ jobs:
 
           npx tsx scripts/paper-trading-artifact-audit.ts \
             --file paper-snapshot-rows.json \
+            --snapshot-summary paper-snapshot-result.json \
             --json \
             | tee paper-artifact-audit-result.json
 

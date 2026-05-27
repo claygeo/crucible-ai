@@ -4,6 +4,7 @@ import type {
   PaperTradingSnapshotRow,
   PaperTradingStrategyProofRollup,
 } from "../src/lib/trading-snapshots";
+import type { TradingResolutionWatch } from "../src/lib/trading";
 
 const ARTIFACT_FILE_NAME = "paper-snapshot-rows.json";
 const DEFAULT_MIN_LIVE_ROWS = 15;
@@ -46,6 +47,7 @@ type CliOptions = {
   json: boolean;
   soft: boolean;
   minLiveRows: number;
+  snapshotSummaryPath: string | null;
   inputs: string[];
 };
 
@@ -82,6 +84,17 @@ type FailedCheck = {
 type ArtifactScan = {
   audit: ArtifactAudit;
   proofRows: PaperTradingSnapshotRow[];
+  snapshotSummary: SnapshotSummaryContext | null;
+};
+
+type SnapshotSummaryContext = {
+  path: string;
+  source: string | null;
+  generated_at: string | null;
+  snapshot_date: string | null;
+  resolution_watch: TradingResolutionWatch | null;
+  status: "available" | "missing" | "error";
+  message: string;
 };
 
 type StrategyRollupSummary = {
@@ -107,6 +120,7 @@ function parseArgs(argv: string[]): CliOptions {
   let json = process.env.npm_config_json === "true";
   let soft = process.env.npm_config_soft === "true";
   let minLiveRows = DEFAULT_MIN_LIVE_ROWS;
+  let snapshotSummaryPath: string | null = null;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -129,6 +143,8 @@ function parseArgs(argv: string[]): CliOptions {
         throw new Error("--min-live-rows must be a positive integer.");
       }
       minLiveRows = parsed;
+    } else if (flag === "--snapshot-summary") {
+      snapshotSummaryPath = nextValue();
     } else if (flag === "--dir" || flag === "--file") {
       inputs.push(nextValue());
     } else if (arg === "--help" || arg === "-h") {
@@ -144,6 +160,7 @@ function parseArgs(argv: string[]): CliOptions {
     json,
     soft,
     minLiveRows,
+    snapshotSummaryPath,
     inputs: inputs.length > 0 ? inputs : ["."],
   };
 }
@@ -165,6 +182,7 @@ Options:
   --soft                     Always exit 0 after printing the report.
   --allow-demo               Do not fail demo-sourced artifacts.
   --min-live-rows <number>   Minimum live strategy rows required per artifact. Default ${DEFAULT_MIN_LIVE_ROWS}.
+  --snapshot-summary <file>  Optional paper-snapshot-result.json for live resolution context.
 
 The report also includes artifact_proof: a read-only strategy proof rollup built
 from valid artifact rows with the same paper-only logic used by persisted
@@ -239,6 +257,77 @@ function discoverArtifactFiles(inputs: string[]): string[] {
   return [...found].sort((a, b) => a.localeCompare(b));
 }
 
+function snapshotSummaryPathForArtifact(
+  artifactPath: string,
+  explicitPath: string | null,
+): string | null {
+  if (explicitPath) return resolve(process.cwd(), explicitPath);
+  const sibling = join(
+    resolve(artifactPath, ".."),
+    "paper-snapshot-result.json",
+  );
+  return existsSync(sibling) ? sibling : null;
+}
+
+function readSnapshotSummary(
+  path: string | null,
+  explicit: boolean,
+): SnapshotSummaryContext | null {
+  if (!path) return null;
+  if (!existsSync(path)) {
+    return explicit
+      ? {
+          path,
+          source: null,
+          generated_at: null,
+          snapshot_date: null,
+          resolution_watch: null,
+          status: "missing",
+          message: "Snapshot summary file was not found.",
+        }
+      : null;
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf8"));
+    if (!isRecord(parsed)) {
+      return {
+        path,
+        source: null,
+        generated_at: null,
+        snapshot_date: null,
+        resolution_watch: null,
+        status: "error",
+        message: "Snapshot summary JSON is not an object.",
+      };
+    }
+    const resolutionWatch = isRecord(parsed.resolution_watch)
+      ? (parsed.resolution_watch as unknown as TradingResolutionWatch)
+      : null;
+    return {
+      path,
+      source: optionalString(parsed.source),
+      generated_at: optionalString(parsed.generated_at),
+      snapshot_date: optionalString(parsed.snapshot_date),
+      resolution_watch: resolutionWatch,
+      status: resolutionWatch ? "available" : "error",
+      message: resolutionWatch
+        ? "Snapshot summary resolution context loaded."
+        : "Snapshot summary is missing resolution_watch.",
+    };
+  } catch (error) {
+    return {
+      path,
+      source: null,
+      generated_at: null,
+      snapshot_date: null,
+      resolution_watch: null,
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 function check(
   checks: Check[],
   code: string,
@@ -268,6 +357,14 @@ function scanArtifact(path: string, options: CliOptions): ArtifactScan {
   const checks: Check[] = [];
   const missingFields: string[] = [];
   const proofRows: PaperTradingSnapshotRow[] = [];
+  const summaryPath = snapshotSummaryPathForArtifact(
+    path,
+    options.snapshotSummaryPath,
+  );
+  const snapshotSummary = readSnapshotSummary(
+    summaryPath,
+    Boolean(options.snapshotSummaryPath),
+  );
   let parsed: unknown;
 
   try {
@@ -525,6 +622,7 @@ function scanArtifact(path: string, options: CliOptions): ArtifactScan {
       checks,
     },
     proofRows,
+    snapshotSummary,
   };
 }
 
@@ -546,6 +644,7 @@ function emptyArtifactScan(path: string, checks: Check[]): ArtifactScan {
       checks,
     },
     proofRows: [],
+    snapshotSummary: null,
   };
 }
 
@@ -593,6 +692,7 @@ function summarizeStrategyRollup(
 async function buildArtifactProof(
   proofRows: PaperTradingSnapshotRow[],
   blocked: boolean,
+  resolutionWatch: TradingResolutionWatch | null,
 ) {
   if (blocked || proofRows.length === 0) {
     return {
@@ -608,6 +708,7 @@ async function buildArtifactProof(
       proof_runway: null,
       capture_health: null,
       capture_calendar: null,
+      resolution_watch: resolutionWatch,
       agent_edge_proof_matrix: [],
       top_strategy_rollups: [],
     };
@@ -643,11 +744,13 @@ async function buildArtifactProof(
     proofSummary,
     captureHealth,
     captureCalendar,
+    resolutionWatch,
   });
   const proofRunway = buildPaperTradingProofRunway({
     proofSummary,
     captureHealth,
     captureCalendar,
+    resolutionWatch,
   });
 
   return {
@@ -662,6 +765,7 @@ async function buildArtifactProof(
     proof_runway: proofRunway,
     capture_health: captureHealth,
     capture_calendar: captureCalendar,
+    resolution_watch: resolutionWatch,
     agent_edge_proof_matrix: agentEdgeProofMatrix,
     top_strategy_rollups: strategyRollups
       .slice(0, 12)
@@ -699,6 +803,18 @@ async function buildReport(options: CliOptions, files: string[]) {
       detail: `No ${ARTIFACT_FILE_NAME} files found in the requested path(s).`,
     });
   }
+  for (const scan of scans) {
+    const summary = scan.snapshotSummary;
+    if (!summary || summary.status === "available") continue;
+    if (options.snapshotSummaryPath) {
+      failedChecks.push({
+        path: summary.path,
+        code: "snapshot_summary",
+        label: "Snapshot summary resolution context",
+        detail: summary.message,
+      });
+    }
+  }
   if (duplicateSnapshotDates.length > 0) {
     failedChecks.push({
       path: null,
@@ -722,9 +838,20 @@ async function buildReport(options: CliOptions, files: string[]) {
   );
   const artifactProofRows =
     failedChecks.length === 0 ? scans.flatMap((scan) => scan.proofRows) : [];
+  const snapshotSummaries = scans
+    .map((scan) => scan.snapshotSummary)
+    .filter((summary): summary is SnapshotSummaryContext => Boolean(summary));
+  const latestSnapshotSummary =
+    snapshotSummaries
+      .filter((summary) => summary.status === "available")
+      .sort(
+        (a, b) =>
+          Date.parse(b.generated_at ?? "") - Date.parse(a.generated_at ?? ""),
+      )[0] ?? null;
   const proof = await buildArtifactProof(
     artifactProofRows,
     failedChecks.length > 0,
+    latestSnapshotSummary?.resolution_watch ?? null,
   );
 
   return {
@@ -772,6 +899,8 @@ async function buildReport(options: CliOptions, files: string[]) {
       ...new Set(artifactAudits.flatMap((artifact) => artifact.missing_fields)),
     ].sort(),
     failed_checks: failedChecks,
+    snapshot_summaries: snapshotSummaries,
+    latest_snapshot_summary: latestSnapshotSummary,
     artifact_proof: proof,
     artifacts: artifactAudits,
     exit_code: failedChecks.length === 0 || options.soft ? 0 : 1,
