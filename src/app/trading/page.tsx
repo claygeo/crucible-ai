@@ -62,6 +62,13 @@ function proofSummaryClass(status: string) {
   return "text-text-muted";
 }
 
+function proofQualityClass(grade: string) {
+  if (grade === "reviewable") return "text-positive";
+  if (grade === "developing") return "text-accent";
+  if (grade === "thin") return "text-warn";
+  return "text-text-muted";
+}
+
 function persistenceStatusClass(status: string) {
   if (status === "available") return "text-positive";
   if (status === "table_missing") return "text-warn";
@@ -126,6 +133,10 @@ function shortDate(value: string | null) {
 
 function edgePoints(n: number) {
   return `${Math.round(n * 100)}pp`;
+}
+
+function dailyProfitFactor(value: number | null) {
+  return value === null || !Number.isFinite(value) ? "-" : value.toFixed(2);
 }
 
 const SAMPLE_LABELS = {
@@ -1146,6 +1157,13 @@ export default async function TradingPage({
                                 >
                                   {row.proof_status_label}
                                 </span>
+                                <div
+                                  className={`mt-1 mono text-[10px] uppercase tracking-wider ${proofQualityClass(
+                                    row.evidence_grade
+                                  )}`}
+                                >
+                                  {row.evidence_grade_label}
+                                </div>
                                 {row.blockers[0] ? (
                                   <div className="mt-1 mono text-[10px] text-text-muted normal-case tracking-normal">
                                     {row.blockers[0]}
@@ -1164,6 +1182,14 @@ export default async function TradingPage({
                               <td className="py-3 px-3 mono text-right text-text-secondary">
                                 {int(row.resolved_trades)}/
                                 {int(row.required_resolved_trades)}
+                                <div
+                                  className={`mt-1 text-[10px] ${proofQualityClass(
+                                    row.evidence_grade
+                                  )}`}
+                                >
+                                  {pct(row.win_rate, 0)} win /{" "}
+                                  {dollars(row.avg_pnl_per_trade_usd, 2)}
+                                </div>
                               </td>
                               <td
                                 className={`py-3 px-3 mono text-right ${pnlClass(
@@ -1178,6 +1204,9 @@ export default async function TradingPage({
                                 )}`}
                               >
                                 {pct(row.window_roi_on_stake, 1)}
+                                <div className="mt-1 text-[10px] text-text-muted">
+                                  daily PF {dailyProfitFactor(row.daily_profit_factor)}
+                                </div>
                               </td>
                               <td className="py-3 pl-3 mono text-right text-text-secondary">
                                 {dollars(row.open_exposure_usd, 0)}
@@ -1216,6 +1245,7 @@ export default async function TradingPage({
                       const durableGate = rollup.durable_proof_gate;
                       const coverage = rollup.capture_coverage;
                       const proofWindow = rollup.proof_window;
+                      const proofQuality = rollup.proof_quality;
                       return (
                         <tr key={rollup.strategy_id}>
                           <td className="py-3 pr-3">
@@ -1261,6 +1291,13 @@ export default async function TradingPage({
                             >
                               {durableGate.status_label}
                             </span>
+                            <div
+                              className={`mt-1 mono text-[10px] uppercase tracking-wider ${proofQualityClass(
+                                proofQuality.evidence_grade
+                              )}`}
+                            >
+                              {proofQuality.evidence_grade_label}
+                            </div>
                             {durableGate.blockers[0] ? (
                               <div className="mt-1 mono text-[10px] text-text-muted normal-case tracking-normal">
                                 {durableGate.blockers[0]}
@@ -1269,6 +1306,14 @@ export default async function TradingPage({
                           </td>
                           <td className="py-3 px-3 mono text-right text-text-secondary">
                             {int(durableGate.resolved_trades)}
+                            <div
+                              className={`mt-1 text-[10px] ${proofQualityClass(
+                                proofQuality.evidence_grade
+                              )}`}
+                            >
+                              {pct(proofQuality.win_rate, 0)} win /{" "}
+                              {dollars(proofQuality.avg_pnl_per_trade_usd, 2)}
+                            </div>
                           </td>
                           <td className="py-3 px-3 mono text-right text-warn">
                             {int(rollup.latest_skipped_trades)}
@@ -1281,6 +1326,10 @@ export default async function TradingPage({
                             {dollars(durableGate.resolved_net_pnl_usd, 0)}
                             <div className="mt-1 text-[10px] text-text-muted">
                               {pct(durableGate.resolved_roi_on_stake, 1)}
+                            </div>
+                            <div className="mt-1 text-[10px] text-text-muted">
+                              daily PF{" "}
+                              {dailyProfitFactor(proofQuality.daily_profit_factor)}
                             </div>
                           </td>
                           <td className="py-3 pl-3 mono text-right text-text-secondary">
