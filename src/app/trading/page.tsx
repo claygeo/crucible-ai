@@ -3631,7 +3631,8 @@ export default async function TradingPage({
                           {source.source_label}
                         </div>
                         <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                          {source.missing_fields.length} required fields missing
+                          {int(source.execution_quality_sample_count)} sampled /{" "}
+                          {int(source.missing_fields.length)} missing
                         </div>
                       </td>
                       <td className="py-3 px-3 mono text-right text-text-secondary">
@@ -3649,8 +3650,17 @@ export default async function TradingPage({
                         {int(source.recent_resolved_trades)} /{" "}
                         {dollars(source.recent_resolved_net_pnl_usd, 0)}
                       </td>
-                      <td className="py-3 px-3 mono text-right text-warn">
-                        missing
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {int(source.available_fields.length)}/
+                        {int(
+                          source.available_fields.length +
+                            source.missing_fields.length
+                        )}
+                        <div className="text-[10px] uppercase tracking-wider text-warn">
+                          {source.missing_fields.length > 0
+                            ? `${int(source.missing_fields.length)} missing`
+                            : "complete"}
+                        </div>
                       </td>
                       <td className="py-3 pl-3 text-right">
                         <span
