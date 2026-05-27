@@ -157,7 +157,10 @@ The 30-day proof window now has a durable audit surface:
   those checks pass, the command emits `artifact_proof`, a read-only proof
   summary, readiness/runway report, agent-edge proof matrix, and top strategy
   rollups built from downloaded rows with the same durable proof logic used for
-  Supabase-backed snapshots.
+  Supabase-backed snapshots. If `paper-snapshot-result.json` is present in the
+  same artifact bundle, artifact proof readiness also imports its live
+  resolution-hygiene context so review-required open markets block the
+  artifact-only capital gate.
 - `/api/trading.json` includes `persistence`, `persisted_daily_snapshots`, and
   `persisted_strategy_rollups` so the public feed shows both current
   request-derived math and stored evidence.
