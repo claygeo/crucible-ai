@@ -283,6 +283,9 @@ export default async function TradingPage({
   const skippedExposureEntries = exposureLedger.recent_entries.filter(
     (entry) => entry.status === "skipped_exposure_cap"
   );
+  const skippedResolvedExposureEntries = skippedExposureEntries.filter(
+    (entry) => entry.missed_pnl_usd !== null
+  );
   const selectedQuery = tradingControlsToQuery(snapshot.controls);
   const jsonHref = `/api/trading.json?${selectedQuery}`;
   const snapshotJsonHref = "/api/trading-snapshots?limit=1000";
@@ -2651,7 +2654,7 @@ export default async function TradingPage({
               selected config
             </span>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Cap
@@ -2678,6 +2681,22 @@ export default async function TradingPage({
             </div>
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Skipped resolved
+              </div>
+              <div className="heading text-2xl text-warn mt-1">
+                {int(exposureLedger.skipped_resolved_trades)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Missed P&amp;L
+              </div>
+              <div className={`heading text-2xl mt-1 ${pnlClass(exposureLedger.skipped_resolved_net_pnl_usd)}`}>
+                {dollars(exposureLedger.skipped_resolved_net_pnl_usd, 0)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Current risk
               </div>
               <div className="heading text-2xl text-text-primary mt-1">
@@ -2698,7 +2717,8 @@ export default async function TradingPage({
               The selected strategy is replayed chronologically. A paper ticket is
               accepted only if its maximum loss keeps simultaneous open risk under
               the cap. Skipped signals remain visible so profitable-looking rules
-              cannot hide capacity problems.
+              cannot hide capacity problems. Resolved skipped tickets count as
+              missed P&amp;L, not proof P&amp;L.
             </p>
             <div className="flex flex-col gap-2">
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
@@ -2722,12 +2742,26 @@ export default async function TradingPage({
                         <span>
                           before {dollars(entry.open_exposure_before_usd, 0)}
                         </span>
+                        {entry.missed_pnl_usd !== null ? (
+                          <span className={pnlClass(entry.missed_pnl_usd)}>
+                            missed {dollars(entry.missed_pnl_usd, 2)}
+                          </span>
+                        ) : (
+                          <span>EV {dollars(entry.expected_pnl_usd, 2)}</span>
+                        )}
                         <span className="text-warn">skipped</span>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+              {skippedResolvedExposureEntries.length > 0 ? (
+                <div className="mono text-[11px] text-warn bg-warn/10 rounded px-2 py-1">
+                  {int(skippedResolvedExposureEntries.length)} skipped signal
+                  {skippedResolvedExposureEntries.length === 1 ? "" : "s"} have
+                  since resolved; they are capacity leakage, not realized proof.
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
