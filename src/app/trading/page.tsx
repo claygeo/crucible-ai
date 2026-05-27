@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
+import { buildPaperTradingAgentEdgeDossier } from "@/lib/trading-agent-edge-dossier";
 import { buildPaperTradingAgentEdgeEvidenceTimeline } from "@/lib/trading-agent-edge-evidence";
 import { buildPaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
 import {
@@ -377,6 +378,15 @@ export default async function TradingPage({
     selectedAgentId: snapshot.controls.agent_id,
     selectedMinEdge: snapshot.controls.min_edge,
   });
+  const agentEdgeDossier = buildPaperTradingAgentEdgeDossier({
+    agentEdgeProof,
+    evidenceTimeline: agentEdgeEvidenceTimeline,
+    tradeLedger: snapshot.agent_edge_trade_ledger,
+    runway: snapshot.agent_edge_runway,
+    watchlist: snapshot.agent_edge_watchlist,
+    selectedAgentId: snapshot.controls.agent_id,
+    selectedMinEdge: snapshot.controls.min_edge,
+  });
   const proofAudit = buildPaperTradingProofAudit({
     snapshot,
     persisted,
@@ -459,6 +469,7 @@ export default async function TradingPage({
   const labStatusJsonHref = `/api/trading-lab-status?${selectedQuery}`;
   const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
   const agentEdgeEvidenceJsonHref = `/api/trading-agent-edge-evidence?${selectedQuery}`;
+  const agentEdgeDossierJsonHref = `/api/trading-agent-edge-dossier?${selectedQuery}`;
   const agentEdgeTradesJsonHref = `/api/trading-agent-edge-trades?${selectedQuery}`;
   const agentEdgeWatchlistJsonHref = `/api/trading-agent-edge-watchlist?${selectedQuery}`;
   const agentEdgeRunwayJsonHref = `/api/trading-agent-edge-runway?${selectedQuery}`;
@@ -3629,6 +3640,166 @@ export default async function TradingPage({
                 </table>
               </div>
             )}
+          </div>
+
+          <div className="panel px-5 py-5 flex flex-col gap-4 min-w-0 lg:col-span-2">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="heading text-base text-text-primary">
+                  Selected rule dossier
+                </h2>
+                <p className="text-xs text-text-muted mt-1">
+                  {agentEdgeDossier.selection.strategy_label ??
+                    "No selected agent-edge rule"}{" "}
+                  / {agentEdgeDossier.source_label.toLowerCase()}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={agentEdgeDossierJsonHref}
+                  className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+                >
+                  dossier json
+                </Link>
+                <span
+                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${readinessStatusClass(
+                    agentEdgeDossier.status
+                  )}`}
+                >
+                  {agentEdgeDossier.status_label}
+                </span>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Days
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(agentEdgeDossier.summary.captured_days)}/
+                  {int(agentEdgeDossier.summary.required_captured_days)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Resolved
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(agentEdgeDossier.summary.resolved_trades)}/
+                  {int(agentEdgeDossier.summary.required_resolved_trades)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  P&amp;L
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${pnlClass(
+                    agentEdgeDossier.summary.window_pnl_usd
+                  )}`}
+                >
+                  {dollars(agentEdgeDossier.summary.window_pnl_usd, 0)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  ROI
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${pnlClass(
+                    agentEdgeDossier.summary.window_roi_on_stake
+                  )}`}
+                >
+                  {pct(agentEdgeDossier.summary.window_roi_on_stake, 1)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Open
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(agentEdgeDossier.summary.tradable_open_signals)}/
+                  {int(agentEdgeDossier.summary.open_signals)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Gap
+                </div>
+                <div className="heading text-xl text-warn mt-1">
+                  {int(agentEdgeDossier.summary.sample_gap_after_open)}
+                </div>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-5 gap-3 border-t border-border-subtle pt-3">
+              {agentEdgeDossier.checks.map((item) => (
+                <div key={item.id} className="min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="mono text-[10px] uppercase tracking-wider text-text-muted truncate">
+                      {item.label}
+                    </div>
+                    <span
+                      className={`mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shrink-0 ${readinessStatusClass(
+                        item.status
+                      )}`}
+                    >
+                      {item.status}
+                    </span>
+                  </div>
+                  <div className="heading text-lg text-text-primary mt-2">
+                    {item.current}
+                  </div>
+                  <div className="text-[11px] text-text-muted mt-1">
+                    target {item.target}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 border-t border-border-subtle pt-3">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Open capacity
+                </div>
+                <div className="text-sm text-text-secondary mt-1">
+                  {int(agentEdgeDossier.summary.pending_resolution_capacity)}{" "}
+                  tickets pending resolution
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Recent evidence
+                </div>
+                <div className="text-sm text-text-secondary mt-1">
+                  {int(agentEdgeDossier.summary.recent_evidence_day_count)} days
+                  / {int(agentEdgeDossier.summary.recent_resolved_trade_count)}{" "}
+                  resolved tickets
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Missed P&amp;L
+                </div>
+                <div
+                  className={`text-sm mt-1 ${pnlClass(
+                    agentEdgeDossier.summary.skipped_resolved_net_pnl_usd
+                  )}`}
+                >
+                  {dollars(
+                    agentEdgeDossier.summary.skipped_resolved_net_pnl_usd,
+                    0
+                  )}{" "}
+                  excluded from proof
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Next action
+                </div>
+                <div className="text-sm text-text-secondary mt-1">
+                  {agentEdgeDossier.next_required_action}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="panel px-5 py-5 flex flex-col gap-4 min-w-0 lg:col-span-2">
