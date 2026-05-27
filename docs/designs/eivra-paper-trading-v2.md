@@ -178,6 +178,11 @@ The 30-day proof window now has a durable audit surface:
   persisting Supabase rows or publishing artifact-only GitHub evidence. The
   payload is sanitized, carries no credentials, and always reports
   `paper_only: true` plus `real_money_execution_allowed: false`.
+- `GET /api/trading-evidence-sla` reports the 30-day lab's capture health as
+  `on_track`, `collecting`, `degraded`, `blocked`, or `unavailable`. It joins
+  Supabase rows, the latest public artifact proof, write mode, registry sync,
+  and current resolution hygiene into a read-only operator SLA with explicit
+  violations and next action.
 - `GET /api/trading-artifacts` reads the public GitHub Actions API and reports
   the latest paper-proof workflow run, matching artifact bundle, expiry, run
   URL, and download command. `/api/trading.json`, `GET /api/trading-snapshots`,

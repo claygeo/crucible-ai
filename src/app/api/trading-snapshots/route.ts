@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
 import {
+  buildPaperTradingEvidenceSla,
   buildPaperTradingWriteReadiness,
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
@@ -56,6 +57,11 @@ export async function GET(request: NextRequest) {
     artifactWorkflow,
     publishedArtifactProof,
   });
+  const evidenceSla = buildPaperTradingEvidenceSla({
+    persistence: history,
+    publishedArtifactProof,
+    writeReadiness,
+  });
   const resolutionReviewQueue = buildResolutionReviewQueue({
     publishedArtifactProof,
   });
@@ -81,6 +87,7 @@ export async function GET(request: NextRequest) {
         github_artifact_workflow: artifactWorkflow,
         published_artifact_proof: publishedArtifactProof,
         write_readiness: writeReadiness,
+        evidence_sla: evidenceSla,
         agent_edge_proof_matrix: history.agent_edge_proof_matrix,
       },
       proof_summary: history.proof_summary,
@@ -92,6 +99,7 @@ export async function GET(request: NextRequest) {
       github_artifact_workflow: artifactWorkflow,
       published_artifact_proof: publishedArtifactProof,
       paper_write_readiness: writeReadiness,
+      paper_evidence_sla: evidenceSla,
       capture_calendar: history.capture_calendar,
       agent_edge_proof_matrix: history.agent_edge_proof_matrix,
       count: history.snapshots.length,

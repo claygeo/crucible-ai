@@ -1,6 +1,15 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { PAPER_TRADING_ARTIFACT_CONTRACT } from "@/lib/trading-snapshots";
+import {
+  PAPER_TRADING_PROOF_RULES,
+  type TradingResolutionWatch,
+} from "@/lib/trading";
+import {
+  PAPER_TRADING_ARTIFACT_CONTRACT,
+  type PaperTradingCaptureCalendarDay,
+  type PaperTradingPersistenceRead,
+  type PaperTradingStrategyRegistrySync,
+} from "@/lib/trading-snapshots";
 
 const GITHUB_API_BASE = "https://api.github.com";
 const GITHUB_USER_AGENT = "eivra-paper-proof-lab";
@@ -111,6 +120,69 @@ export type PaperTradingWriteReadiness = {
   latest_workflow_run_url: string | null;
   latest_published_at: string | null;
   blockers: string[];
+};
+
+export type PaperTradingEvidenceSlaStatus =
+  | "on_track"
+  | "collecting"
+  | "degraded"
+  | "blocked"
+  | "unavailable";
+
+export type PaperTradingEvidenceSlaViolation = {
+  id:
+    | "persistence"
+    | "artifact_proof"
+    | "write_mode"
+    | "capture_freshness"
+    | "capture_calendar"
+    | "registry_sync"
+    | "resolution_hygiene";
+  severity: "info" | "warning" | "blocking";
+  label: string;
+  current: string;
+  target: string;
+  detail: string;
+};
+
+export type PaperTradingEvidenceSla = {
+  schema_version: "1";
+  generated_at: string;
+  status: PaperTradingEvidenceSlaStatus;
+  status_label: string;
+  message: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  proof_window_days: number;
+  schedule_cron_utc: string;
+  scheduled_time_utc: string;
+  stale_after_hours: number;
+  data_source_status:
+    | "supabase_and_artifacts"
+    | "supabase_only"
+    | "artifact_only"
+    | "none";
+  latest_snapshot_date: string | null;
+  latest_captured_at: string | null;
+  next_expected_capture_at: string | null;
+  complete_days: number;
+  partial_days: number;
+  missing_days: number;
+  coverage_ratio: number;
+  current_streak_days: number;
+  days_remaining_to_30: number;
+  expected_live_strategy_count: number;
+  persisted_row_count: number;
+  artifact_live_row_count: number | null;
+  artifact_proof_status: PublishedPaperTradingArtifactProof["status"];
+  write_mode_status: PaperTradingWriteReadinessStatus;
+  write_enabled: boolean | null;
+  effective_dry_run: boolean | null;
+  registry_sync_status: PaperTradingStrategyRegistrySync["status"] | null;
+  review_required_live_signals: number | null;
+  violations: PaperTradingEvidenceSlaViolation[];
+  recent_calendar_days: PaperTradingCaptureCalendarDay[];
 };
 
 type GitHubRunPayload = {
@@ -251,6 +323,284 @@ export function buildPaperTradingWriteReadiness(args: {
     latest_workflow_run_url: latestRun?.html_url ?? null,
     latest_published_at: args.publishedArtifactProof.generated_at,
     blockers,
+  };
+}
+
+function evidenceSlaStatusLabel(status: PaperTradingEvidenceSlaStatus): string {
+  if (status === "on_track") return "On track";
+  if (status === "collecting") return "Collecting";
+  if (status === "degraded") return "Degraded";
+  if (status === "blocked") return "Blocked";
+  return "Unavailable";
+}
+
+function evidenceSlaDataSource(args: {
+  hasPersistedRows: boolean;
+  hasArtifactProof: boolean;
+}): PaperTradingEvidenceSla["data_source_status"] {
+  if (args.hasPersistedRows && args.hasArtifactProof) {
+    return "supabase_and_artifacts";
+  }
+  if (args.hasPersistedRows) return "supabase_only";
+  if (args.hasArtifactProof) return "artifact_only";
+  return "none";
+}
+
+function evidenceSlaLatestSnapshotDate(args: {
+  persistence: PaperTradingPersistenceRead;
+  publishedArtifactProof: PublishedPaperTradingArtifactProof;
+}): string | null {
+  const latestPersisted =
+    args.persistence.snapshots
+      .map((snapshot) => snapshot.snapshot_date)
+      .filter((date) => typeof date === "string" && date.length > 0)
+      .sort((a, b) => b.localeCompare(a))[0] ?? null;
+  const artifactAudit = args.publishedArtifactProof.artifact_audit;
+  return (
+    latestPersisted ??
+    nullableString(artifactAudit?.latest_snapshot_date) ??
+    null
+  );
+}
+
+function evidenceSlaNextAction(
+  status: PaperTradingEvidenceSlaStatus,
+  violations: PaperTradingEvidenceSlaViolation[],
+  daysRemaining: number,
+): string {
+  const firstBlocking = violations.find(
+    (violation) => violation.severity === "blocking",
+  );
+  const firstWarning = violations.find(
+    (violation) => violation.severity === "warning",
+  );
+  if (status === "unavailable") {
+    return "Restore Supabase reads or a published GitHub proof artifact before trusting the 30-day lab.";
+  }
+  if (status === "blocked" && firstBlocking) {
+    return firstBlocking.detail;
+  }
+  if (status === "degraded" && firstWarning) {
+    return firstWarning.detail;
+  }
+  if (status === "collecting") {
+    return `Collect ${daysRemaining} more complete daily proof capture${
+      daysRemaining === 1 ? "" : "s"
+    }.`;
+  }
+  return "Keep daily proof captures landing on schedule; execution remains disabled.";
+}
+
+export function buildPaperTradingEvidenceSla(args: {
+  persistence: PaperTradingPersistenceRead;
+  publishedArtifactProof: PublishedPaperTradingArtifactProof;
+  writeReadiness: PaperTradingWriteReadiness;
+  registrySync?: PaperTradingStrategyRegistrySync | null;
+  resolutionWatch?: TradingResolutionWatch | null;
+  generatedAt?: string;
+}): PaperTradingEvidenceSla {
+  const artifactAudit = args.publishedArtifactProof.artifact_audit;
+  const artifactLiveRowCount = nullableNumber(artifactAudit?.live_row_count);
+  const hasArtifactProof = args.publishedArtifactProof.status === "available";
+  const hasPersistedRows = args.persistence.snapshots.length > 0;
+  const dataSourceStatus = evidenceSlaDataSource({
+    hasPersistedRows,
+    hasArtifactProof,
+  });
+  const violations: PaperTradingEvidenceSlaViolation[] = [];
+
+  if (args.persistence.status !== "available") {
+    violations.push({
+      id: "persistence",
+      severity: hasArtifactProof ? "warning" : "blocking",
+      label: "Supabase proof log",
+      current: args.persistence.status.replace("_", " "),
+      target: "available persisted proof rows",
+      detail: hasArtifactProof
+        ? "Supabase proof rows are unavailable, so the lab is relying on the latest public GitHub artifact proof."
+        : args.persistence.message,
+    });
+  } else if (!hasPersistedRows) {
+    violations.push({
+      id: "persistence",
+      severity: "info",
+      label: "Supabase proof log",
+      current: "0 rows",
+      target: "daily proof rows",
+      detail:
+        "Supabase is reachable, but no persisted paper proof rows are available yet.",
+    });
+  }
+
+  if (!hasArtifactProof) {
+    violations.push({
+      id: "artifact_proof",
+      severity: hasPersistedRows ? "warning" : "blocking",
+      label: "Published artifact proof",
+      current: args.publishedArtifactProof.status_label,
+      target: "available latest public proof JSON",
+      detail: args.publishedArtifactProof.message,
+    });
+  }
+
+  if (args.writeReadiness.status !== "persisting") {
+    violations.push({
+      id: "write_mode",
+      severity:
+        args.writeReadiness.status === "artifact_only" ? "warning" : "blocking",
+      label: "Snapshot write mode",
+      current: args.writeReadiness.status_label,
+      target: "persisting Supabase rows",
+      detail: args.writeReadiness.next_required_action,
+    });
+  }
+
+  if (args.persistence.status === "available") {
+    const health = args.persistence.capture_health;
+    if (health.status === "waiting_first_capture") {
+      violations.push({
+        id: "capture_freshness",
+        severity: "info",
+        label: "Daily capture freshness",
+        current: health.status_label,
+        target: "fresh daily capture",
+        detail: health.message,
+      });
+    } else if (health.status !== "fresh") {
+      violations.push({
+        id: "capture_freshness",
+        severity: "blocking",
+        label: "Daily capture freshness",
+        current: health.status_label,
+        target: "fresh daily capture",
+        detail: health.message,
+      });
+    }
+
+    const calendar = args.persistence.capture_calendar;
+    if (calendar.missing_days > 0 || calendar.partial_days > 0) {
+      violations.push({
+        id: "capture_calendar",
+        severity: "blocking",
+        label: "Capture calendar",
+        current: `${calendar.complete_days} complete / ${calendar.partial_days} partial / ${calendar.missing_days} missing`,
+        target: "0 partial or missing proof days",
+        detail:
+          "Repair missing or partial daily captures before treating the proof window as continuous.",
+      });
+    }
+  }
+
+  if (args.registrySync && args.registrySync.status !== "synced") {
+    violations.push({
+      id: "registry_sync",
+      severity:
+        args.registrySync.status === "pending_capture" &&
+        dataSourceStatus !== "artifact_only"
+          ? "blocking"
+          : "warning",
+      label: "Strategy registry sync",
+      current: args.registrySync.status_label,
+      target: "current live strategy registry captured",
+      detail: args.registrySync.message,
+    });
+  }
+
+  if (
+    args.resolutionWatch &&
+    args.resolutionWatch.review_required_live_signals > 0
+  ) {
+    violations.push({
+      id: "resolution_hygiene",
+      severity: "warning",
+      label: "Resolution hygiene",
+      current: `${args.resolutionWatch.review_required_live_signals} needs review`,
+      target: "0 review-required live paper markets",
+      detail:
+        "Investigate overdue or unknown-close live paper markets before trusting open EV.",
+    });
+  }
+
+  const hasBlocking = violations.some(
+    (violation) => violation.severity === "blocking",
+  );
+  const hasWarning = violations.some(
+    (violation) => violation.severity === "warning",
+  );
+  const daysRemaining = Math.max(
+    0,
+    args.persistence.capture_calendar.days_remaining_to_30,
+  );
+  const status: PaperTradingEvidenceSlaStatus =
+    dataSourceStatus === "none"
+      ? "unavailable"
+      : hasBlocking
+        ? "blocked"
+        : hasWarning
+          ? "degraded"
+          : daysRemaining > 0
+            ? "collecting"
+            : "on_track";
+  const latestSnapshotDate = evidenceSlaLatestSnapshotDate({
+    persistence: args.persistence,
+    publishedArtifactProof: args.publishedArtifactProof,
+  });
+  const nextRequiredAction = evidenceSlaNextAction(
+    status,
+    violations,
+    daysRemaining,
+  );
+
+  return {
+    schema_version: "1",
+    generated_at: args.generatedAt ?? new Date().toISOString(),
+    status,
+    status_label: evidenceSlaStatusLabel(status),
+    message:
+      status === "on_track"
+        ? "The 30-day paper evidence window is complete and current."
+        : status === "collecting"
+          ? "Daily evidence capture is healthy, but the 30-day proof window is still filling."
+          : status === "degraded"
+            ? "The lab has usable evidence, but at least one proof source needs attention."
+            : status === "blocked"
+              ? "The evidence trail has a blocker that must be repaired before the proof window is trusted."
+              : "No usable paper evidence source is currently available.",
+    next_required_action: nextRequiredAction,
+    paper_only: true,
+    real_money_execution_allowed: false,
+    proof_window_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+    schedule_cron_utc: PAPER_TRADING_ARTIFACT_CONTRACT.schedule_cron_utc,
+    scheduled_time_utc: PAPER_TRADING_ARTIFACT_CONTRACT.scheduled_time_utc,
+    stale_after_hours: args.persistence.capture_health.stale_after_hours,
+    data_source_status: dataSourceStatus,
+    latest_snapshot_date: latestSnapshotDate,
+    latest_captured_at:
+      args.persistence.latest_captured_at ??
+      args.publishedArtifactProof.generated_at,
+    next_expected_capture_at:
+      args.persistence.capture_health.next_expected_capture_at ?? null,
+    complete_days: args.persistence.capture_calendar.complete_days,
+    partial_days: args.persistence.capture_calendar.partial_days,
+    missing_days: args.persistence.capture_calendar.missing_days,
+    coverage_ratio: args.persistence.capture_calendar.coverage_ratio,
+    current_streak_days: args.persistence.capture_calendar.current_streak_days,
+    days_remaining_to_30: daysRemaining,
+    expected_live_strategy_count:
+      args.persistence.capture_calendar.expected_live_strategy_count,
+    persisted_row_count: args.persistence.snapshots.length,
+    artifact_live_row_count: artifactLiveRowCount,
+    artifact_proof_status: args.publishedArtifactProof.status,
+    write_mode_status: args.writeReadiness.status,
+    write_enabled: args.writeReadiness.write_enabled,
+    effective_dry_run: args.writeReadiness.effective_dry_run,
+    registry_sync_status: args.registrySync?.status ?? null,
+    review_required_live_signals:
+      args.resolutionWatch?.review_required_live_signals ?? null,
+    violations,
+    recent_calendar_days: args.persistence.capture_calendar.days
+      .slice(-7)
+      .reverse(),
   };
 }
 
