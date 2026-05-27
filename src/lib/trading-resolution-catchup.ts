@@ -550,9 +550,7 @@ function stakeForTrade(
   const denominator = side === "YES" ? 1 - entryPrice : entryPrice;
   const fullKelly = denominator > 0 ? Math.abs(edge) / denominator : 0;
   const rawStake =
-    PAPER_TRADING_CONFIG.bankrollUsd *
-    PAPER_TRADING_CONFIG.kellyFraction *
-    fullKelly;
+    controls.bankroll_usd * PAPER_TRADING_CONFIG.kellyFraction * fullKelly;
   return round2(
     Math.min(
       controls.max_stake_usd,
