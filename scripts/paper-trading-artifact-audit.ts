@@ -870,6 +870,59 @@ async function buildReport(options: CliOptions, files: string[]) {
         (a, b) =>
           Date.parse(b.generated_at ?? "") - Date.parse(a.generated_at ?? ""),
       )[0] ?? null;
+  if (latestSnapshotSummary?.resolution_watch) {
+    const wouldTradeToday = latestSnapshotSummary.would_trade_today;
+    if (!wouldTradeToday) {
+      failedChecks.push({
+        path: latestSnapshotSummary.path,
+        code: "would_trade_today",
+        label: "Would-trade feed",
+        detail: "Snapshot summary is missing would_trade_today.",
+      });
+    } else {
+      const globalReviewRequired =
+        latestSnapshotSummary.resolution_watch.review_required_live_signals;
+      const feedGlobalReviewRequired =
+        wouldTradeToday.global_review_required_live_signals;
+      const feedStatus = wouldTradeToday.status;
+
+      if (
+        !isFiniteNumber(feedGlobalReviewRequired) ||
+        feedGlobalReviewRequired !== globalReviewRequired
+      ) {
+        failedChecks.push({
+          path: latestSnapshotSummary.path,
+          code: "would_trade_resolution_sync",
+          label: "Would-trade resolution sync",
+          detail: `Expected global review count ${globalReviewRequired}, got ${String(
+            feedGlobalReviewRequired,
+          )}.`,
+        });
+      }
+      if (globalReviewRequired > 0 && feedStatus !== "blocked") {
+        failedChecks.push({
+          path: latestSnapshotSummary.path,
+          code: "would_trade_blocked_status",
+          label: "Would-trade blocked status",
+          detail: `Expected would_trade_today.status=blocked while ${globalReviewRequired} live paper markets need review, got ${String(
+            feedStatus,
+          )}.`,
+        });
+      }
+      if (
+        wouldTradeToday.paper_only !== true ||
+        wouldTradeToday.real_money_execution_allowed !== false
+      ) {
+        failedChecks.push({
+          path: latestSnapshotSummary.path,
+          code: "would_trade_paper_only",
+          label: "Would-trade paper-only lock",
+          detail:
+            "would_trade_today must keep paper_only=true and real_money_execution_allowed=false.",
+        });
+      }
+    }
+  }
   const proof = await buildArtifactProof(
     artifactProofRows,
     failedChecks.length > 0,

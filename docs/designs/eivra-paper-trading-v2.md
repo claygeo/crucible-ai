@@ -215,7 +215,9 @@ The 30-day proof window now has a durable audit surface:
   candidates, top open tickets, and `paper_only: true` /
   `real_money_execution_allowed: false`. Snapshot artifacts carry the same
   payload so the daily proof log records what the lab would have watched without
-  creating an execution path.
+  creating an execution path. The feed also imports global resolution-hygiene
+  blockers, so it cannot present a clean watchlist while any live paper market
+  still needs resolution review.
 - `persistence.proof_runway` and the top-level `persisted_proof_runway` turn the
   same evidence into an operator timeline: earliest possible capital-review
   date, remaining capture days, remaining resolved live trades, open resolution

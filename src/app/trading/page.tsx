@@ -423,16 +423,16 @@ export default async function TradingPage({
             </div>
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                Review
+                Global review
               </div>
               <div
                 className={`heading text-2xl mt-1 ${
-                  wouldTradeToday.unique_review_required_signals > 0
+                  wouldTradeToday.global_review_required_live_signals > 0
                     ? "text-rose-400"
                     : "text-text-primary"
                 }`}
               >
-                {int(wouldTradeToday.unique_review_required_signals)}
+                {int(wouldTradeToday.global_review_required_live_signals)}
               </div>
             </div>
             <div>
@@ -465,6 +465,9 @@ export default async function TradingPage({
               execution: {wouldTradeToday.execution_recommendation.replaceAll("_", " ")}
             </span>
             <span>real money: disabled</span>
+            <span>
+              watchlist review: {int(wouldTradeToday.unique_review_required_signals)}
+            </span>
             <span>
               selected strategy: {wouldTradeToday.selected_strategy_id.replaceAll("_", " ")}
             </span>
