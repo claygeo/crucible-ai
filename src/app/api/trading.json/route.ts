@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getTradingSnapshot, parseTradingControls } from "@/lib/trading";
-import { loadPaperTradingArtifactWorkflowStatus } from "@/lib/trading-artifacts";
+import {
+  loadPaperTradingArtifactWorkflowStatus,
+  loadPublishedPaperTradingArtifactProof,
+} from "@/lib/trading-artifacts";
 import {
   buildPaperTradingProofEvidenceSources,
   buildPaperTradingProofReadiness,
@@ -14,11 +17,13 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   const controls = parseTradingControls(new URL(request.url).searchParams);
-  const [snapshot, persisted, artifactWorkflow] = await Promise.all([
-    getTradingSnapshot(controls),
-    loadPaperTradingSnapshotHistory(1000),
-    loadPaperTradingArtifactWorkflowStatus(5),
-  ]);
+  const [snapshot, persisted, artifactWorkflow, publishedArtifactProof] =
+    await Promise.all([
+      getTradingSnapshot(controls),
+      loadPaperTradingSnapshotHistory(1000),
+      loadPaperTradingArtifactWorkflowStatus(5),
+      loadPublishedPaperTradingArtifactProof(),
+    ]);
   const registrySync = buildPaperTradingStrategyRegistrySync(
     snapshot.strategy_variants,
     persisted.snapshots,
@@ -56,6 +61,7 @@ export async function GET(request: Request) {
       persisted_capture_calendar: persisted.capture_calendar,
       persisted_agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       github_artifact_workflow: artifactWorkflow,
+      published_artifact_proof: publishedArtifactProof,
       persistence: {
         status: persisted.status,
         message: persisted.message,
@@ -68,6 +74,7 @@ export async function GET(request: Request) {
         proof_runway: proofRunway,
         proof_evidence_sources: proofEvidenceSources,
         github_artifact_workflow: artifactWorkflow,
+        published_artifact_proof: publishedArtifactProof,
         agent_edge_proof_matrix: persisted.agent_edge_proof_matrix,
       },
       persisted_registry_sync: registrySync,

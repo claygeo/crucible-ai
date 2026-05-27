@@ -1,8 +1,12 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { PAPER_TRADING_ARTIFACT_CONTRACT } from "@/lib/trading-snapshots";
 
 const GITHUB_API_BASE = "https://api.github.com";
 const GITHUB_USER_AGENT = "eivra-paper-proof-lab";
 const DEFAULT_RECENT_RUN_LIMIT = 5;
+const PUBLISHED_PROOF_PATH = "public/paper-trading/latest-artifact-proof.json";
+const PUBLISHED_PROOF_URL = "/paper-trading/latest-artifact-proof.json";
 
 export type PaperTradingWorkflowArtifactStatus =
   | "available"
@@ -51,6 +55,30 @@ export type PaperTradingArtifactWorkflowStatus = {
   latest_run: PaperTradingWorkflowRun | null;
   latest_successful_artifact_run: PaperTradingWorkflowRun | null;
   recent_runs: PaperTradingWorkflowRun[];
+  error: string | null;
+};
+
+export type PublishedPaperTradingArtifactProof = {
+  status: "available" | "blocked" | "unavailable";
+  status_label: string;
+  generated_at: string | null;
+  source: string | null;
+  message: string;
+  next_required_action: string;
+  path: string;
+  url: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  repository: string | null;
+  workflow_path: string | null;
+  workflow_run: Record<string, unknown> | null;
+  artifact_audit: Record<string, unknown> | null;
+  artifact_proof: Record<string, unknown> | null;
+  proof_summary: Record<string, unknown> | null;
+  proof_readiness: Record<string, unknown> | null;
+  proof_runway: Record<string, unknown> | null;
+  agent_edge_proof_matrix: unknown[];
+  top_strategy_rollups: unknown[];
   error: string | null;
 };
 
@@ -119,6 +147,16 @@ function nullableNumber(value: unknown): number | null {
 
 function booleanOrNull(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
+}
+
+function objectOrNull(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function arrayOrEmpty(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
 }
 
 function workflowFileName(): string {
@@ -318,6 +356,126 @@ function unavailableWorkflowStatus(
     recent_runs: [],
     error: error instanceof Error ? error.message : String(error),
   };
+}
+
+function unavailablePublishedProof(
+  message: string,
+  error: string | null,
+): PublishedPaperTradingArtifactProof {
+  return {
+    status: "unavailable",
+    status_label: "Unavailable",
+    generated_at: null,
+    source: null,
+    message,
+    next_required_action:
+      "Wait for the paper proof workflow to publish latest-artifact-proof.json.",
+    path: PUBLISHED_PROOF_PATH,
+    url: PUBLISHED_PROOF_URL,
+    paper_only: true,
+    real_money_execution_allowed: false,
+    repository: PAPER_TRADING_ARTIFACT_CONTRACT.repository,
+    workflow_path: PAPER_TRADING_ARTIFACT_CONTRACT.workflow_path,
+    workflow_run: null,
+    artifact_audit: null,
+    artifact_proof: null,
+    proof_summary: null,
+    proof_readiness: null,
+    proof_runway: null,
+    agent_edge_proof_matrix: [],
+    top_strategy_rollups: [],
+    error,
+  };
+}
+
+export async function loadPublishedPaperTradingArtifactProof(): Promise<PublishedPaperTradingArtifactProof> {
+  try {
+    const raw = await readFile(
+      join(process.cwd(), PUBLISHED_PROOF_PATH),
+      "utf8",
+    );
+    const payload = JSON.parse(raw) as unknown;
+    const proof = objectOrNull(payload);
+    if (!proof) {
+      return unavailablePublishedProof(
+        "Published proof JSON is not an object.",
+        null,
+      );
+    }
+    const artifactProof = objectOrNull(proof.artifact_proof);
+    const artifactAudit = objectOrNull(proof.artifact_audit);
+    const proofReadiness = objectOrNull(artifactProof?.proof_readiness);
+    const proofRunway = objectOrNull(artifactProof?.proof_runway);
+    const proofSummary = objectOrNull(artifactProof?.proof_summary);
+    const paperOnly =
+      proof.paper_only === true && artifactProof?.paper_only === true;
+    const executionDisabled =
+      proof.real_money_execution_allowed === false &&
+      artifactProof?.real_money_execution_allowed === false;
+
+    if (!paperOnly || !executionDisabled) {
+      return unavailablePublishedProof(
+        "Published proof failed the paper-only execution lock.",
+        null,
+      );
+    }
+
+    const isPlaceholder = proof.source === "placeholder";
+    const artifactProofStatus = stringValue(
+      artifactProof?.status,
+      "unavailable",
+    );
+    const status: PublishedPaperTradingArtifactProof["status"] = isPlaceholder
+      ? "unavailable"
+      : artifactProofStatus === "available"
+        ? "available"
+        : "blocked";
+    const nextRequiredAction =
+      stringValue(proofReadiness?.next_required_action) ||
+      stringValue(artifactProof?.message) ||
+      "Audit the latest published artifact proof before treating it as durable evidence.";
+
+    return {
+      status,
+      status_label:
+        status === "available"
+          ? "Published proof available"
+          : status === "blocked"
+            ? "Published proof blocked"
+            : "Unavailable",
+      generated_at: nullableString(proof.generated_at),
+      source: nullableString(proof.source),
+      message: isPlaceholder
+        ? "No published artifact proof has been generated yet."
+        : stringValue(
+            artifactProof?.message,
+            "Latest artifact proof JSON is published.",
+          ),
+      next_required_action: nextRequiredAction,
+      path: PUBLISHED_PROOF_PATH,
+      url: PUBLISHED_PROOF_URL,
+      paper_only: true,
+      real_money_execution_allowed: false,
+      repository: nullableString(proof.repository),
+      workflow_path: nullableString(proof.workflow_path),
+      workflow_run: objectOrNull(proof.workflow_run),
+      artifact_audit: artifactAudit,
+      artifact_proof: artifactProof,
+      proof_summary: proofSummary,
+      proof_readiness: proofReadiness,
+      proof_runway: proofRunway,
+      agent_edge_proof_matrix: arrayOrEmpty(
+        artifactProof?.agent_edge_proof_matrix,
+      ),
+      top_strategy_rollups: arrayOrEmpty(artifactProof?.top_strategy_rollups),
+      error: null,
+    };
+  } catch (error) {
+    return unavailablePublishedProof(
+      "Published proof JSON is not available.",
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 }
 
 export async function loadPaperTradingArtifactWorkflowStatus(
