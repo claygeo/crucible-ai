@@ -93,6 +93,7 @@ type SnapshotSummaryContext = {
   generated_at: string | null;
   snapshot_date: string | null;
   resolution_watch: TradingResolutionWatch | null;
+  strategy_registry: Record<string, unknown> | null;
   status: "available" | "missing" | "error";
   message: string;
 };
@@ -282,6 +283,7 @@ function readSnapshotSummary(
           generated_at: null,
           snapshot_date: null,
           resolution_watch: null,
+          strategy_registry: null,
           status: "missing",
           message: "Snapshot summary file was not found.",
         }
@@ -297,6 +299,7 @@ function readSnapshotSummary(
         generated_at: null,
         snapshot_date: null,
         resolution_watch: null,
+        strategy_registry: null,
         status: "error",
         message: "Snapshot summary JSON is not an object.",
       };
@@ -304,12 +307,16 @@ function readSnapshotSummary(
     const resolutionWatch = isRecord(parsed.resolution_watch)
       ? (parsed.resolution_watch as unknown as TradingResolutionWatch)
       : null;
+    const strategyRegistry = isRecord(parsed.strategy_registry)
+      ? parsed.strategy_registry
+      : null;
     return {
       path,
       source: optionalString(parsed.source),
       generated_at: optionalString(parsed.generated_at),
       snapshot_date: optionalString(parsed.snapshot_date),
       resolution_watch: resolutionWatch,
+      strategy_registry: strategyRegistry,
       status: resolutionWatch ? "available" : "error",
       message: resolutionWatch
         ? "Snapshot summary resolution context loaded."
@@ -322,6 +329,7 @@ function readSnapshotSummary(
       generated_at: null,
       snapshot_date: null,
       resolution_watch: null,
+      strategy_registry: null,
       status: "error",
       message: error instanceof Error ? error.message : String(error),
     };
@@ -693,6 +701,7 @@ async function buildArtifactProof(
   proofRows: PaperTradingSnapshotRow[],
   blocked: boolean,
   resolutionWatch: TradingResolutionWatch | null,
+  strategyRegistry: Record<string, unknown> | null,
 ) {
   if (blocked || proofRows.length === 0) {
     return {
@@ -709,6 +718,7 @@ async function buildArtifactProof(
       capture_health: null,
       capture_calendar: null,
       resolution_watch: resolutionWatch,
+      strategy_registry: strategyRegistry,
       agent_edge_proof_matrix: [],
       top_strategy_rollups: [],
     };
@@ -766,6 +776,7 @@ async function buildArtifactProof(
     capture_health: captureHealth,
     capture_calendar: captureCalendar,
     resolution_watch: resolutionWatch,
+    strategy_registry: strategyRegistry,
     agent_edge_proof_matrix: agentEdgeProofMatrix,
     top_strategy_rollups: strategyRollups
       .slice(0, 12)
@@ -852,6 +863,7 @@ async function buildReport(options: CliOptions, files: string[]) {
     artifactProofRows,
     failedChecks.length > 0,
     latestSnapshotSummary?.resolution_watch ?? null,
+    latestSnapshotSummary?.strategy_registry ?? null,
   );
 
   return {

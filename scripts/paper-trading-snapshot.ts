@@ -41,7 +41,9 @@ function loadEnvFile(path: string): boolean {
   for (const rawLine of contents.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith("#")) continue;
-    const withoutExport = line.startsWith("export ") ? line.slice(7).trim() : line;
+    const withoutExport = line.startsWith("export ")
+      ? line.slice(7).trim()
+      : line;
     const equals = withoutExport.indexOf("=");
     if (equals <= 0) continue;
     const key = withoutExport.slice(0, equals).trim();
@@ -140,14 +142,16 @@ Options:
 function summarizeRows(rows: Array<Record<string, unknown>>) {
   const liveRows = rows.filter((row) => row.sample === "live_only");
   const controlRows = rows.filter((row) => row.sample !== "live_only");
-  const selectedRows = rows.filter((row) => row.strategy_id === "selected-query");
+  const selectedRows = rows.filter(
+    (row) => row.strategy_id === "selected-query",
+  );
   const openExposureUsd = rows.reduce(
     (sum, row) => sum + Number(row.open_exposure_usd ?? 0),
-    0
+    0,
   );
   const openExpectedPnlUsd = rows.reduce(
     (sum, row) => sum + Number(row.open_expected_pnl_usd ?? 0),
-    0
+    0,
   );
 
   return {
@@ -163,7 +167,7 @@ function summarizeRows(rows: Array<Record<string, unknown>>) {
 
 function writeRowsArtifact(
   path: string,
-  value: Record<string, unknown>
+  value: Record<string, unknown>,
 ): string {
   const fullPath = resolve(process.cwd(), path);
   writeFileSync(fullPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
@@ -173,9 +177,8 @@ function writeRowsArtifact(
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const loadedEnvFiles = options.envFiles.filter((file) => loadEnvFile(file));
-  const { getTradingSnapshot, parseTradingControls } = await import(
-    "../src/lib/trading"
-  );
+  const { getTradingSnapshot, parseTradingControls } =
+    await import("../src/lib/trading");
   const {
     buildPaperTradingSnapshotRows,
     loadPaperTradingSnapshotHistory,
@@ -190,6 +193,7 @@ async function main() {
     source: snapshot.source,
     generated_at: snapshot.generated_at,
     controls,
+    strategy_registry: snapshot.strategy_registry,
     loaded_env_files: loadedEnvFiles,
     snapshot_date: snapshot.generated_at.slice(0, 10),
     schema_version: "1",
@@ -204,6 +208,7 @@ async function main() {
     source: snapshot.source,
     generated_at: snapshot.generated_at,
     controls,
+    strategy_registry: snapshot.strategy_registry,
     loaded_env_files: loadedEnvFiles,
     snapshot_date: snapshot.generated_at.slice(0, 10),
     selected_strategy: {
@@ -230,7 +235,7 @@ async function main() {
 
   if (snapshot.source !== "live" && !options.allowDemoWrite) {
     throw new Error(
-      `Refusing to persist ${snapshot.source} snapshot rows. Set Supabase env vars for live data or pass --allow-demo-write explicitly.`
+      `Refusing to persist ${snapshot.source} snapshot rows. Set Supabase env vars for live data or pass --allow-demo-write explicitly.`,
     );
   }
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {

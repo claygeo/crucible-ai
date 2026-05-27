@@ -205,6 +205,11 @@ The 30-day proof window now has a durable audit surface:
   every overdue or unknown-close paper market that blocks open EV from being
   trusted, including source-market links when available; it never writes outcomes
   or enables execution.
+- `/api/trading-strategy-registry` returns the paper-only strategy lab manifest:
+  every canonical rule under observation, the selected URL-configured rule, proof
+  gates, configurable controls, and execution-disabled invariants. Snapshot
+  artifacts also carry this manifest so future rollups can be interpreted against
+  the exact rule set captured that day.
 - `persistence.proof_runway` and the top-level `persisted_proof_runway` turn the
   same evidence into an operator timeline: earliest possible capital-review
   date, remaining capture days, remaining resolved live trades, open resolution
