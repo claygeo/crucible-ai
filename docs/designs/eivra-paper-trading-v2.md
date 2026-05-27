@@ -173,6 +173,8 @@ The 30-day proof window now has a durable audit surface:
   available and falls back to the latest published artifact proof while
   Supabase writes are disabled, so artifact-only mode can still answer which
   agent/edge rules have resolved profit versus unresolved open EV.
+  Scheduled artifact audits publish the same `agent_edge_proof` packet into
+  `artifact_proof`, so daily evidence bundles remain self-contained.
 - `/api/trading.json` and `GET /api/trading-snapshots` expose
   `proof_evidence_sources`, a paper-only source map that separates Supabase
   persistence, GitHub artifact bundles, live resolution hygiene, and the capital

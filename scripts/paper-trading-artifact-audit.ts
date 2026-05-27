@@ -843,11 +843,14 @@ async function buildArtifactProof(
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
       market_exposure_digest: marketExposureDigest,
+      agent_edge_proof: null,
       agent_edge_proof_matrix: [],
       top_strategy_rollups: [],
     };
   }
 
+  const { buildPaperTradingAgentEdgeProofFromRows } =
+    await import("../src/lib/trading-agent-edge-proof");
   const {
     buildPaperTradingAgentEdgeProofMatrix,
     buildPaperTradingCapitalReviewPacket,
@@ -873,6 +876,10 @@ async function buildArtifactProof(
   );
   const agentEdgeProofMatrix =
     buildPaperTradingAgentEdgeProofMatrix(strategyRollups);
+  const agentEdgeProof = buildPaperTradingAgentEdgeProofFromRows({
+    rows: agentEdgeProofMatrix,
+    source: "published_artifact",
+  });
   const proofSummary = buildPaperTradingProofSummary(strategyRollups);
   const proofReadiness = buildPaperTradingProofReadiness({
     persistenceStatus: "available",
@@ -912,6 +919,7 @@ async function buildArtifactProof(
     strategy_registry: strategyRegistry,
     would_trade_today: wouldTradeToday,
     market_exposure_digest: marketExposureDigest,
+    agent_edge_proof: agentEdgeProof,
     agent_edge_proof_matrix: agentEdgeProofMatrix,
     top_strategy_rollups: strategyRollups
       .slice(0, 12)
@@ -1107,12 +1115,36 @@ async function buildReport(options: CliOptions, files: string[]) {
   const capitalReviewPacket = isRecord(proof.capital_review_packet)
     ? proof.capital_review_packet
     : null;
+  const agentEdgeProof = isRecord(proof.agent_edge_proof)
+    ? proof.agent_edge_proof
+    : null;
   if (proof.status === "available" && !capitalReviewPacket) {
     failedChecks.push({
       path: null,
       code: "capital_review_packet",
       label: "Capital review packet",
       detail: "Available artifact proof must include capital_review_packet.",
+    });
+  }
+  if (proof.status === "available" && !agentEdgeProof) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_proof",
+      label: "Agent-edge proof leaderboard",
+      detail: "Available artifact proof must include agent_edge_proof.",
+    });
+  }
+  if (
+    agentEdgeProof &&
+    (agentEdgeProof.paper_only !== true ||
+      agentEdgeProof.real_money_execution_allowed !== false)
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "agent_edge_proof_paper_only",
+      label: "Agent-edge proof paper-only lock",
+      detail:
+        "agent_edge_proof must keep paper_only=true and real_money_execution_allowed=false.",
     });
   }
   if (
