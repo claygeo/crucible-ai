@@ -23,15 +23,15 @@ export function Tooltip({
       aria-describedby={visible ? id : undefined}
     >
       {children}
-      <span
-        id={id}
-        role="tooltip"
-        className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-[#111317] border border-[#2a313b] rounded px-3 py-2 text-[10px] text-[#9aa4b2] mono leading-snug z-50 pointer-events-none whitespace-normal transition-opacity duration-100 ${
-          visible ? "opacity-100" : "opacity-0 select-none"
-        }`}
-      >
-        {tip}
-      </span>
+      {visible ? (
+        <span
+          id={id}
+          role="tooltip"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-[#111317] border border-[#2a313b] rounded px-3 py-2 text-[10px] text-[#9aa4b2] mono leading-snug z-50 pointer-events-none whitespace-normal"
+        >
+          {tip}
+        </span>
+      ) : null}
     </span>
   );
 }
