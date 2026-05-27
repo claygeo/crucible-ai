@@ -117,6 +117,12 @@ latest row for each `(strategy_id, snapshot_date)` pair. The 30-day proof count
 is therefore `captured_days`, not raw row count. Raw rows remain in the feed for
 auditability.
 
+Rollups also dedupe equivalent strategy rules by fingerprinting the live/backfill
+sample, edge gate, stake mode, ticket caps, exposure cap, agent set, category,
+and side. This keeps the URL-selected `selected-query` row from double-counting
+when it exactly matches a canned strategy, while still preserving truly custom
+URL configurations as their own rollups.
+
 Each persisted rollup also carries `durable_proof_gate`. This is the
 authoritative readiness gate for the 30-day lab because it uses stored capture
 days, latest resolved live-trade stats, drawdown, and capture freshness instead

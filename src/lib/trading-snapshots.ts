@@ -221,6 +221,31 @@ function controlsHash(controls: TradingControls): string {
   return createHash("sha256").update(stableJson(controls)).digest("hex").slice(0, 16);
 }
 
+function strategyRuleFingerprint(
+  strategy: Partial<StrategyVariantSummary> | null | undefined
+): string {
+  const agentIds = Array.isArray(strategy?.agent_ids)
+    ? [...strategy.agent_ids].sort()
+    : [];
+  const exposureLedger =
+    strategy?.exposure_ledger as
+      | Partial<StrategyVariantSummary["exposure_ledger"]>
+      | null
+      | undefined;
+
+  return stableJson({
+    sample: strategy?.sample ?? null,
+    min_edge: strategy?.min_edge ?? null,
+    stake_mode: strategy?.stake_mode ?? null,
+    flat_stake_usd: strategy?.flat_stake_usd ?? null,
+    max_stake_usd: strategy?.max_stake_usd ?? null,
+    max_open_exposure_usd: exposureLedger?.max_open_exposure_usd ?? null,
+    agent_ids: agentIds,
+    category: strategy?.category ?? null,
+    side: strategy?.side ?? null,
+  });
+}
+
 function snapshotDateFromGeneratedAt(generatedAt: string): string {
   const parsed = new Date(generatedAt);
   if (Number.isNaN(parsed.getTime())) {
@@ -278,18 +303,22 @@ export function buildPaperTradingSnapshotRows(
     })
     .filter((row): row is PaperTradingSnapshotInsert => Boolean(row));
 
+  const selectedRow = buildSnapshotRow(
+    snapshot,
+    snapshot.selected_strategy,
+    snapshot.selected_daily_series,
+    snapshot.controls
+  );
+  const selectedFingerprint = strategyRuleFingerprint(
+    selectedRow.strategy_summary
+  );
   const selectedAlreadyCaptured = rows.some(
-    (row) => row.strategy_id === snapshot.selected_strategy.id
+    (row) =>
+      row.strategy_id === selectedRow.strategy_id ||
+      strategyRuleFingerprint(row.strategy_summary) === selectedFingerprint
   );
   if (!selectedAlreadyCaptured) {
-    rows.push(
-      buildSnapshotRow(
-        snapshot,
-        snapshot.selected_strategy,
-        snapshot.selected_daily_series,
-        snapshot.controls
-      )
-    );
+    rows.push(selectedRow);
   }
 
   return rows;
@@ -402,7 +431,11 @@ export function buildPaperTradingCaptureHealth(
 function latestRowForDay(rows: PaperTradingSnapshotRow[]): PaperTradingSnapshotRow {
   return rows
     .slice()
-    .sort((a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at))[0];
+    .sort(
+      (a, b) =>
+        Date.parse(b.captured_at) - Date.parse(a.captured_at) ||
+        Number(a.is_custom) - Number(b.is_custom)
+    )[0];
 }
 
 function latestCapturedAt(snapshots: PaperTradingSnapshotRow[]): string | null {
@@ -849,13 +882,14 @@ export function buildPaperTradingStrategyRollups(
 ): PaperTradingStrategyProofRollup[] {
   const byStrategy = new Map<string, PaperTradingSnapshotRow[]>();
   for (const snapshot of snapshots) {
-    const existing = byStrategy.get(snapshot.strategy_id) ?? [];
+    const strategyKey = strategyRuleFingerprint(snapshot.strategy_summary);
+    const existing = byStrategy.get(strategyKey) ?? [];
     existing.push(snapshot);
-    byStrategy.set(snapshot.strategy_id, existing);
+    byStrategy.set(strategyKey, existing);
   }
 
   return Array.from(byStrategy.entries())
-    .map(([strategyId, rows]) => {
+    .map(([, rows]) => {
       const byDay = new Map<string, PaperTradingSnapshotRow[]>();
       for (const row of rows) {
         const dayRows = byDay.get(row.snapshot_date) ?? [];
@@ -877,7 +911,7 @@ export function buildPaperTradingStrategyRollups(
       const proofWindow = buildProofWindow(latestRowsByDay, captureCoverage);
 
       return {
-        strategy_id: strategyId,
+        strategy_id: latest.strategy_id,
         strategy_label: latest.strategy_label,
         source: latest.source,
         sample: latest.sample,
