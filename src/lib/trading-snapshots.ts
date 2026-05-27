@@ -126,6 +126,29 @@ export type PaperTradingProofWindow = {
   latest_open_expected_pnl_usd: number;
 };
 
+export type PaperTradingProofQualityGrade =
+  | "none"
+  | "thin"
+  | "developing"
+  | "reviewable";
+
+export type PaperTradingProofQuality = {
+  evidence_grade: PaperTradingProofQualityGrade;
+  evidence_grade_label: string;
+  resolved_trades: number;
+  winning_trades: number;
+  losing_trades: number;
+  win_rate: number;
+  avg_pnl_per_trade_usd: number;
+  avg_stake_usd: number;
+  winning_days: number;
+  losing_days: number;
+  flat_days: number;
+  avg_daily_pnl_usd: number;
+  daily_profit_factor: number | null;
+  blockers: string[];
+};
+
 export type PaperTradingCaptureCoverage = {
   status: "complete" | "missing";
   status_label: string;
@@ -202,6 +225,11 @@ export type PaperTradingAgentEdgeProofRow = {
   missing_capture_days: number;
   resolved_trades: number;
   required_resolved_trades: number;
+  win_rate: number;
+  avg_pnl_per_trade_usd: number;
+  daily_profit_factor: number | null;
+  evidence_grade: PaperTradingProofQualityGrade;
+  evidence_grade_label: string;
   window_pnl_usd: number;
   window_roi_on_stake: number;
   max_drawdown_usd: number;
@@ -209,6 +237,7 @@ export type PaperTradingAgentEdgeProofRow = {
   open_expected_pnl_usd: number;
   latest_snapshot_date: string | null;
   latest_captured_at: string | null;
+  proof_quality: PaperTradingProofQuality;
   blockers: string[];
 };
 
@@ -234,6 +263,7 @@ export type PaperTradingStrategyProofRollup = {
   latest_open_exposure_usd: number;
   latest_open_expected_pnl_usd: number;
   proof_window: PaperTradingProofWindow;
+  proof_quality: PaperTradingProofQuality;
   capture_coverage: PaperTradingCaptureCoverage;
   durable_proof_gate: DurableProofGate;
   latest_snapshot: PaperTradingSnapshotRow;
@@ -1013,6 +1043,13 @@ function rowResolvedStake(row: PaperTradingSnapshotRow | null): number {
   return strategySummaryValue(row, "stake_usd");
 }
 
+function rowStrategyCount(
+  row: PaperTradingSnapshotRow | null,
+  key: "wins" | "losses"
+): number {
+  return Math.max(0, Math.round(strategySummaryValue(row, key)));
+}
+
 function rowOpenExposure(row: PaperTradingSnapshotRow | null): number {
   if (!row) return 0;
   return Number.isFinite(row.open_exposure_usd)
@@ -1027,10 +1064,18 @@ function rowOpenExpectedPnl(row: PaperTradingSnapshotRow | null): number {
     : strategySummaryValue(row, "open_expected_pnl_usd");
 }
 
-function buildProofWindow(
+type PaperTradingProofWindowContext = {
+  windowStart: string | null;
+  windowEnd: string | null;
+  rowsInWindow: PaperTradingSnapshotRow[];
+  baseline: PaperTradingSnapshotRow | null;
+  latest: PaperTradingSnapshotRow | null;
+};
+
+function buildProofWindowContext(
   latestRowsByDay: PaperTradingSnapshotRow[],
   captureCoverage: PaperTradingCaptureCoverage
-): PaperTradingProofWindow {
+): PaperTradingProofWindowContext {
   const windowStart = captureCoverage.first_expected_snapshot_date;
   const windowEnd = captureCoverage.last_expected_snapshot_date;
   const latestRows = latestRowsByDay
@@ -1048,6 +1093,20 @@ function buildProofWindow(
     return row.snapshot_date >= windowStart && row.snapshot_date <= windowEnd;
   });
   const latest = rowsInWindow[rowsInWindow.length - 1] ?? latestRows[latestRows.length - 1] ?? null;
+
+  return {
+    windowStart,
+    windowEnd,
+    rowsInWindow,
+    baseline,
+    latest,
+  };
+}
+
+function buildProofWindow(
+  context: PaperTradingProofWindowContext
+): PaperTradingProofWindow {
+  const { windowStart, windowEnd, rowsInWindow, baseline, latest } = context;
   const baselineTrades = rowResolvedTrades(baseline);
   const baselinePnl = rowResolvedPnl(baseline);
   const baselineStake = rowResolvedStake(baseline);
@@ -1075,6 +1134,134 @@ function buildProofWindow(
     max_drawdown_usd: round2(maxDrawdownUsd),
     latest_open_exposure_usd: round2(rowOpenExposure(latest)),
     latest_open_expected_pnl_usd: round2(rowOpenExpectedPnl(latest)),
+  };
+}
+
+function proofQualityGradeLabel(
+  grade: PaperTradingProofQualityGrade
+): string {
+  if (grade === "reviewable") return "Reviewable";
+  if (grade === "developing") return "Developing";
+  if (grade === "thin") return "Thin sample";
+  return "No sample";
+}
+
+function proofWindowTradeCountDelta(
+  context: PaperTradingProofWindowContext,
+  key: "wins" | "losses"
+): number {
+  return Math.max(
+    0,
+    rowStrategyCount(context.latest, key) - rowStrategyCount(context.baseline, key)
+  );
+}
+
+function proofWindowDailyPnlValues(
+  context: PaperTradingProofWindowContext
+): number[] {
+  const windowStart = context.windowStart;
+  const windowEnd = context.windowEnd;
+  if (!windowStart || !windowEnd || !context.latest) return [];
+
+  return context.latest.daily_series.days
+    .filter((day) => day.date >= windowStart && day.date <= windowEnd)
+    .map((day) => (Number.isFinite(day.net_pnl_usd) ? day.net_pnl_usd : 0));
+}
+
+function buildProofQuality(
+  context: PaperTradingProofWindowContext,
+  captureCoverage: PaperTradingCaptureCoverage,
+  proofWindow: PaperTradingProofWindow,
+  durableGate: DurableProofGate
+): PaperTradingProofQuality {
+  const winningTrades = proofWindowTradeCountDelta(context, "wins");
+  const losingTrades = proofWindowTradeCountDelta(context, "losses");
+  const classifiedTrades = winningTrades + losingTrades;
+  const dailyPnlValues = proofWindowDailyPnlValues(context);
+  const grossPositiveDailyPnl = dailyPnlValues
+    .filter((pnl) => pnl > 0)
+    .reduce((sum, pnl) => sum + pnl, 0);
+  const grossNegativeDailyPnl = Math.abs(
+    dailyPnlValues
+      .filter((pnl) => pnl < 0)
+      .reduce((sum, pnl) => sum + pnl, 0)
+  );
+  const winningDays = dailyPnlValues.filter((pnl) => pnl > 0).length;
+  const losingDays = dailyPnlValues.filter((pnl) => pnl < 0).length;
+  const flatDays = dailyPnlValues.length - winningDays - losingDays;
+  const blockers = new Set<string>();
+
+  if (captureCoverage.captured_days === 0) {
+    blockers.add("No persisted captures in proof window.");
+  }
+  if (proofWindow.resolved_trades === 0) {
+    blockers.add("No resolved trades in proof window.");
+  }
+  if (captureCoverage.missing_days > 0) {
+    const label =
+      captureCoverage.missing_days === 1 ? "capture" : "captures";
+    blockers.add(`${captureCoverage.missing_days} missed daily ${label}.`);
+  }
+  if (captureCoverage.captured_days < PAPER_TRADING_PROOF_RULES.requiredLiveDays) {
+    blockers.add(
+      `${PAPER_TRADING_PROOF_RULES.requiredLiveDays - captureCoverage.captured_days} more capture days needed.`
+    );
+  }
+  if (proofWindow.resolved_trades < PAPER_TRADING_PROOF_RULES.requiredResolvedTrades) {
+    blockers.add(
+      `${PAPER_TRADING_PROOF_RULES.requiredResolvedTrades - proofWindow.resolved_trades} more resolved trades needed.`
+    );
+  }
+  if (dailyPnlValues.length === 0) {
+    blockers.add("No daily P&L series in proof window.");
+  }
+  for (const blocker of durableGate.blockers) {
+    blockers.add(blocker);
+  }
+
+  const evidenceGrade: PaperTradingProofQualityGrade =
+    captureCoverage.captured_days === 0 || proofWindow.resolved_trades === 0
+      ? "none"
+      : captureCoverage.captured_days <
+            PAPER_TRADING_PROOF_RULES.requiredLiveDays ||
+          captureCoverage.missing_days > 0 ||
+          proofWindow.resolved_trades <
+            PAPER_TRADING_PROOF_RULES.requiredResolvedTrades
+        ? "thin"
+        : durableGate.status === "candidate"
+          ? "reviewable"
+          : "developing";
+
+  return {
+    evidence_grade: evidenceGrade,
+    evidence_grade_label: proofQualityGradeLabel(evidenceGrade),
+    resolved_trades: proofWindow.resolved_trades,
+    winning_trades: winningTrades,
+    losing_trades: losingTrades,
+    win_rate: classifiedTrades > 0 ? winningTrades / classifiedTrades : 0,
+    avg_pnl_per_trade_usd:
+      proofWindow.resolved_trades > 0
+        ? round2(proofWindow.resolved_net_pnl_usd / proofWindow.resolved_trades)
+        : 0,
+    avg_stake_usd:
+      proofWindow.resolved_trades > 0
+        ? round2(proofWindow.resolved_stake_usd / proofWindow.resolved_trades)
+        : 0,
+    winning_days: winningDays,
+    losing_days: losingDays,
+    flat_days: flatDays,
+    avg_daily_pnl_usd:
+      dailyPnlValues.length > 0
+        ? round2(
+            dailyPnlValues.reduce((sum, pnl) => sum + pnl, 0) /
+              dailyPnlValues.length
+          )
+        : 0,
+    daily_profit_factor:
+      grossNegativeDailyPnl > 0
+        ? round2(grossPositiveDailyPnl / grossNegativeDailyPnl)
+        : null,
+    blockers: Array.from(blockers),
   };
 }
 
@@ -1370,7 +1557,23 @@ export function buildPaperTradingStrategyRollups(
         latestRowsByDay,
         captureHealth
       );
-      const proofWindow = buildProofWindow(latestRowsByDay, captureCoverage);
+      const proofWindowContext = buildProofWindowContext(
+        latestRowsByDay,
+        captureCoverage
+      );
+      const proofWindow = buildProofWindow(proofWindowContext);
+      const durableProofGate = buildDurableProofGate(
+        latest,
+        captureCoverage,
+        proofWindow,
+        captureHealth
+      );
+      const proofQuality = buildProofQuality(
+        proofWindowContext,
+        captureCoverage,
+        proofWindow,
+        durableProofGate
+      );
 
       return {
         strategy_id: latest.strategy_id,
@@ -1397,13 +1600,9 @@ export function buildPaperTradingStrategyRollups(
         latest_open_exposure_usd: latest.open_exposure_usd,
         latest_open_expected_pnl_usd: latest.open_expected_pnl_usd,
         proof_window: proofWindow,
+        proof_quality: proofQuality,
         capture_coverage: captureCoverage,
-        durable_proof_gate: buildDurableProofGate(
-          latest,
-          captureCoverage,
-          proofWindow,
-          captureHealth
-        ),
+        durable_proof_gate: durableProofGate,
         latest_snapshot: latest,
       };
     })
@@ -1440,6 +1639,7 @@ export function buildPaperTradingAgentEdgeProofMatrix(
       const agent = AGENTS.find((item) => item.id === agentId);
       const gate = rollup.durable_proof_gate;
       const proofWindow = rollup.proof_window;
+      const proofQuality = rollup.proof_quality;
 
       return {
         strategy_id: rollup.strategy_id,
@@ -1454,6 +1654,11 @@ export function buildPaperTradingAgentEdgeProofMatrix(
         missing_capture_days: gate.missing_capture_days,
         resolved_trades: gate.resolved_trades,
         required_resolved_trades: gate.required_resolved_trades,
+        win_rate: proofQuality.win_rate,
+        avg_pnl_per_trade_usd: proofQuality.avg_pnl_per_trade_usd,
+        daily_profit_factor: proofQuality.daily_profit_factor,
+        evidence_grade: proofQuality.evidence_grade,
+        evidence_grade_label: proofQuality.evidence_grade_label,
         window_pnl_usd: gate.resolved_net_pnl_usd,
         window_roi_on_stake: gate.resolved_roi_on_stake,
         max_drawdown_usd: gate.max_drawdown_usd,
@@ -1461,6 +1666,7 @@ export function buildPaperTradingAgentEdgeProofMatrix(
         open_expected_pnl_usd: round2(proofWindow.latest_open_expected_pnl_usd),
         latest_snapshot_date: rollup.latest_snapshot_date,
         latest_captured_at: rollup.latest_captured_at,
+        proof_quality: proofQuality,
         blockers: gate.blockers,
       };
     })
