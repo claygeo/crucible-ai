@@ -10,6 +10,7 @@
     "paper:audit": "tsx scripts/paper-trading-proof-audit.ts",
     "paper:audit:soft": "tsx scripts/paper-trading-proof-audit.ts --soft",
     "paper:artifact-audit": "tsx scripts/paper-trading-artifact-audit.ts",
+    "paper:proof-smoke": "tsx scripts/paper-trading-proof-smoke.ts",
     "paper:publish-artifact-proof": "tsx scripts/paper-trading-publish-artifact-proof.ts",
     "paper:snapshot": "tsx scripts/paper-trading-snapshot.ts",
     "paper:snapshot:write": "tsx scripts/paper-trading-snapshot.ts --write",
