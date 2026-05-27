@@ -275,6 +275,11 @@ The 30-day proof window now has a durable audit surface:
   as `selected_agent_edge_proof_lag`, so a live replay that sees a resolved miss
   before the next Supabase/artifact proof capture is labeled as proof-source lag
   instead of being silently hidden.
+  The payload also includes `operating_plan`, which separates the primary
+  day-by-day action from secondary warnings. The primary action prioritizes
+  evidence repair, then the 30-day capture window, then rule-level profitability
+  and capital review, so a capacity-leakage warning cannot obscure the actual
+  proof-window task while the lab is still on day 1/30.
 - `GET /api/trading-liquidity-review` is the source-level liquidity/slippage
   blocker for capital review. It groups current live paper activity and recent
   canonical resolved tickets by market source, then reports that spread, depth,
