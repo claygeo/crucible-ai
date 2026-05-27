@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
+import { buildPaperTradingAgentEdgeEvidenceTimeline } from "@/lib/trading-agent-edge-evidence";
 import { buildPaperTradingAgentEdgeProof } from "@/lib/trading-agent-edge-proof";
 import {
   buildPaperTradingArtifactHistory,
@@ -124,7 +125,7 @@ function resolutionWatchClass(status: string) {
 }
 
 function readinessStatusClass(status: string) {
-  if (status === "pass") return "bg-positive/10 text-positive";
+  if (status === "pass" || status === "available" || status === "reviewable") return "bg-positive/10 text-positive";
   if (status === "blocked") return "bg-rose-400/10 text-rose-400";
   if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
   return "bg-warn/10 text-warn";
@@ -370,6 +371,12 @@ export default async function TradingPage({
     persistedRows: persisted.agent_edge_proof_matrix,
     publishedArtifactProof,
   });
+  const agentEdgeEvidenceTimeline = buildPaperTradingAgentEdgeEvidenceTimeline({
+    persistence: persisted,
+    agentEdgeProof,
+    selectedAgentId: snapshot.controls.agent_id,
+    selectedMinEdge: snapshot.controls.min_edge,
+  });
   const proofAudit = buildPaperTradingProofAudit({
     snapshot,
     persisted,
@@ -451,6 +458,7 @@ export default async function TradingPage({
   const evidenceSlaJsonHref = `/api/trading-evidence-sla?${selectedQuery}`;
   const labStatusJsonHref = `/api/trading-lab-status?${selectedQuery}`;
   const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
+  const agentEdgeEvidenceJsonHref = `/api/trading-agent-edge-evidence?${selectedQuery}`;
   const agentEdgeTradesJsonHref = `/api/trading-agent-edge-trades?${selectedQuery}`;
   const agentEdgeWatchlistJsonHref = `/api/trading-agent-edge-watchlist?${selectedQuery}`;
   const agentEdgeRunwayJsonHref = `/api/trading-agent-edge-runway?${selectedQuery}`;
@@ -3621,6 +3629,142 @@ export default async function TradingPage({
                 </table>
               </div>
             )}
+          </div>
+
+          <div className="panel px-5 py-5 flex flex-col gap-4 min-w-0 lg:col-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="heading text-base text-text-primary">Agent-edge evidence timeline</h2>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={agentEdgeEvidenceJsonHref}
+                  className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+                >
+                  evidence json
+                </Link>
+                <span
+                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${readinessStatusClass(
+                    agentEdgeEvidenceTimeline.status
+                  )}`}
+                >
+                  {agentEdgeEvidenceTimeline.status_label}
+                </span>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Days
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(agentEdgeEvidenceTimeline.complete_days)}/
+                  {int(agentEdgeEvidenceTimeline.required_days)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Rule-days
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(agentEdgeEvidenceTimeline.captured_rule_days)}/
+                  {int(agentEdgeEvidenceTimeline.total_expected_rule_days)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Proven
+                </div>
+                <div className="heading text-xl text-positive mt-1">
+                  {int(agentEdgeEvidenceTimeline.rules_with_profitability_proven)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Positive thin
+                </div>
+                <div className="heading text-xl text-warn mt-1">
+                  {int(agentEdgeEvidenceTimeline.rules_positive_but_unproven)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Resolved
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(agentEdgeEvidenceTimeline.total_resolved_trades)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Window P&amp;L
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${pnlClass(
+                    agentEdgeEvidenceTimeline.total_window_pnl_usd
+                  )}`}
+                >
+                  {dollars(agentEdgeEvidenceTimeline.total_window_pnl_usd, 0)}
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto border-t border-border-subtle pt-3">
+              <table className="w-full" aria-label="Agent-edge evidence timeline">
+                <thead>
+                  <tr className="border-b border-border-subtle text-text-muted">
+                    <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Rule</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Captures</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Resolved</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Latest delta</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">P&amp;L</th>
+                    <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Missing</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle/60">
+                  {agentEdgeEvidenceTimeline.rules.slice(0, 8).map((rule) => {
+                    const latestDay = rule.recent_days.find(
+                      (day) => day.has_rule_snapshot
+                    );
+                    return (
+                      <tr key={rule.strategy_id}>
+                        <td className="py-3 pr-3">
+                          <div className="text-sm text-text-primary">
+                            {rule.agent_name} / {edgePoints(rule.min_edge)}
+                          </div>
+                          <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                            {rule.profitability_status_label}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 mono text-right text-text-secondary">
+                          {int(rule.captured_days)}/{int(rule.required_captured_days)}
+                        </td>
+                        <td className="py-3 px-3 mono text-right text-text-secondary">
+                          {int(rule.resolved_trades)}/{int(rule.required_resolved_trades)}
+                        </td>
+                        <td
+                          className={`py-3 px-3 mono text-right ${pnlClass(
+                            latestDay?.delta_resolved_net_pnl_usd ?? 0
+                          )}`}
+                        >
+                          {dollars(latestDay?.delta_resolved_net_pnl_usd ?? 0, 0)}
+                          <div className="mt-1 text-[10px] text-text-muted">
+                            {latestDay?.snapshot_date ?? "-"}
+                          </div>
+                        </td>
+                        <td
+                          className={`py-3 px-3 mono text-right ${pnlClass(
+                            rule.window_pnl_usd
+                          )}`}
+                        >
+                          {dollars(rule.window_pnl_usd, 0)}
+                        </td>
+                        <td className="py-3 pl-3 mono text-right text-warn">
+                          {int(rule.missing_capture_days)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="panel px-5 py-5 flex flex-col gap-4 min-w-0 lg:col-span-2">
