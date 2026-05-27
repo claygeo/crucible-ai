@@ -414,6 +414,8 @@ export default async function TradingPage({
     agentEdgeProof,
     resolutionCatchupPreview,
   });
+  const selectedProofLag =
+    labStatus.tradability.selected_agent_edge_proof_lag;
   const latestArtifactRun = artifactWorkflow.latest_successful_artifact_run;
   const latestWorkflowRun = artifactWorkflow.latest_run;
   const publishedAudit = publishedArtifactProof.artifact_audit;
@@ -1152,12 +1154,34 @@ export default async function TradingPage({
               </div>
             </div>
           </div>
+          {selectedProofLag.status === "live_ahead_of_durable" ||
+          selectedProofLag.status === "durable_ahead_of_live" ? (
+            <div className="border-t border-border-subtle pt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-warn">
+                  selected proof source lag
+                </div>
+                <div className="text-sm text-text-secondary mt-1">
+                  {selectedProofLag.message}
+                </div>
+              </div>
+              <div className="mono text-[11px] text-text-muted shrink-0">
+                live {int(selectedProofLag.live_skipped_resolved_trades)} /
+                durable {int(selectedProofLag.durable_skipped_resolved_trades)} /
+                delta{" "}
+                {dollars(
+                  selectedProofLag.delta_skipped_resolved_net_pnl_usd,
+                  0
+                )}
+              </div>
+            </div>
+          ) : null}
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 border-t border-border-subtle pt-4">
             <p className="text-sm text-text-secondary leading-relaxed">
               {labStatus.message} {labStatus.next_required_action}
             </p>
             <div className="grid sm:grid-cols-2 gap-2">
-              {labStatus.checks.slice(0, 6).map((item) => (
+              {labStatus.checks.slice(0, 8).map((item) => (
                 <div
                   key={item.id}
                   className="border-b border-border-subtle/60 pb-2 min-w-0"
