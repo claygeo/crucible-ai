@@ -181,6 +181,13 @@ function marketExposureStatusClass(status: string) {
   return "bg-text-muted/10 text-text-muted";
 }
 
+function executionStressStatusClass(status: string) {
+  if (status === "survives_stress") return "bg-positive/10 text-positive";
+  if (status === "fragile_profit") return "bg-warn/10 text-warn";
+  if (status === "loss_making") return "bg-rose-400/10 text-rose-400";
+  return "bg-accent/10 text-accent";
+}
+
 function capitalReviewPacketStatusClass(status: string) {
   if (status === "reviewable_paper_candidate") {
     return "bg-positive/10 text-positive";
@@ -3455,7 +3462,7 @@ export default async function TradingPage({
               </span>
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-7 gap-3">
             <div>
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                 Sources
@@ -3501,6 +3508,15 @@ export default async function TradingPage({
                 Adj. P&amp;L
               </div>
               <div className="heading text-2xl text-warn mt-1">missing</div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Stress pass
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(liquidityReview.stress_surviving_rule_count)}/
+                {int(liquidityReview.stress_tested_rule_count)}
+              </div>
             </div>
           </div>
           {liquidityReview.sources.length === 0 ? (
@@ -3567,6 +3583,82 @@ export default async function TradingPage({
               </table>
             </div>
           )}
+          <div className="overflow-x-auto border-t border-border-subtle pt-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                execution-friction stress
+              </div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                counts as proof:{" "}
+                {liquidityReview.stress_evidence_counts_as_proof
+                  ? "yes"
+                  : "no"}
+              </div>
+            </div>
+            <table className="w-full" aria-label="Execution friction stress">
+              <thead>
+                <tr className="border-b border-border-subtle text-text-muted">
+                  <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Rule</th>
+                  <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Resolved</th>
+                  <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Gross</th>
+                  <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Worst stress</th>
+                  <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-subtle/60">
+                {liquidityReview.stress_rules.slice(0, 8).map((rule) => {
+                  const worstScenario =
+                    rule.scenarios[rule.scenarios.length - 1] ?? null;
+                  return (
+                    <tr key={rule.strategy_id}>
+                      <td className="py-3 pr-3">
+                        <div className="text-sm text-text-primary">
+                          {rule.strategy_label}
+                        </div>
+                        <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                          {rule.agent_name} / edge {edgePoints(rule.min_edge)}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {int(rule.resolved_trades)}
+                      </td>
+                      <td
+                        className={`py-3 px-3 mono text-right ${pnlClass(
+                          rule.gross_net_pnl_usd
+                        )}`}
+                      >
+                        {dollars(rule.gross_net_pnl_usd, 0)}
+                        <div className="mt-1 text-[10px] text-text-muted">
+                          {pct(rule.gross_roi_on_stake, 1)}
+                        </div>
+                      </td>
+                      <td
+                        className={`py-3 px-3 mono text-right ${pnlClass(
+                          rule.worst_case_net_pnl_usd
+                        )}`}
+                      >
+                        {dollars(rule.worst_case_net_pnl_usd, 0)}
+                        <div className="mt-1 text-[10px] text-text-muted">
+                          {worstScenario
+                            ? `${worstScenario.total_friction_bps}bps`
+                            : "-"}
+                        </div>
+                      </td>
+                      <td className="py-3 pl-3 text-right">
+                        <span
+                          className={`mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${executionStressStatusClass(
+                            rule.status
+                          )}`}
+                        >
+                          {rule.status_label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           <div className="border-t border-border-subtle pt-3 text-xs text-text-muted">
             {liquidityReview.next_required_action}
           </div>

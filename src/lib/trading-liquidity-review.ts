@@ -12,8 +12,27 @@ export const PAPER_TRADING_LIQUIDITY_RULES = {
     "max_fill_size_at_simulated_stake",
     "slippage_adjusted_entry_price",
   ],
+  execution_stress_scenarios: [
+    {
+      id: "friction_50bps",
+      label: "50 bps friction",
+      total_friction_bps: 50,
+    },
+    {
+      id: "friction_100bps",
+      label: "100 bps friction",
+      total_friction_bps: 100,
+    },
+    {
+      id: "friction_250bps",
+      label: "250 bps friction",
+      total_friction_bps: 250,
+    },
+  ],
   proof_policy:
     "Paper P&L is valid analytics evidence, but it is not capital-review evidence until source-level liquidity, spread, fee, and fill-size data is persisted.",
+  stress_policy:
+    "Execution-friction stress subtracts a fixed basis-point cost from paper stake. It is a fragility screen only, not a replacement for persisted source-level liquidity data.",
 } as const;
 
 export type PaperTradingLiquidityReviewStatus =
@@ -40,6 +59,40 @@ export type PaperTradingLiquidityReviewSource = {
   blocker: string;
 };
 
+export type PaperTradingExecutionStressScenario = {
+  id: string;
+  label: string;
+  total_friction_bps: number;
+  friction_cost_usd: number;
+  net_pnl_after_friction_usd: number;
+  roi_after_friction: number;
+  remains_profitable: boolean;
+};
+
+export type PaperTradingExecutionStressRule = {
+  strategy_id: string;
+  strategy_label: string;
+  agent_id: string;
+  agent_name: string;
+  min_edge: number;
+  status:
+    | "survives_stress"
+    | "fragile_profit"
+    | "loss_making"
+    | "collecting";
+  status_label: string;
+  resolved_trades: number;
+  stake_usd: number;
+  gross_net_pnl_usd: number;
+  gross_roi_on_stake: number;
+  break_even_win_rate: number | null;
+  win_rate: number;
+  worst_case_net_pnl_usd: number;
+  worst_case_roi_on_stake: number;
+  stress_evidence_counts_as_proof: false;
+  scenarios: PaperTradingExecutionStressScenario[];
+};
+
 export type PaperTradingLiquidityReview = {
   schema_version: "1";
   generated_at: string;
@@ -61,6 +114,13 @@ export type PaperTradingLiquidityReview = {
   open_expected_pnl_usd: number;
   recent_resolved_trades: number;
   recent_resolved_net_pnl_usd: number;
+  stress_scenario_count: number;
+  stress_tested_rule_count: number;
+  stress_surviving_rule_count: number;
+  stress_fragile_rule_count: number;
+  stress_loss_rule_count: number;
+  stress_evidence_counts_as_proof: false;
+  stress_rules: PaperTradingExecutionStressRule[];
   sources: PaperTradingLiquidityReviewSource[];
 };
 
@@ -68,11 +128,24 @@ function round2(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+function round4(value: number): number {
+  return Math.round(value * 10000) / 10000;
+}
+
 function statusLabel(status: PaperTradingLiquidityReviewStatus): string {
   if (status === "clear") return "Clear";
   if (status === "blocked") return "Blocked";
   if (status === "collecting") return "Collecting";
   return "Unavailable";
+}
+
+function stressRuleStatusLabel(
+  status: PaperTradingExecutionStressRule["status"],
+): string {
+  if (status === "survives_stress") return "Survives stress";
+  if (status === "fragile_profit") return "Fragile profit";
+  if (status === "loss_making") return "Loss making";
+  return "Collecting";
 }
 
 function uniqueRecentResolvedTrades(
@@ -123,6 +196,57 @@ function sourceRowFromOpenExposure(
   };
 }
 
+function buildStressRule(
+  rule: TradingSnapshot["agent_edge_trade_ledger"]["rules"][number],
+): PaperTradingExecutionStressRule {
+  const scenarios = PAPER_TRADING_LIQUIDITY_RULES.execution_stress_scenarios.map(
+    (scenario) => {
+      const frictionCostUsd =
+        rule.stake_usd * (scenario.total_friction_bps / 10000);
+      const netPnlAfterFriction = rule.net_pnl_usd - frictionCostUsd;
+      return {
+        id: scenario.id,
+        label: scenario.label,
+        total_friction_bps: scenario.total_friction_bps,
+        friction_cost_usd: round2(frictionCostUsd),
+        net_pnl_after_friction_usd: round2(netPnlAfterFriction),
+        roi_after_friction:
+          rule.stake_usd > 0 ? round4(netPnlAfterFriction / rule.stake_usd) : 0,
+        remains_profitable: netPnlAfterFriction > 0,
+      };
+    },
+  );
+  const worstCase = scenarios[scenarios.length - 1] ?? null;
+  const hasResolvedTrades = rule.resolved_trades > 0;
+  const status: PaperTradingExecutionStressRule["status"] = !hasResolvedTrades
+    ? "collecting"
+    : rule.net_pnl_usd <= 0
+      ? "loss_making"
+      : scenarios.every((scenario) => scenario.remains_profitable)
+        ? "survives_stress"
+        : "fragile_profit";
+
+  return {
+    strategy_id: rule.strategy_id,
+    strategy_label: rule.strategy_label,
+    agent_id: rule.agent_id,
+    agent_name: rule.agent_name,
+    min_edge: rule.min_edge,
+    status,
+    status_label: stressRuleStatusLabel(status),
+    resolved_trades: rule.resolved_trades,
+    stake_usd: rule.stake_usd,
+    gross_net_pnl_usd: rule.net_pnl_usd,
+    gross_roi_on_stake: rule.roi_on_stake,
+    break_even_win_rate: rule.break_even_win_rate,
+    win_rate: rule.win_rate,
+    worst_case_net_pnl_usd: worstCase?.net_pnl_after_friction_usd ?? 0,
+    worst_case_roi_on_stake: worstCase?.roi_after_friction ?? 0,
+    stress_evidence_counts_as_proof: false,
+    scenarios,
+  };
+}
+
 export function buildPaperTradingLiquidityReview(
   snapshot: TradingSnapshot,
   generatedAt = new Date().toISOString(),
@@ -158,6 +282,22 @@ export function buildPaperTradingLiquidityReview(
   const blockedSourceCount = sources.filter(
     (source) => source.status === "blocked",
   ).length;
+  const stressRules = snapshot.agent_edge_trade_ledger.rules
+    .map(buildStressRule)
+    .sort((a, b) => {
+      if (b.resolved_trades !== a.resolved_trades) {
+        return b.resolved_trades - a.resolved_trades;
+      }
+      if (b.worst_case_net_pnl_usd !== a.worst_case_net_pnl_usd) {
+        return b.worst_case_net_pnl_usd - a.worst_case_net_pnl_usd;
+      }
+      return `${a.agent_id}-${a.min_edge}`.localeCompare(
+        `${b.agent_id}-${b.min_edge}`,
+      );
+    });
+  const stressTestedRules = stressRules.filter(
+    (rule) => rule.resolved_trades > 0,
+  );
   const unavailable = snapshot.source !== "live";
   const status: PaperTradingLiquidityReviewStatus = unavailable
     ? "unavailable"
@@ -205,6 +345,20 @@ export function buildPaperTradingLiquidityReview(
         0,
       ),
     ),
+    stress_scenario_count:
+      PAPER_TRADING_LIQUIDITY_RULES.execution_stress_scenarios.length,
+    stress_tested_rule_count: stressTestedRules.length,
+    stress_surviving_rule_count: stressRules.filter(
+      (rule) => rule.status === "survives_stress",
+    ).length,
+    stress_fragile_rule_count: stressRules.filter(
+      (rule) => rule.status === "fragile_profit",
+    ).length,
+    stress_loss_rule_count: stressRules.filter(
+      (rule) => rule.status === "loss_making",
+    ).length,
+    stress_evidence_counts_as_proof: false,
+    stress_rules: stressRules,
     sources,
   };
 }
