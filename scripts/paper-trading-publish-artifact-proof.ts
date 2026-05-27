@@ -87,6 +87,16 @@ function main() {
       "Refusing to publish artifact proof unless real_money_execution_allowed=false.",
     );
   }
+  const agentEdgeProof = record(artifactProof.agent_edge_proof);
+  if (
+    Object.keys(agentEdgeProof).length > 0 &&
+    (agentEdgeProof.paper_only !== true ||
+      agentEdgeProof.real_money_execution_allowed !== false)
+  ) {
+    throw new Error(
+      "Refusing to publish agent_edge_proof unless it stays paper-only with execution disabled.",
+    );
+  }
 
   const runId = stringEnv("GITHUB_RUN_ID");
   const artifactName = runId
@@ -121,6 +131,8 @@ function main() {
     },
     artifact_contract: PAPER_TRADING_ARTIFACT_CONTRACT,
     workflow_mode: workflowMode,
+    agent_edge_proof:
+      Object.keys(agentEdgeProof).length > 0 ? agentEdgeProof : null,
     artifact_audit: {
       verdict: artifactAudit.verdict ?? null,
       checked_at: artifactAudit.checked_at ?? null,

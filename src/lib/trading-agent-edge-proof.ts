@@ -274,13 +274,25 @@ export function buildPaperTradingAgentEdgeProof(args: {
       : source === "published_artifact"
         ? artifactRows
         : [];
-  const sortedRows = sourceRows.slice().sort(compareAgentEdgeRows);
+  return buildPaperTradingAgentEdgeProofFromRows({
+    rows: sourceRows,
+    source,
+    generatedAt: args.generatedAt,
+  });
+}
+
+export function buildPaperTradingAgentEdgeProofFromRows(args: {
+  rows: PaperTradingAgentEdgeProofRow[];
+  source: PaperTradingAgentEdgeProofSource;
+  generatedAt?: string;
+}): PaperTradingAgentEdgeProof {
+  const sortedRows = args.rows.slice().sort(compareAgentEdgeRows);
   const rows = sortedRows.map((row, index) => {
     const status = profitabilityStatus(row);
     return {
       ...row,
       rank: index + 1,
-      source,
+      source: args.source,
       profitability_status: status,
       profitability_status_label: profitabilityStatusLabel(status),
       is_profitable: status === "profitable",
@@ -321,13 +333,13 @@ export function buildPaperTradingAgentEdgeProof(args: {
           ? "Collecting"
           : "Unavailable",
     message:
-      source === "none"
+      args.source === "none"
         ? "No canonical agent-edge proof matrix is available yet."
         : status === "collecting"
           ? "Canonical agent-edge rules are being captured, but no live paper trades have resolved in the proof window yet."
           : "Canonical agent-edge proof is available for profitability review.",
     next_required_action:
-      source === "none"
+      args.source === "none"
         ? "Run the paper snapshot workflow and publish a proof artifact."
         : status === "collecting"
           ? "Wait for live paper markets to resolve before treating open EV as realized profit."
@@ -336,8 +348,8 @@ export function buildPaperTradingAgentEdgeProof(args: {
             : "Compare resolved P&L, ROI, drawdown, and blockers before any operator review.",
     paper_only: true,
     real_money_execution_allowed: false,
-    source,
-    source_label: sourceLabel(source),
+    source: args.source,
+    source_label: sourceLabel(args.source),
     rule_count: rows.length,
     candidate_count: candidateCount,
     profitable_rule_count: profitableRuleCount,
