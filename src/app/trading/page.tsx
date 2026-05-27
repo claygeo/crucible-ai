@@ -20,6 +20,7 @@ import {
   tradingControlsToQuery,
 } from "@/lib/trading";
 import {
+  buildPaperTradingCapitalReviewPacket,
   buildPaperTradingProofEvidenceSources,
   buildPaperTradingProofReadiness,
   buildPaperTradingProofRunway,
@@ -135,6 +136,14 @@ function proofRunwayStatusClass(status: string) {
 function wouldTradeStatusClass(status: string) {
   if (status === "collecting") return "bg-accent/10 text-accent";
   if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  return "bg-text-muted/10 text-text-muted";
+}
+
+function capitalReviewPacketStatusClass(status: string) {
+  if (status === "reviewable_paper_candidate") {
+    return "bg-positive/10 text-positive";
+  }
+  if (status === "not_reviewable") return "bg-warn/10 text-warn";
   return "bg-text-muted/10 text-text-muted";
 }
 
@@ -262,6 +271,11 @@ export default async function TradingPage({
     captureCalendar,
     resolutionWatch,
   });
+  const capitalReviewPacket = buildPaperTradingCapitalReviewPacket({
+    proofSummary,
+    proofReadiness,
+    proofRunway,
+  });
   const proofEvidenceSources = buildPaperTradingProofEvidenceSources({
     persistence: persisted,
     proofReadiness,
@@ -289,6 +303,7 @@ export default async function TradingPage({
       ? publishedReadiness.status
       : "unavailable";
   const resolutionReviewJsonHref = `/api/trading-resolution-review?${selectedQuery}`;
+  const capitalReviewJsonHref = `/api/trading-capital-review?${selectedQuery}`;
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
     .filter((series) => series.sample === "live_only")
     .map((series) => {
@@ -1295,6 +1310,96 @@ export default async function TradingPage({
                 </table>
               </div>
             )}
+          </div>
+          <div className="border-t border-border-subtle pt-4 flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="heading text-sm text-text-primary">
+                  Capital review packet
+                </h3>
+                <p className="text-xs text-text-muted mt-1">
+                  {capitalReviewPacket.decision_summary}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={capitalReviewJsonHref}
+                  className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+                >
+                  packet json
+                </Link>
+                <span
+                  className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${capitalReviewPacketStatusClass(
+                    capitalReviewPacket.status
+                  )}`}
+                >
+                  {capitalReviewPacket.status_label}
+                </span>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-5 gap-y-4">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Decision
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {capitalReviewPacket.decision.replaceAll("_", " ")}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Captured
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(capitalReviewPacket.evidence.captured_days)}/
+                  {int(capitalReviewPacket.evidence.required_live_days)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Resolved
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(capitalReviewPacket.evidence.resolved_trades)}/
+                  {int(capitalReviewPacket.evidence.required_resolved_trades)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Window P&amp;L
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${pnlClass(
+                    capitalReviewPacket.evidence.window_pnl_usd
+                  )}`}
+                >
+                  {dollars(capitalReviewPacket.evidence.window_pnl_usd, 0)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Review blockers
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${
+                    capitalReviewPacket.blockers.length > 0
+                      ? "text-warn"
+                      : "text-positive"
+                  }`}
+                >
+                  {int(capitalReviewPacket.blockers.length)}
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
+              <span>{capitalReviewPacket.next_required_action}</span>
+              <span>execution path: absent</span>
+              <span>real money: disabled</span>
+              <span>
+                earliest review{" "}
+                {capitalReviewPacket.earliest_capital_review_date ?? "unknown"}
+              </span>
+            </div>
           </div>
           <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">

@@ -405,6 +405,55 @@ export type PaperTradingProofRunway = {
   milestones: PaperTradingProofRunwayMilestone[];
 };
 
+export type PaperTradingCapitalReviewStatus =
+  | "reviewable_paper_candidate"
+  | "not_reviewable"
+  | "unavailable";
+
+export type PaperTradingCapitalReviewPacket = {
+  schema_version: "1";
+  generated_at: string;
+  status: PaperTradingCapitalReviewStatus;
+  status_label: string;
+  decision:
+    | "ready_for_operator_review"
+    | "do_not_allocate_capital"
+    | "proof_unavailable";
+  decision_summary: string;
+  next_required_action: string;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  execution_path_present: false;
+  capital_review_allowed: boolean;
+  earliest_capital_review_at: string | null;
+  earliest_capital_review_date: string | null;
+  blockers: string[];
+  passed_item_count: number;
+  collecting_item_count: number;
+  blocked_item_count: number;
+  unavailable_item_count: number;
+  required_rules: typeof PAPER_TRADING_PROOF_RULES;
+  evidence: {
+    best_live_strategy_id: string | null;
+    best_live_strategy_label: string | null;
+    best_live_status: DurableProofStatus | null;
+    captured_days: number;
+    required_live_days: number;
+    resolved_trades: number;
+    required_resolved_trades: number;
+    window_pnl_usd: number;
+    min_window_pnl_usd: number;
+    window_roi_on_stake: number;
+    min_roi_on_stake: number;
+    max_drawdown_usd: number;
+    open_live_signals: number | null;
+    review_required_live_signals: number | null;
+    pending_resolution_capacity: number | null;
+  };
+  readiness_items: PaperTradingProofReadinessItem[];
+  runway_milestones: PaperTradingProofRunwayMilestone[];
+};
+
 export type PaperTradingProofEvidenceSourceStatus =
   | "active"
   | "available"
@@ -2415,6 +2464,100 @@ export function buildPaperTradingProofReadiness(args: {
     ).length,
     blocked_item_ids: blockedItemIds,
     items,
+  };
+}
+
+function capitalReviewStatusLabel(
+  status: PaperTradingCapitalReviewStatus,
+): string {
+  if (status === "reviewable_paper_candidate") return "Reviewable";
+  if (status === "unavailable") return "Unavailable";
+  return "Not reviewable";
+}
+
+export function buildPaperTradingCapitalReviewPacket(args: {
+  proofSummary: PaperTradingProofSummary;
+  proofReadiness: PaperTradingProofReadiness;
+  proofRunway: PaperTradingProofRunway;
+  generatedAt?: string;
+}): PaperTradingCapitalReviewPacket {
+  const generatedAt = args.generatedAt ?? new Date().toISOString();
+  const status: PaperTradingCapitalReviewStatus =
+    args.proofReadiness.status === "unavailable" ||
+    args.proofSummary.capital_review_status === "unavailable" ||
+    args.proofRunway.status === "unavailable"
+      ? "unavailable"
+      : args.proofReadiness.ready_for_capital_review &&
+          args.proofSummary.capital_review_status === "reviewable" &&
+          args.proofRunway.status === "reviewable"
+        ? "reviewable_paper_candidate"
+        : "not_reviewable";
+  const decision: PaperTradingCapitalReviewPacket["decision"] =
+    status === "reviewable_paper_candidate"
+      ? "ready_for_operator_review"
+      : status === "unavailable"
+        ? "proof_unavailable"
+        : "do_not_allocate_capital";
+  const itemBlockers = args.proofReadiness.items
+    .filter((item) => item.status === "blocked")
+    .map((item) => `${item.label}: ${item.detail}`);
+  const blockers =
+    status === "reviewable_paper_candidate"
+      ? []
+      : [
+          ...args.proofSummary.capital_review_blockers,
+          ...itemBlockers,
+          args.proofRunway.blocker_summary,
+        ]
+          .filter((blocker) => blocker.trim().length > 0)
+          .filter((blocker, index, list) => list.indexOf(blocker) === index);
+
+  return {
+    schema_version: "1",
+    generated_at: generatedAt,
+    status,
+    status_label: capitalReviewStatusLabel(status),
+    decision,
+    decision_summary:
+      status === "reviewable_paper_candidate"
+        ? "A durable paper candidate is ready for operator review; execution remains disabled."
+        : status === "unavailable"
+          ? "Proof evidence is unavailable, so capital review is not allowed."
+          : "Do not allocate capital; the 30-day paper proof gate has not cleared.",
+    next_required_action: args.proofReadiness.next_required_action,
+    paper_only: true,
+    real_money_execution_allowed: false,
+    execution_path_present: false,
+    capital_review_allowed: status === "reviewable_paper_candidate",
+    earliest_capital_review_at: args.proofRunway.earliest_capital_review_at,
+    earliest_capital_review_date: args.proofRunway.earliest_capital_review_date,
+    blockers,
+    passed_item_count: args.proofReadiness.passed_item_count,
+    collecting_item_count: args.proofReadiness.collecting_item_count,
+    blocked_item_count: args.proofReadiness.blocked_item_count,
+    unavailable_item_count: args.proofReadiness.unavailable_item_count,
+    required_rules: PAPER_TRADING_PROOF_RULES,
+    evidence: {
+      best_live_strategy_id: args.proofSummary.best_live_strategy_id,
+      best_live_strategy_label: args.proofSummary.best_live_strategy_label,
+      best_live_status: args.proofSummary.best_live_status,
+      captured_days: args.proofSummary.best_live_captured_days,
+      required_live_days: PAPER_TRADING_PROOF_RULES.requiredLiveDays,
+      resolved_trades: args.proofSummary.best_live_resolved_trades,
+      required_resolved_trades:
+        PAPER_TRADING_PROOF_RULES.requiredResolvedTrades,
+      window_pnl_usd: args.proofSummary.best_live_window_pnl_usd,
+      min_window_pnl_usd: PAPER_TRADING_PROOF_RULES.minResolvedNetPnlUsd,
+      window_roi_on_stake: args.proofSummary.best_live_window_roi_on_stake,
+      min_roi_on_stake: PAPER_TRADING_PROOF_RULES.minRoiOnStake,
+      max_drawdown_usd: PAPER_TRADING_PROOF_RULES.maxDrawdownUsd,
+      open_live_signals: args.proofRunway.open_live_signals,
+      review_required_live_signals:
+        args.proofRunway.review_required_live_signals,
+      pending_resolution_capacity: args.proofRunway.pending_resolution_capacity,
+    },
+    readiness_items: args.proofReadiness.items,
+    runway_milestones: args.proofRunway.milestones,
   };
 }
 

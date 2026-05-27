@@ -77,6 +77,7 @@ export type PublishedPaperTradingArtifactProof = {
   proof_summary: Record<string, unknown> | null;
   proof_readiness: Record<string, unknown> | null;
   proof_runway: Record<string, unknown> | null;
+  capital_review_packet: Record<string, unknown> | null;
   strategy_registry: Record<string, unknown> | null;
   would_trade_today: Record<string, unknown> | null;
   agent_edge_proof_matrix: unknown[];
@@ -384,6 +385,7 @@ function unavailablePublishedProof(
     proof_summary: null,
     proof_readiness: null,
     proof_runway: null,
+    capital_review_packet: null,
     strategy_registry: null,
     would_trade_today: null,
     agent_edge_proof_matrix: [],
@@ -410,6 +412,9 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
     const artifactAudit = objectOrNull(proof.artifact_audit);
     const proofReadiness = objectOrNull(artifactProof?.proof_readiness);
     const proofRunway = objectOrNull(artifactProof?.proof_runway);
+    const capitalReviewPacket = objectOrNull(
+      artifactProof?.capital_review_packet,
+    );
     const proofSummary = objectOrNull(artifactProof?.proof_summary);
     const strategyRegistry = objectOrNull(artifactProof?.strategy_registry);
     const wouldTradeToday = objectOrNull(artifactProof?.would_trade_today);
@@ -470,6 +475,7 @@ export async function loadPublishedPaperTradingArtifactProof(): Promise<Publishe
       proof_summary: proofSummary,
       proof_readiness: proofReadiness,
       proof_runway: proofRunway,
+      capital_review_packet: capitalReviewPacket,
       strategy_registry: strategyRegistry,
       would_trade_today: wouldTradeToday,
       agent_edge_proof_matrix: arrayOrEmpty(

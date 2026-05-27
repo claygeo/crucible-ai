@@ -724,6 +724,7 @@ async function buildArtifactProof(
       proof_summary: null,
       proof_readiness: null,
       proof_runway: null,
+      capital_review_packet: null,
       capture_health: null,
       capture_calendar: null,
       resolution_watch: resolutionWatch,
@@ -736,6 +737,7 @@ async function buildArtifactProof(
 
   const {
     buildPaperTradingAgentEdgeProofMatrix,
+    buildPaperTradingCapitalReviewPacket,
     buildPaperTradingCaptureCalendar,
     buildPaperTradingCaptureHealth,
     buildPaperTradingProofReadiness,
@@ -772,6 +774,11 @@ async function buildArtifactProof(
     captureCalendar,
     resolutionWatch,
   });
+  const capitalReviewPacket = buildPaperTradingCapitalReviewPacket({
+    proofSummary,
+    proofReadiness,
+    proofRunway,
+  });
 
   return {
     status: "available",
@@ -783,6 +790,7 @@ async function buildArtifactProof(
     proof_summary: proofSummary,
     proof_readiness: proofReadiness,
     proof_runway: proofRunway,
+    capital_review_packet: capitalReviewPacket,
     capture_health: captureHealth,
     capture_calendar: captureCalendar,
     resolution_watch: resolutionWatch,
@@ -930,6 +938,31 @@ async function buildReport(options: CliOptions, files: string[]) {
     latestSnapshotSummary?.strategy_registry ?? null,
     latestSnapshotSummary?.would_trade_today ?? null,
   );
+  const capitalReviewPacket = isRecord(proof.capital_review_packet)
+    ? proof.capital_review_packet
+    : null;
+  if (proof.status === "available" && !capitalReviewPacket) {
+    failedChecks.push({
+      path: null,
+      code: "capital_review_packet",
+      label: "Capital review packet",
+      detail: "Available artifact proof must include capital_review_packet.",
+    });
+  }
+  if (
+    capitalReviewPacket &&
+    (capitalReviewPacket.paper_only !== true ||
+      capitalReviewPacket.real_money_execution_allowed !== false ||
+      capitalReviewPacket.execution_path_present !== false)
+  ) {
+    failedChecks.push({
+      path: null,
+      code: "capital_review_paper_only",
+      label: "Capital review paper-only lock",
+      detail:
+        "capital_review_packet must keep paper_only=true, real_money_execution_allowed=false, and execution_path_present=false.",
+    });
+  }
 
   return {
     verdict: failedChecks.length === 0 ? "pass" : "blocked",

@@ -6,6 +6,7 @@ import {
 } from "@/lib/trading-artifacts";
 import { buildResolutionReviewQueue } from "@/lib/trading-resolution-review";
 import {
+  buildPaperTradingCapitalReviewPacket,
   buildPaperTradingProofEvidenceSources,
   loadPaperTradingSnapshotHistory,
   persistPaperTradingSnapshot,
@@ -45,6 +46,11 @@ export async function GET(request: NextRequest) {
     proofReadiness: history.proof_readiness,
     proofRunway: history.proof_runway,
   });
+  const capitalReviewPacket = buildPaperTradingCapitalReviewPacket({
+    proofSummary: history.proof_summary,
+    proofReadiness: history.proof_readiness,
+    proofRunway: history.proof_runway,
+  });
   const resolutionReviewQueue = buildResolutionReviewQueue({
     publishedArtifactProof,
   });
@@ -64,6 +70,7 @@ export async function GET(request: NextRequest) {
         proof_summary: history.proof_summary,
         proof_readiness: history.proof_readiness,
         proof_runway: history.proof_runway,
+        capital_review_packet: capitalReviewPacket,
         proof_evidence_sources: proofEvidenceSources,
         resolution_review_queue: resolutionReviewQueue,
         github_artifact_workflow: artifactWorkflow,
@@ -73,6 +80,7 @@ export async function GET(request: NextRequest) {
       proof_summary: history.proof_summary,
       proof_readiness: history.proof_readiness,
       proof_runway: history.proof_runway,
+      capital_review_packet: capitalReviewPacket,
       proof_evidence_sources: proofEvidenceSources,
       resolution_review_queue: resolutionReviewQueue,
       github_artifact_workflow: artifactWorkflow,

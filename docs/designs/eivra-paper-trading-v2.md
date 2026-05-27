@@ -218,6 +218,12 @@ The 30-day proof window now has a durable audit surface:
   creating an execution path. The feed also imports global resolution-hygiene
   blockers, so it cannot present a clean watchlist while any live paper market
   still needs resolution review.
+- `/api/trading-capital-review` returns the read-only capital-review packet:
+  reviewability status, decision summary, earliest possible review date,
+  blockers, readiness items, runway milestones, proof-rule thresholds, and
+  `execution_path_present: false`. The packet is also embedded in published
+  artifact proof so a future capital discussion starts from the durable 30-day
+  evidence boundary, not the live dashboard mood.
 - `persistence.proof_runway` and the top-level `persisted_proof_runway` turn the
   same evidence into an operator timeline: earliest possible capital-review
   date, remaining capture days, remaining resolved live trades, open resolution
