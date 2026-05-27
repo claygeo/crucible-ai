@@ -1,19 +1,19 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-05-27T09:44:04.726Z",
+  "generated_at": "2026-05-27T09:50:22.202Z",
   "source": "github_actions_artifact_audit",
   "paper_only": true,
   "real_money_execution_allowed": false,
   "repository": "claygeo/eivra",
   "workflow_path": ".github/workflows/paper-trading-snapshot.yml",
   "workflow_run": {
-    "id": "26503633424",
-    "url": "https://github.com/claygeo/eivra/actions/runs/26503633424",
+    "id": "26503931612",
+    "url": "https://github.com/claygeo/eivra/actions/runs/26503931612",
     "event": "workflow_dispatch",
     "ref": "main",
-    "head_sha": "6175949ce679ed6a51ad58e7f22c728054852efd",
-    "artifact_name": "paper-trading-proof-26503633424",
-    "download_command": "gh run download 26503633424 --repo claygeo/eivra --dir ./paper-artifacts"
+    "head_sha": "7b1d59255e2c0f57e4b74b6dfda45cf2fd2b2f9d",
+    "artifact_name": "paper-trading-proof-26503931612",
+    "download_command": "gh run download 26503931612 --repo claygeo/eivra --dir ./paper-artifacts"
   },
   "artifact_contract": {
     "repository": "claygeo/eivra",
@@ -42,7 +42,7 @@
   },
   "artifact_audit": {
     "verdict": "pass",
-    "checked_at": "2026-05-27T09:44:03.925Z",
+    "checked_at": "2026-05-27T09:50:21.467Z",
     "exit_code": 0,
     "artifact_count": 1,
     "latest_snapshot_date": "2026-05-27",
@@ -61,7 +61,7 @@
       {
         "path": "/home/runner/work/eivra/eivra/paper-snapshot-result.json",
         "source": "live",
-        "generated_at": "2026-05-27T09:44:01.610Z",
+        "generated_at": "2026-05-27T09:50:18.647Z",
         "snapshot_date": "2026-05-27",
         "resolution_watch": {
           "status": "overdue_resolution",
@@ -98,7 +98,7 @@
               "close_status": "overdue",
               "tradability_status": "needs_review",
               "days_until_close": -0.41,
-              "age_days": 1.89
+              "age_days": 1.9
             },
             {
               "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
@@ -117,7 +117,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.59,
-              "age_days": 1.39
+              "age_days": 1.4
             },
             {
               "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
@@ -136,7 +136,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.59,
-              "age_days": 1.39
+              "age_days": 1.4
             },
             {
               "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -155,7 +155,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.59,
-              "age_days": 1.39
+              "age_days": 1.4
             },
             {
               "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -174,7 +174,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.59,
-              "age_days": 1.39
+              "age_days": 1.4
             },
             {
               "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
@@ -192,8 +192,8 @@
               "created_at": "2026-05-24T12:19:25.197698+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 1.76,
-              "age_days": 2.89
+              "days_until_close": 1.75,
+              "age_days": 2.9
             },
             {
               "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
@@ -211,8 +211,8 @@
               "created_at": "2026-05-26T00:20:32.626001+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 3.26,
-              "age_days": 1.39
+              "days_until_close": 3.25,
+              "age_days": 1.4
             },
             {
               "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -231,7 +231,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.35,
-              "age_days": 1.89
+              "age_days": 1.9
             },
             {
               "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -250,7 +250,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.35,
-              "age_days": 1.89
+              "age_days": 1.9
             },
             {
               "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -269,7 +269,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.59,
-              "age_days": 6.37
+              "age_days": 6.38
             },
             {
               "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -288,7 +288,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.59,
-              "age_days": 6.37
+              "age_days": 6.38
             },
             {
               "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
@@ -313,7 +313,7 @@
         },
         "strategy_registry": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T09:44:01.610Z",
+          "generated_at": "2026-05-27T09:50:18.647Z",
           "paper_only": true,
           "real_money_execution_allowed": false,
           "config": {
@@ -722,7 +722,7 @@
         },
         "would_trade_today": {
           "schema_version": "1",
-          "generated_at": "2026-05-27T09:44:01.610Z",
+          "generated_at": "2026-05-27T09:50:18.647Z",
           "status": "blocked",
           "status_label": "Blocked",
           "message": "1 global live paper market need resolution review before any would-trade watchlist is trusted.",
@@ -866,8 +866,8 @@
                 "created_at": "2026-05-21T00:48:41.661021+00:00",
                 "close_status": "future",
                 "tradability_status": "tradable",
-                "days_until_close": 21.64,
-                "age_days": 6.37
+                "days_until_close": 21.63,
+                "age_days": 6.38
               }
             ],
             "paper_only": true,
@@ -897,7 +897,7 @@
               "close_status": "overdue",
               "tradability_status": "needs_review",
               "days_until_close": -0.41,
-              "age_days": 1.89
+              "age_days": 1.9
             }
           ],
           "unique_open_signals": 30,
@@ -972,7 +972,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.35,
-                  "age_days": 1.89
+                  "age_days": 1.9
                 },
                 {
                   "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -1043,7 +1043,7 @@
                   "created_at": "2026-05-21T01:24:34.379932+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.89,
+                  "days_until_close": 4.88,
                   "age_days": 6.35
                 }
               ],
@@ -1185,8 +1185,8 @@
                   "created_at": "2026-05-21T00:48:41.661021+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 21.64,
-                  "age_days": 6.37
+                  "days_until_close": 21.63,
+                  "age_days": 6.38
                 }
               ],
               "paper_only": true,
@@ -1327,8 +1327,8 @@
                   "created_at": "2026-05-21T00:48:41.661021+00:00",
                   "close_status": "future",
                   "tradability_status": "tradable",
-                  "days_until_close": 21.64,
-                  "age_days": 6.37
+                  "days_until_close": 21.63,
+                  "age_days": 6.38
                 }
               ],
               "paper_only": true,
@@ -1446,7 +1446,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.59,
-                  "age_days": 6.37
+                  "age_days": 6.38
                 },
                 {
                   "prediction_id": "f661b165-9ed0-4b8a-a3e7-bacdb97797f5",
@@ -1470,7 +1470,7 @@
                   "close_status": "future",
                   "tradability_status": "tradable",
                   "days_until_close": 76.7,
-                  "age_days": 6.35
+                  "age_days": 6.36
                 }
               ],
               "paper_only": true,
@@ -1539,7 +1539,7 @@
                   "created_at": "2026-05-21T01:24:34.379932+00:00",
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
-                  "days_until_close": 4.89,
+                  "days_until_close": 4.88,
                   "age_days": 6.35
                 },
                 {
@@ -1564,7 +1564,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.59,
-                  "age_days": 6.37
+                  "age_days": 6.38
                 },
                 {
                   "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -1588,7 +1588,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.59,
-                  "age_days": 6.37
+                  "age_days": 6.38
                 },
                 {
                   "prediction_id": "a8cf8cf0-f847-4afd-b2c5-0ea0d8505e9e",
@@ -1754,7 +1754,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 4.59,
-                  "age_days": 1.89
+                  "age_days": 1.9
                 }
               ],
               "paper_only": true,
@@ -1824,7 +1824,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 0.59,
-                  "age_days": 1.39
+                  "age_days": 1.4
                 },
                 {
                   "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -1918,7 +1918,7 @@
                   "close_status": "closing_next_7d",
                   "tradability_status": "tradable",
                   "days_until_close": 0.59,
-                  "age_days": 1.39
+                  "age_days": 1.4
                 },
                 {
                   "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -1960,7 +1960,7 @@
     "message": "Artifact rows were rolled up with the same paper-only proof logic used for persisted snapshots.",
     "paper_only": true,
     "real_money_execution_allowed": false,
-    "latest_captured_at": "2026-05-27T09:44:01.610Z",
+    "latest_captured_at": "2026-05-27T09:50:18.647Z",
     "proof_summary": {
       "status": "collecting",
       "status_label": "Collecting",
@@ -2072,7 +2072,7 @@
               "created_at": "2026-05-25T12:19:22.529011+00:00",
               "close_status": "overdue",
               "days_until_close": -0.41,
-              "age_days": 1.89
+              "age_days": 1.9
             }
           ]
         },
@@ -2198,11 +2198,234 @@
         }
       ]
     },
+    "capital_review_packet": {
+      "schema_version": "1",
+      "generated_at": "2026-05-27T09:50:21.467Z",
+      "status": "not_reviewable",
+      "status_label": "Not reviewable",
+      "decision": "do_not_allocate_capital",
+      "decision_summary": "Do not allocate capital; the 30-day paper proof gate has not cleared.",
+      "next_required_action": "Investigate 1 live paper market needing resolution review before trusting open EV.",
+      "paper_only": true,
+      "real_money_execution_allowed": false,
+      "execution_path_present": false,
+      "capital_review_allowed": false,
+      "earliest_capital_review_at": "2026-06-25T05:22:00.000Z",
+      "earliest_capital_review_date": "2026-06-25",
+      "blockers": [
+        "29 more persisted capture days needed.",
+        "30 more resolved live trades needed.",
+        "Resolution hygiene: Overdue or unknown-close open markets must be checked before treating open EV as credible.",
+        "Investigate 1 live paper market needing review before trusting open EV."
+      ],
+      "passed_item_count": 3,
+      "collecting_item_count": 6,
+      "blocked_item_count": 1,
+      "unavailable_item_count": 1,
+      "required_rules": {
+        "requiredLiveDays": 30,
+        "requiredResolvedTrades": 30,
+        "minResolvedNetPnlUsd": 1,
+        "minRoiOnStake": 0,
+        "maxDrawdownUsd": 500
+      },
+      "evidence": {
+        "best_live_strategy_id": "all-live-edge-10",
+        "best_live_strategy_label": "All agents live, edge >= 10pp",
+        "best_live_status": "collecting",
+        "captured_days": 1,
+        "required_live_days": 30,
+        "resolved_trades": 0,
+        "required_resolved_trades": 30,
+        "window_pnl_usd": 0,
+        "min_window_pnl_usd": 1,
+        "window_roi_on_stake": 0,
+        "min_roi_on_stake": 0,
+        "max_drawdown_usd": 500,
+        "open_live_signals": 42,
+        "review_required_live_signals": 1,
+        "pending_resolution_capacity": 42
+      },
+      "readiness_items": [
+        {
+          "id": "archive",
+          "label": "Persisted proof archive",
+          "status": "pass",
+          "status_label": "Pass",
+          "current": "available",
+          "target": "available",
+          "detail": "Stored snapshots must be readable before the lab can prove anything.",
+          "evidence": []
+        },
+        {
+          "id": "paper_only",
+          "label": "Paper-only lock",
+          "status": "pass",
+          "status_label": "Pass",
+          "current": "execution disabled",
+          "target": "execution disabled",
+          "detail": "The proof lab must never enable orders, wallets, leverage, or live capital.",
+          "evidence": []
+        },
+        {
+          "id": "capture_freshness",
+          "label": "Daily capture freshness",
+          "status": "pass",
+          "status_label": "Pass",
+          "current": "Fresh",
+          "target": "fresh",
+          "detail": "Latest persisted capture is within the daily freshness window.",
+          "evidence": []
+        },
+        {
+          "id": "registry_sync",
+          "label": "Strategy registry sync",
+          "status": "unavailable",
+          "status_label": "Unavailable",
+          "current": "not checked",
+          "target": "current live registry captured",
+          "detail": "Only /api/trading.json can compare current and persisted registries.",
+          "evidence": []
+        },
+        {
+          "id": "resolution_hygiene",
+          "label": "Resolution hygiene",
+          "status": "blocked",
+          "status_label": "Blocked",
+          "current": "1 needs review (1 overdue, 0 unknown close) / 42 open",
+          "target": "0 review-required live paper markets",
+          "detail": "Overdue or unknown-close open markets must be checked before treating open EV as credible.",
+          "evidence": [
+            {
+              "kind": "resolution_signal",
+              "prediction_id": "777708e1-69a0-42d8-8fd2-10d7a91f76be",
+              "market_id": "38aab025-d0b0-4545-9d15-fe0964214db9",
+              "market_question": "Will manifold continue M6 trader bonus after May 25th?",
+              "market_source": "manifold",
+              "market_url": "https://manifold.markets/2ndPairofBoots/will-manifold-continue-m6-trader-bo",
+              "market_status": "open",
+              "agent_id": "hawk",
+              "agent_name": "Hawk",
+              "side": "YES",
+              "stake_usd": 100,
+              "expected_pnl_usd": 33.16,
+              "market_closes_at": "2026-05-26T23:59:00+00:00",
+              "created_at": "2026-05-25T12:19:22.529011+00:00",
+              "close_status": "overdue",
+              "days_until_close": -0.41,
+              "age_days": 1.9
+            }
+          ]
+        },
+        {
+          "id": "capture_window",
+          "label": "30-day capture window",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "current": "1/30 complete days",
+          "target": "30 complete days, 0 missing",
+          "detail": "0 missing, 0 partial.",
+          "evidence": []
+        },
+        {
+          "id": "resolved_trades",
+          "label": "Resolved live trades",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "current": "0/30",
+          "target": "30 resolved live paper trades",
+          "detail": "Best live rollup: All agents live, edge >= 10pp.",
+          "evidence": []
+        },
+        {
+          "id": "window_pnl",
+          "label": "Positive window P&L",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "current": "$0.00",
+          "target": ">= $1.00",
+          "detail": "Waiting for enough captured days and resolved trades.",
+          "evidence": []
+        },
+        {
+          "id": "window_roi",
+          "label": "Positive window ROI",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "current": "0.0%",
+          "target": "> 0.0%",
+          "detail": "ROI is not judged until the proof window is complete.",
+          "evidence": []
+        },
+        {
+          "id": "drawdown",
+          "label": "Drawdown limit",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "current": "tracked in rollups",
+          "target": "<= $500",
+          "detail": "Drawdown is not final until the proof window is complete.",
+          "evidence": []
+        },
+        {
+          "id": "capital_review",
+          "label": "Capital review boundary",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "current": "Blocked",
+          "target": "reviewable candidate, execution still disabled",
+          "detail": "29 more persisted capture days needed.",
+          "evidence": []
+        }
+      ],
+      "runway_milestones": [
+        {
+          "id": "capture_window",
+          "label": "30-day capture runway",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "current": "1/30 complete days",
+          "target": "30 complete days",
+          "eta_at": "2026-06-25T05:22:00.000Z",
+          "detail": "Earliest date assumes the daily snapshot keeps landing on schedule."
+        },
+        {
+          "id": "resolved_trades",
+          "label": "Resolved trade runway",
+          "status": "collecting",
+          "status_label": "Collecting",
+          "current": "0/30 resolved",
+          "target": "30 resolved live paper trades",
+          "eta_at": null,
+          "detail": "42 open live paper tickets can become realized evidence when markets resolve."
+        },
+        {
+          "id": "resolution_hygiene",
+          "label": "Resolution hygiene",
+          "status": "blocked",
+          "status_label": "Blocked",
+          "current": "1 needs review / 42 open",
+          "target": "0 review-required live paper markets",
+          "eta_at": "2026-05-28T00:00:00.000Z",
+          "detail": "Overdue or unknown-close markets must be investigated before their EV is treated as actionable."
+        },
+        {
+          "id": "capital_review",
+          "label": "Capital review boundary",
+          "status": "blocked",
+          "status_label": "Blocked",
+          "current": "Blocked",
+          "target": "reviewable candidate, execution still disabled",
+          "eta_at": "2026-06-25T05:22:00.000Z",
+          "detail": "29 more persisted capture days needed."
+        }
+      ]
+    },
     "capture_health": {
       "cron": "22 5 * * *",
       "scheduled_time_utc": "05:22",
       "stale_after_hours": 36,
-      "latest_captured_at": "2026-05-27T09:44:01.610Z",
+      "latest_captured_at": "2026-05-27T09:50:18.647Z",
       "previous_expected_capture_at": "2026-05-27T05:22:00.000Z",
       "next_expected_capture_at": "2026-05-28T05:22:00.000Z",
       "status": "fresh",
@@ -2272,7 +2495,7 @@
             "sage-live-edge-10",
             "sports-live-edge-10"
           ],
-          "latest_captured_at": "2026-05-27T09:44:01.610Z"
+          "latest_captured_at": "2026-05-27T09:50:18.647Z"
         }
       ]
     },
@@ -2311,7 +2534,7 @@
           "close_status": "overdue",
           "tradability_status": "needs_review",
           "days_until_close": -0.41,
-          "age_days": 1.89
+          "age_days": 1.9
         },
         {
           "prediction_id": "bc5020f0-8da4-4c4a-9874-2e612d09e27d",
@@ -2330,7 +2553,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 0.59,
-          "age_days": 1.39
+          "age_days": 1.4
         },
         {
           "prediction_id": "18a237d9-a36c-4bfc-9edc-3fcf6bd6dbe9",
@@ -2349,7 +2572,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 0.59,
-          "age_days": 1.39
+          "age_days": 1.4
         },
         {
           "prediction_id": "de24fce2-315a-4289-a8bb-31e6abd61e17",
@@ -2368,7 +2591,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 0.59,
-          "age_days": 1.39
+          "age_days": 1.4
         },
         {
           "prediction_id": "8920b21f-08ab-4301-8a0a-592c222ddf49",
@@ -2387,7 +2610,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 0.59,
-          "age_days": 1.39
+          "age_days": 1.4
         },
         {
           "prediction_id": "defbfc89-003c-4e1f-a23c-d9edd9221fe1",
@@ -2405,8 +2628,8 @@
           "created_at": "2026-05-24T12:19:25.197698+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 1.76,
-          "age_days": 2.89
+          "days_until_close": 1.75,
+          "age_days": 2.9
         },
         {
           "prediction_id": "24a13aef-73e0-4765-b4c8-720b8b76123b",
@@ -2424,8 +2647,8 @@
           "created_at": "2026-05-26T00:20:32.626001+00:00",
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
-          "days_until_close": 3.26,
-          "age_days": 1.39
+          "days_until_close": 3.25,
+          "age_days": 1.4
         },
         {
           "prediction_id": "37d6d6d7-4251-4392-a30d-041e55adda28",
@@ -2444,7 +2667,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.35,
-          "age_days": 1.89
+          "age_days": 1.9
         },
         {
           "prediction_id": "419b06f4-776b-4ecc-831c-8d8f67efd16d",
@@ -2463,7 +2686,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.35,
-          "age_days": 1.89
+          "age_days": 1.9
         },
         {
           "prediction_id": "6a4786e6-e21f-476a-a814-4a2bfd6e8342",
@@ -2482,7 +2705,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.59,
-          "age_days": 6.37
+          "age_days": 6.38
         },
         {
           "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -2501,7 +2724,7 @@
           "close_status": "closing_next_7d",
           "tradability_status": "tradable",
           "days_until_close": 4.59,
-          "age_days": 6.37
+          "age_days": 6.38
         },
         {
           "prediction_id": "9fd8ae9f-9890-4d8d-bd6d-ea143f5a063f",
@@ -2526,7 +2749,7 @@
     },
     "strategy_registry": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T09:44:01.610Z",
+      "generated_at": "2026-05-27T09:50:18.647Z",
       "paper_only": true,
       "real_money_execution_allowed": false,
       "config": {
@@ -2935,7 +3158,7 @@
     },
     "would_trade_today": {
       "schema_version": "1",
-      "generated_at": "2026-05-27T09:44:01.610Z",
+      "generated_at": "2026-05-27T09:50:18.647Z",
       "status": "blocked",
       "status_label": "Blocked",
       "message": "1 global live paper market need resolution review before any would-trade watchlist is trusted.",
@@ -3079,8 +3302,8 @@
             "created_at": "2026-05-21T00:48:41.661021+00:00",
             "close_status": "future",
             "tradability_status": "tradable",
-            "days_until_close": 21.64,
-            "age_days": 6.37
+            "days_until_close": 21.63,
+            "age_days": 6.38
           }
         ],
         "paper_only": true,
@@ -3110,7 +3333,7 @@
           "close_status": "overdue",
           "tradability_status": "needs_review",
           "days_until_close": -0.41,
-          "age_days": 1.89
+          "age_days": 1.9
         }
       ],
       "unique_open_signals": 30,
@@ -3185,7 +3408,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.35,
-              "age_days": 1.89
+              "age_days": 1.9
             },
             {
               "prediction_id": "1e20c465-43c3-445e-be5e-3c7a4abcc6ab",
@@ -3256,7 +3479,7 @@
               "created_at": "2026-05-21T01:24:34.379932+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.89,
+              "days_until_close": 4.88,
               "age_days": 6.35
             }
           ],
@@ -3398,8 +3621,8 @@
               "created_at": "2026-05-21T00:48:41.661021+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 21.64,
-              "age_days": 6.37
+              "days_until_close": 21.63,
+              "age_days": 6.38
             }
           ],
           "paper_only": true,
@@ -3540,8 +3763,8 @@
               "created_at": "2026-05-21T00:48:41.661021+00:00",
               "close_status": "future",
               "tradability_status": "tradable",
-              "days_until_close": 21.64,
-              "age_days": 6.37
+              "days_until_close": 21.63,
+              "age_days": 6.38
             }
           ],
           "paper_only": true,
@@ -3659,7 +3882,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.59,
-              "age_days": 6.37
+              "age_days": 6.38
             },
             {
               "prediction_id": "f661b165-9ed0-4b8a-a3e7-bacdb97797f5",
@@ -3683,7 +3906,7 @@
               "close_status": "future",
               "tradability_status": "tradable",
               "days_until_close": 76.7,
-              "age_days": 6.35
+              "age_days": 6.36
             }
           ],
           "paper_only": true,
@@ -3752,7 +3975,7 @@
               "created_at": "2026-05-21T01:24:34.379932+00:00",
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
-              "days_until_close": 4.89,
+              "days_until_close": 4.88,
               "age_days": 6.35
             },
             {
@@ -3777,7 +4000,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.59,
-              "age_days": 6.37
+              "age_days": 6.38
             },
             {
               "prediction_id": "ff9308b2-3b9e-4cdd-a56a-2b8a8ce9cd88",
@@ -3801,7 +4024,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.59,
-              "age_days": 6.37
+              "age_days": 6.38
             },
             {
               "prediction_id": "a8cf8cf0-f847-4afd-b2c5-0ea0d8505e9e",
@@ -3967,7 +4190,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 4.59,
-              "age_days": 1.89
+              "age_days": 1.9
             }
           ],
           "paper_only": true,
@@ -4037,7 +4260,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.59,
-              "age_days": 1.39
+              "age_days": 1.4
             },
             {
               "prediction_id": "9701c09f-495e-42cc-918f-22e390794bce",
@@ -4131,7 +4354,7 @@
               "close_status": "closing_next_7d",
               "tradability_status": "tradable",
               "days_until_close": 0.59,
-              "age_days": 1.39
+              "age_days": 1.4
             },
             {
               "prediction_id": "95f1fed7-b9d1-4017-adc4-8020c38921a8",
@@ -4188,7 +4411,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 551.42,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4241,7 +4464,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 654.71,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4294,7 +4517,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 109.88,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4347,7 +4570,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 161.2,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4400,7 +4623,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 125.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4453,7 +4676,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 223.7,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4506,7 +4729,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4559,7 +4782,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4612,7 +4835,7 @@
         "open_exposure_usd": 500,
         "open_expected_pnl_usd": 164.21,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4665,7 +4888,7 @@
         "open_exposure_usd": 300,
         "open_expected_pnl_usd": 215.04,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4718,7 +4941,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
@@ -4771,7 +4994,7 @@
         "open_exposure_usd": 0,
         "open_expected_pnl_usd": 0,
         "latest_snapshot_date": "2026-05-27",
-        "latest_captured_at": "2026-05-27T09:44:01.610Z",
+        "latest_captured_at": "2026-05-27T09:50:18.647Z",
         "proof_quality": {
           "evidence_grade": "none",
           "evidence_grade_label": "No sample",
