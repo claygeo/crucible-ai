@@ -11,6 +11,7 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
+import { buildPaperTradingLabStatus } from "@/lib/trading-lab-status";
 import { buildResolutionCatchupPreview } from "@/lib/trading-resolution-catchup";
 import {
   buildResolutionReviewQueue,
@@ -189,6 +190,22 @@ function evidenceSlaStatusClass(status: string) {
   if (status === "degraded") return "bg-warn/10 text-warn";
   if (status === "blocked") return "bg-rose-400/10 text-rose-400";
   return "bg-text-muted/10 text-text-muted";
+}
+
+function labStatusClass(status: string) {
+  if (status === "reviewable") return "bg-positive/10 text-positive";
+  if (status === "collecting") return "bg-accent/10 text-accent";
+  if (status === "degraded") return "bg-warn/10 text-warn";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  return "bg-text-muted/10 text-text-muted";
+}
+
+function labCheckStatusClass(status: string) {
+  if (status === "pass") return "bg-positive/10 text-positive";
+  if (status === "warning") return "bg-warn/10 text-warn";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
+  return "bg-accent/10 text-accent";
 }
 
 function artifactHistoryStatusClass(status: string) {
@@ -384,6 +401,18 @@ export default async function TradingPage({
   const resolutionCatchupPreview = await buildResolutionCatchupPreview({
     controls: snapshot.controls,
   });
+  const labStatus = buildPaperTradingLabStatus({
+    snapshot,
+    registrySync,
+    proofReadiness,
+    proofRunway,
+    capitalReviewPacket,
+    writeReadiness,
+    artifactHistory,
+    evidenceSla,
+    agentEdgeProof,
+    resolutionCatchupPreview,
+  });
   const latestArtifactRun = artifactWorkflow.latest_successful_artifact_run;
   const latestWorkflowRun = artifactWorkflow.latest_run;
   const publishedAudit = publishedArtifactProof.artifact_audit;
@@ -404,6 +433,7 @@ export default async function TradingPage({
   const capitalReviewJsonHref = `/api/trading-capital-review?${selectedQuery}`;
   const writeReadinessJsonHref = "/api/trading-write-readiness";
   const evidenceSlaJsonHref = `/api/trading-evidence-sla?${selectedQuery}`;
+  const labStatusJsonHref = `/api/trading-lab-status?${selectedQuery}`;
   const agentEdgeProofJsonHref = `/api/trading-agent-edge-proof?${selectedQuery}`;
   const agentEdgeTradesJsonHref = `/api/trading-agent-edge-trades?${selectedQuery}`;
   const agentEdgeWatchlistJsonHref = `/api/trading-agent-edge-watchlist?${selectedQuery}`;
@@ -1018,6 +1048,131 @@ export default async function TradingPage({
 
         <section className="panel px-5 py-5 flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="heading text-base text-text-primary">
+                30-day lab status
+              </h2>
+              <p className="text-xs text-text-muted mt-1">
+                {labStatus.selected_strategy.strategy_label}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href={labStatusJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                lab json
+              </Link>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${labStatusClass(
+                  labStatus.status
+                )}`}
+              >
+                {labStatus.status_label}
+              </span>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Proof days
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(labStatus.proof_window.complete_days)}/
+                {int(labStatus.proof_window.required_days)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Accepted P&amp;L
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${pnlClass(
+                  labStatus.tradability.selected_accepted_resolved_pnl_usd
+                )}`}
+              >
+                {dollars(
+                  labStatus.tradability.selected_accepted_resolved_pnl_usd,
+                  0
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Missed P&amp;L
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${pnlClass(
+                  labStatus.tradability.skipped_resolved_net_pnl_usd
+                )}`}
+              >
+                {dollars(
+                  labStatus.tradability.skipped_resolved_net_pnl_usd,
+                  0
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Proven rules
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(labStatus.profitability.proven_profitable_rule_count)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Positive thin
+              </div>
+              <div className="heading text-2xl text-warn mt-1">
+                {int(labStatus.profitability.positive_unproven_rule_count)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Resolver
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {labStatus.operations.resolution_catchup_status.replaceAll(
+                  "_",
+                  " "
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 border-t border-border-subtle pt-4">
+            <p className="text-sm text-text-secondary leading-relaxed">
+              {labStatus.message} {labStatus.next_required_action}
+            </p>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {labStatus.checks.slice(0, 6).map((item) => (
+                <div
+                  key={item.id}
+                  className="border-b border-border-subtle/60 pb-2 min-w-0"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="mono text-[10px] uppercase tracking-wider text-text-muted truncate">
+                      {item.label}
+                    </div>
+                    <span
+                      className={`mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shrink-0 ${labCheckStatusClass(
+                        item.status
+                      )}`}
+                    >
+                      {item.status_label}
+                    </span>
+                  </div>
+                  <div className="text-xs text-text-secondary mt-1 line-clamp-2">
+                    {item.current}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="panel px-5 py-5 flex flex-col gap-5">
+          <div className="flex items-center justify-between gap-3">
             <h2 className="heading text-base text-text-primary">30-day proof gate</h2>
             <span
               className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofStatusClass(selectedProof.status)}`}
@@ -1130,6 +1285,12 @@ export default async function TradingPage({
                 className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
               >
                 evidence sla
+              </Link>
+              <Link
+                href={labStatusJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                lab status
               </Link>
               <Link
                 href={agentEdgeProofJsonHref}
