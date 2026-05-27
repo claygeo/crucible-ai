@@ -122,6 +122,11 @@ authoritative readiness gate for the 30-day lab because it uses stored capture
 days, latest resolved live-trade stats, drawdown, and capture freshness instead
 of the current request's URL filters.
 
+Each rollup also carries `capture_coverage`, which compares captured snapshot
+dates against the latest up-to-30 scheduled capture dates in the proof window.
+Missing scheduled dates block live strategies from becoming candidates, even
+when the latest global capture is still inside the broader freshness window.
+
 The dashboard and public JSON feed load a 360-row persisted history window. That
 is intentionally larger than 30 days because the daily writer stores multiple
 strategy rows per capture, and same-day manual probes can add duplicate rows.
