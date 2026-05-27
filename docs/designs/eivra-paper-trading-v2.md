@@ -210,6 +210,12 @@ The 30-day proof window now has a durable audit surface:
   gates, configurable controls, and execution-disabled invariants. Snapshot
   artifacts also carry this manifest so future rollups can be interpreted against
   the exact rule set captured that day.
+- `/api/trading-would-trade-today` returns the live-only paper watchlist: current
+  candidate counts, tradable versus review-required exposure, ranked strategy
+  candidates, top open tickets, and `paper_only: true` /
+  `real_money_execution_allowed: false`. Snapshot artifacts carry the same
+  payload so the daily proof log records what the lab would have watched without
+  creating an execution path.
 - `persistence.proof_runway` and the top-level `persisted_proof_runway` turn the
   same evidence into an operator timeline: earliest possible capital-review
   date, remaining capture days, remaining resolved live trades, open resolution
@@ -315,4 +321,4 @@ P&L. This label is evidence hygiene, not an execution signal.
 
 ## Later Phases
 
-- Add a public "would trade today" feed once live sample size is meaningful.
+- Add source-level liquidity/slippage filters before any capital review.

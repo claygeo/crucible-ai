@@ -132,6 +132,12 @@ function proofRunwayStatusClass(status: string) {
   return "bg-warn/10 text-warn";
 }
 
+function wouldTradeStatusClass(status: string) {
+  if (status === "collecting") return "bg-accent/10 text-accent";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  return "bg-text-muted/10 text-text-muted";
+}
+
 function proofEvidenceSourceStatusClass(status: string) {
   if (status === "active" || status === "available" || status === "reviewable") {
     return "bg-positive/10 text-positive";
@@ -204,6 +210,7 @@ export default async function TradingPage({
       : "live pending";
   const livePnlPending = snapshot.totals.live_resolved_trades === 0;
   const resolutionWatch = snapshot.resolution_watch;
+  const wouldTradeToday = snapshot.would_trade_today;
   const liveLeader = snapshot.live_agent_summaries[0];
   const liveStrategyRows = snapshot.strategy_variants.filter(
     (strategy) => strategy.sample === "live_only"
@@ -223,6 +230,8 @@ export default async function TradingPage({
   const artifactJsonHref = "/api/trading-artifacts";
   const strategyRegistryJsonHref =
     `/api/trading-strategy-registry?${selectedQuery}`;
+  const wouldTradeTodayJsonHref =
+    `/api/trading-would-trade-today?${selectedQuery}`;
   const publishedProofHref = "/paper-trading/latest-artifact-proof.json";
   const edgeOptions = Array.from(
     new Set([...TRADING_MIN_EDGE_OPTIONS, snapshot.controls.min_edge])
@@ -368,6 +377,165 @@ export default async function TradingPage({
             </p>
           </section>
         )}
+
+        <section className="panel px-5 py-5 flex flex-col gap-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="heading text-base text-text-primary">
+                Would trade today
+              </h2>
+              <p className="text-xs text-text-muted mt-1">
+                Live-only paper watchlist ranked by current strategy rules.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href={wouldTradeTodayJsonHref}
+                className="mono text-[10px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors"
+              >
+                json feed
+              </Link>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${wouldTradeStatusClass(
+                  wouldTradeToday.status
+                )}`}
+              >
+                {wouldTradeToday.status_label}
+              </span>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Unique live
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {int(wouldTradeToday.unique_open_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Tradable
+              </div>
+              <div className="heading text-2xl text-positive mt-1">
+                {int(wouldTradeToday.unique_tradable_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Review
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${
+                  wouldTradeToday.unique_review_required_signals > 0
+                    ? "text-rose-400"
+                    : "text-text-primary"
+                }`}
+              >
+                {int(wouldTradeToday.unique_review_required_signals)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Tradable risk
+              </div>
+              <div className="heading text-2xl text-text-primary mt-1">
+                {dollars(wouldTradeToday.unique_tradable_open_exposure_usd, 0)}
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Tradable EV
+              </div>
+              <div
+                className={`heading text-2xl mt-1 ${pnlClass(
+                  wouldTradeToday.unique_tradable_open_expected_pnl_usd
+                )}`}
+              >
+                {dollars(
+                  wouldTradeToday.unique_tradable_open_expected_pnl_usd,
+                  0
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-border-subtle pt-3 flex flex-wrap gap-x-4 gap-y-2 mono text-[11px] text-text-muted">
+            <span>{wouldTradeToday.message}</span>
+            <span className="text-text-primary">
+              execution: {wouldTradeToday.execution_recommendation.replaceAll("_", " ")}
+            </span>
+            <span>real money: disabled</span>
+            <span>
+              selected strategy: {wouldTradeToday.selected_strategy_id.replaceAll("_", " ")}
+            </span>
+          </div>
+          {wouldTradeToday.top_strategies.length === 0 ? (
+            <div className="text-sm text-text-muted mono">
+              [no live paper strategy has an open candidate]
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full" aria-label="Would trade today">
+                <thead>
+                  <tr className="border-b border-border-subtle text-text-muted">
+                    <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Strategy</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Proof</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Tradable</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Review</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Risk</th>
+                    <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">EV</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle/60">
+                  {wouldTradeToday.top_strategies.slice(0, 6).map((strategy) => (
+                    <tr key={strategy.strategy_id}>
+                      <td className="py-3 pr-3">
+                        <div className="text-sm text-text-primary">
+                          {strategy.rank}. {strategy.strategy_label}
+                        </div>
+                        <div className="mono text-[10px] text-text-muted uppercase tracking-wider">
+                          edge {pct(strategy.min_edge, 0)} / avg live edge{" "}
+                          {pct(strategy.avg_edge, 1)}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <span
+                          className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofStatusClass(
+                            strategy.proof_status
+                          )}`}
+                        >
+                          {strategy.proof_status_label}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {int(strategy.tradable_signals)}
+                      </td>
+                      <td
+                        className={`py-3 px-3 mono text-right ${
+                          strategy.review_required_signals > 0
+                            ? "text-rose-400"
+                            : "text-text-secondary"
+                        }`}
+                      >
+                        {int(strategy.review_required_signals)}
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {dollars(strategy.tradable_open_exposure_usd, 0)}
+                      </td>
+                      <td
+                        className={`py-3 pl-3 mono text-right ${pnlClass(
+                          strategy.tradable_open_expected_pnl_usd
+                        )}`}
+                      >
+                        {dollars(strategy.tradable_open_expected_pnl_usd, 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
 
         <section className="panel px-5 py-5 flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3">
