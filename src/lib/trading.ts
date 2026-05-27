@@ -427,6 +427,8 @@ export type ExposureLedgerEntry = {
   resolved_at: string | null;
   stake_usd: number;
   expected_pnl_usd: number;
+  pnl_usd: number | null;
+  missed_pnl_usd: number | null;
   open_exposure_before_usd: number;
   open_exposure_after_usd: number;
   status: "accepted" | "skipped_exposure_cap";
@@ -440,6 +442,11 @@ export type ExposureLedgerSummary = {
   accepted_open_signals: number;
   skipped_open_signals: number;
   accepted_resolved_trades: number;
+  skipped_resolved_trades: number;
+  skipped_profitable_resolved_trades: number;
+  skipped_loss_resolved_trades: number;
+  accepted_resolved_net_pnl_usd: number;
+  skipped_resolved_net_pnl_usd: number;
   current_open_exposure_usd: number;
   peak_open_exposure_usd: number;
   skipped_exposure_usd: number;
@@ -2001,6 +2008,10 @@ function applyExposureCap(
   let skippedExposureUsd = 0;
   let skippedExpectedOpenPnlUsd = 0;
   let skippedOpenSignals = 0;
+  let skippedResolvedTrades = 0;
+  let skippedProfitableResolvedTrades = 0;
+  let skippedLossResolvedTrades = 0;
+  let skippedResolvedNetPnlUsd = 0;
 
   for (const trade of sorted) {
     const createdTs = Date.parse(trade.created_at);
@@ -2017,6 +2028,14 @@ function applyExposureCap(
       if (trade.pnl_usd === null) {
         skippedOpenSignals += 1;
         skippedExpectedOpenPnlUsd += trade.expected_pnl_usd;
+      } else {
+        skippedResolvedTrades += 1;
+        skippedResolvedNetPnlUsd += trade.pnl_usd;
+        if (trade.pnl_usd > 0) {
+          skippedProfitableResolvedTrades += 1;
+        } else if (trade.pnl_usd < 0) {
+          skippedLossResolvedTrades += 1;
+        }
       }
       entries.push({
         prediction_id: trade.prediction_id,
@@ -2029,6 +2048,8 @@ function applyExposureCap(
         resolved_at: trade.resolved_at,
         stake_usd: trade.stake_usd,
         expected_pnl_usd: trade.expected_pnl_usd,
+        pnl_usd: trade.pnl_usd,
+        missed_pnl_usd: trade.pnl_usd,
         open_exposure_before_usd: round2(exposureBefore),
         open_exposure_after_usd: round2(exposureBefore),
         status: "skipped_exposure_cap",
@@ -2058,6 +2079,8 @@ function applyExposureCap(
       resolved_at: trade.resolved_at,
       stake_usd: trade.stake_usd,
       expected_pnl_usd: trade.expected_pnl_usd,
+      pnl_usd: trade.pnl_usd,
+      missed_pnl_usd: null,
       open_exposure_before_usd: round2(exposureBefore),
       open_exposure_after_usd: round2(exposureAfter),
       status: "accepted",
@@ -2071,6 +2094,10 @@ function applyExposureCap(
   const acceptedResolvedTrades = acceptedTrades.filter(
     (trade) => trade.pnl_usd !== null,
   );
+  const acceptedResolvedNetPnlUsd = acceptedResolvedTrades.reduce(
+    (sum, trade) => sum + (trade.pnl_usd ?? 0),
+    0,
+  );
 
   return {
     acceptedTrades,
@@ -2083,6 +2110,11 @@ function applyExposureCap(
       accepted_open_signals: acceptedOpenSignals.length,
       skipped_open_signals: skippedOpenSignals,
       accepted_resolved_trades: acceptedResolvedTrades.length,
+      skipped_resolved_trades: skippedResolvedTrades,
+      skipped_profitable_resolved_trades: skippedProfitableResolvedTrades,
+      skipped_loss_resolved_trades: skippedLossResolvedTrades,
+      accepted_resolved_net_pnl_usd: round2(acceptedResolvedNetPnlUsd),
+      skipped_resolved_net_pnl_usd: round2(skippedResolvedNetPnlUsd),
       current_open_exposure_usd: round2(
         acceptedOpenSignals.reduce((sum, trade) => sum + trade.stake_usd, 0),
       ),

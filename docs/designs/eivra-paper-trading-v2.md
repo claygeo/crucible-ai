@@ -95,6 +95,13 @@ The selected strategy exposes `selected_exposure_ledger`; each canned strategy
 variant exposes `exposure_ledger`. This prevents a strategy from looking good
 only because it pretended unlimited simultaneous tickets could be taken.
 
+The exposure ledger also separates skipped open EV from skipped resolved
+opportunities. `skipped_resolved_trades`,
+`skipped_profitable_resolved_trades`, `skipped_loss_resolved_trades`, and
+`skipped_resolved_net_pnl_usd` show capacity leakage after a skipped signal
+resolves. Those values are not proof P&L; they explain why a good forecast did
+not count as a trade the strategy would actually have taken.
+
 ## Daily Evidence Series
 
 The dashboard and `/api/trading.json` expose capped daily evidence in two forms:
