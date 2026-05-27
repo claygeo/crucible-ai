@@ -16,6 +16,7 @@ import {
 } from "@/lib/trading";
 import {
   buildPaperTradingProofReadiness,
+  buildPaperTradingProofRunway,
   buildPaperTradingStrategyRegistrySync,
   loadPaperTradingSnapshotHistory,
 } from "@/lib/trading-snapshots";
@@ -105,6 +106,24 @@ function readinessStatusClass(status: string) {
   return "bg-warn/10 text-warn";
 }
 
+function proofRunwayStatusClass(status: string) {
+  if (status === "reviewable") return "bg-positive/10 text-positive";
+  if (status === "blocked") return "bg-rose-400/10 text-rose-400";
+  if (status === "unavailable") return "bg-text-muted/10 text-text-muted";
+  return "bg-warn/10 text-warn";
+}
+
+function shortDate(value: string | null) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 function edgePoints(n: number) {
   return `${Math.round(n * 100)}pp`;
 }
@@ -186,6 +205,12 @@ export default async function TradingPage({
     captureHealth,
     captureCalendar,
     registrySync,
+    resolutionWatch,
+  });
+  const proofRunway = buildPaperTradingProofRunway({
+    proofSummary,
+    captureHealth,
+    captureCalendar,
     resolutionWatch,
   });
   const liveDailyEvidenceRows = snapshot.strategy_daily_series
@@ -786,6 +811,139 @@ export default async function TradingPage({
                       </td>
                       <td className="py-3 pl-3 mono text-left text-text-secondary">
                         {item.target}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="border-t border-border-subtle pt-4 flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="heading text-sm text-text-primary">
+                  Proof runway
+                </h3>
+                <p className="text-xs text-text-muted mt-1">
+                  {proofRunway.blocker_summary}
+                </p>
+              </div>
+              <span
+                className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofRunwayStatusClass(
+                  proofRunway.status
+                )}`}
+              >
+                {proofRunway.status_label}
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-4">
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Earliest review
+                </div>
+                <div
+                  suppressHydrationWarning
+                  className="heading text-xl text-text-primary mt-1"
+                >
+                  {proofRunway.earliest_capital_review_at
+                    ? shortDate(proofRunway.earliest_capital_review_at)
+                    : "-"}
+                </div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted mt-1">
+                  {proofRunway.days_until_earliest_review !== null
+                    ? `${int(proofRunway.days_until_earliest_review)}d minimum`
+                    : "unknown"}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Capture days left
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(proofRunway.capture_days_remaining)}
+                </div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted mt-1">
+                  {int(captureCalendar.complete_days)}/
+                  {int(captureCalendar.expected_days)} logged
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Resolved left
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(proofRunway.resolved_trades_remaining)}
+                </div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted mt-1">
+                  {proofRunway.pending_resolution_capacity === null
+                    ? "open unknown"
+                    : `${int(proofRunway.pending_resolution_capacity)} open`}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Resolution pressure
+                </div>
+                <div
+                  className={`heading text-xl mt-1 ${
+                    (proofRunway.overdue_live_signals ?? 0) > 0
+                      ? "text-warn"
+                      : "text-text-primary"
+                  }`}
+                >
+                  {proofRunway.overdue_live_signals === null
+                    ? "-"
+                    : `${int(proofRunway.overdue_live_signals)} overdue`}
+                </div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted mt-1">
+                  {proofRunway.closing_next_7d_signals === null
+                    ? "closing unknown"
+                    : `${int(proofRunway.closing_next_7d_signals)} closing 7d`}
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full" aria-label="Proof runway milestones">
+                <thead>
+                  <tr className="border-b border-border-subtle text-text-muted">
+                    <th className="text-left py-2 pr-3 mono text-[10px] uppercase tracking-wider">Milestone</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Status</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider">Current</th>
+                    <th className="text-left py-2 px-3 mono text-[10px] uppercase tracking-wider">Target</th>
+                    <th className="text-right py-2 pl-3 mono text-[10px] uppercase tracking-wider">ETA</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle/60">
+                  {proofRunway.milestones.map((milestone) => (
+                    <tr key={milestone.id}>
+                      <td className="py-3 pr-3">
+                        <div className="text-sm text-text-primary">
+                          {milestone.label}
+                        </div>
+                        <div className="text-xs text-text-muted leading-relaxed max-w-xl">
+                          {milestone.detail}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <span
+                          className={`mono text-[10px] uppercase tracking-wider px-2 py-1 rounded ${proofRunwayStatusClass(
+                            milestone.status
+                          )}`}
+                        >
+                          {milestone.status_label}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 mono text-right text-text-secondary">
+                        {milestone.current}
+                      </td>
+                      <td className="py-3 px-3 mono text-left text-text-secondary">
+                        {milestone.target}
+                      </td>
+                      <td
+                        suppressHydrationWarning
+                        className="py-3 pl-3 mono text-right text-text-secondary"
+                      >
+                        {milestone.eta_at ? relativeTime(milestone.eta_at) : "-"}
                       </td>
                     </tr>
                   ))}

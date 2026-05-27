@@ -144,6 +144,10 @@ The 30-day proof window now has a durable audit surface:
   capital-review boundary. The readiness payload also includes per-status item
   counts, blocked item ids, and structured evidence for gates with live blockers
   such as overdue resolution signals.
+- `persistence.proof_runway` and the top-level `persisted_proof_runway` turn the
+  same evidence into an operator timeline: earliest possible capital-review
+  date, remaining capture days, remaining resolved live trades, open resolution
+  capacity, overdue/closing resolution pressure, and milestone-level ETAs.
 
 The database table is public-read, service-role-write, and RLS-enabled. Snapshot
 rows are analytics evidence only; they do not create wallets, orders, leverage,
@@ -215,6 +219,9 @@ When loaded through `/api/trading.json`, the checklist includes the current
 resolution backlog so overdue live paper markets are visible before open EV is
 mistaken for realized P&L. Blocked gates can render their attached evidence
 directly under the checklist row, linking back to the market that needs review.
+The proof-runway section beside it answers the next question: if capture health
+stays fresh and markets resolve, what is the earliest date this evidence could
+be reviewable, and which milestone is still short.
 
 Capture health is `fresh` while the latest persisted row is less than 36 hours
 old. It becomes `stale` after that window, which makes a missed daily snapshot
