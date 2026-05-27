@@ -241,6 +241,75 @@ export type TradingResolutionWatch = {
   signals: ResolutionWatchSignal[];
 };
 
+export type PaperTradingWouldTradeSignal = {
+  prediction_id: string;
+  market_id: string;
+  market_question: string;
+  market_source: string;
+  market_url: string | null;
+  agent_id: string;
+  agent_name: string;
+  side: TradeSide;
+  probability: number;
+  market_price: number;
+  edge: number;
+  abs_edge: number;
+  stake_usd: number;
+  max_loss_usd: number;
+  profit_if_correct_usd: number;
+  expected_pnl_usd: number;
+  market_closes_at: string | null;
+  created_at: string;
+  close_status: ResolutionWatchSignal["close_status"];
+  tradability_status: ResolutionWatchSignal["tradability_status"];
+  days_until_close: number | null;
+  age_days: number;
+};
+
+export type PaperTradingWouldTradeStrategy = {
+  rank: number;
+  strategy_id: string;
+  strategy_label: string;
+  sample: TradingSample;
+  min_edge: number;
+  stake_mode: StakeMode;
+  proof_status: ProofGateStatus;
+  proof_status_label: string;
+  open_signals: number;
+  tradable_signals: number;
+  review_required_signals: number;
+  open_exposure_usd: number;
+  tradable_open_exposure_usd: number;
+  open_expected_pnl_usd: number;
+  tradable_open_expected_pnl_usd: number;
+  avg_edge: number;
+  top_signals: PaperTradingWouldTradeSignal[];
+  paper_only: true;
+  real_money_execution_allowed: false;
+};
+
+export type PaperTradingWouldTradeFeed = {
+  schema_version: "1";
+  generated_at: string;
+  status: "blocked" | "collecting" | "no_live_signals";
+  status_label: string;
+  message: string;
+  execution_recommendation: "paper_watch_only";
+  capital_review_allowed: false;
+  paper_only: true;
+  real_money_execution_allowed: false;
+  selected_strategy_id: string;
+  selected_strategy: PaperTradingWouldTradeStrategy | null;
+  unique_open_signals: number;
+  unique_tradable_signals: number;
+  unique_review_required_signals: number;
+  unique_open_exposure_usd: number;
+  unique_tradable_open_exposure_usd: number;
+  unique_open_expected_pnl_usd: number;
+  unique_tradable_open_expected_pnl_usd: number;
+  top_strategies: PaperTradingWouldTradeStrategy[];
+};
+
 export type ProofGateStatus =
   | "collecting"
   | "candidate"
@@ -426,6 +495,7 @@ export type TradingSnapshot = {
   config: typeof PAPER_TRADING_CONFIG;
   controls: TradingControls;
   strategy_registry: PaperTradingStrategyRegistry;
+  would_trade_today: PaperTradingWouldTradeFeed;
   totals: TradingTotals;
   live_totals: TradingTotals;
   backfill_totals: TradingTotals;
@@ -988,6 +1058,43 @@ function dayDelta(from: Date, toIso: string): number | null {
   return round2((toTs - fromTs) / (24 * 60 * 60 * 1000));
 }
 
+function classifyOpenLiveTrade(
+  trade: PaperTrade,
+  now: Date,
+): Pick<
+  ResolutionWatchSignal,
+  "close_status" | "tradability_status" | "days_until_close" | "age_days"
+> {
+  const nowTs = now.getTime();
+  const weekFromNowTs = nowTs + 7 * 24 * 60 * 60 * 1000;
+  const closeTs = trade.market_closes_at
+    ? Date.parse(trade.market_closes_at)
+    : NaN;
+  const ageDays = dayDelta(new Date(trade.created_at), now.toISOString()) ?? 0;
+  const closeStatus: ResolutionWatchSignal["close_status"] = !Number.isFinite(
+    closeTs,
+  )
+    ? "unknown_close"
+    : closeTs < nowTs
+      ? "overdue"
+      : closeTs <= weekFromNowTs
+        ? "closing_next_7d"
+        : "future";
+  const tradabilityStatus: ResolutionWatchSignal["tradability_status"] =
+    closeStatus === "overdue" || closeStatus === "unknown_close"
+      ? "needs_review"
+      : "tradable";
+
+  return {
+    close_status: closeStatus,
+    tradability_status: tradabilityStatus,
+    days_until_close: trade.market_closes_at
+      ? dayDelta(now, trade.market_closes_at)
+      : null,
+    age_days: Math.max(0, ageDays),
+  };
+}
+
 function resolutionStatusRank(
   status: ResolutionWatchSignal["close_status"],
 ): number {
@@ -1003,26 +1110,8 @@ function buildResolutionWatch(
 ): TradingResolutionWatch {
   const openLiveTrades = liveTrades.filter((trade) => trade.pnl_usd === null);
   const nowTs = now.getTime();
-  const weekFromNowTs = nowTs + 7 * 24 * 60 * 60 * 1000;
   const signals = openLiveTrades.map((trade): ResolutionWatchSignal => {
-    const closeTs = trade.market_closes_at
-      ? Date.parse(trade.market_closes_at)
-      : NaN;
-    const ageDays =
-      dayDelta(new Date(trade.created_at), now.toISOString()) ?? 0;
-    const closeStatus: ResolutionWatchSignal["close_status"] = !Number.isFinite(
-      closeTs,
-    )
-      ? "unknown_close"
-      : closeTs < nowTs
-        ? "overdue"
-        : closeTs <= weekFromNowTs
-          ? "closing_next_7d"
-          : "future";
-    const tradabilityStatus: ResolutionWatchSignal["tradability_status"] =
-      closeStatus === "overdue" || closeStatus === "unknown_close"
-        ? "needs_review"
-        : "tradable";
+    const classification = classifyOpenLiveTrade(trade, now);
 
     return {
       prediction_id: trade.prediction_id,
@@ -1038,12 +1127,7 @@ function buildResolutionWatch(
       expected_pnl_usd: trade.expected_pnl_usd,
       market_closes_at: trade.market_closes_at,
       created_at: trade.created_at,
-      close_status: closeStatus,
-      tradability_status: tradabilityStatus,
-      days_until_close: trade.market_closes_at
-        ? dayDelta(now, trade.market_closes_at)
-        : null,
-      age_days: Math.max(0, ageDays),
+      ...classification,
     };
   });
 
@@ -1133,6 +1217,216 @@ function buildResolutionWatch(
       ),
     ),
     signals: sortedSignals,
+  };
+}
+
+function buildWouldTradeSignal(
+  trade: PaperTrade,
+  now: Date,
+): PaperTradingWouldTradeSignal {
+  return {
+    prediction_id: trade.prediction_id,
+    market_id: trade.market_id,
+    market_question: trade.market_question,
+    market_source: trade.market_source,
+    market_url: trade.market_url,
+    agent_id: trade.agent_id,
+    agent_name: trade.agent_name,
+    side: trade.side,
+    probability: trade.probability,
+    market_price: trade.market_price,
+    edge: trade.edge,
+    abs_edge: trade.abs_edge,
+    stake_usd: trade.stake_usd,
+    max_loss_usd: trade.max_loss_usd,
+    profit_if_correct_usd: trade.profit_if_correct_usd,
+    expected_pnl_usd: trade.expected_pnl_usd,
+    market_closes_at: trade.market_closes_at,
+    created_at: trade.created_at,
+    ...classifyOpenLiveTrade(trade, now),
+  };
+}
+
+function wouldTradeSignalSort(
+  a: PaperTradingWouldTradeSignal,
+  b: PaperTradingWouldTradeSignal,
+): number {
+  const tradabilityDelta =
+    (a.tradability_status === "tradable" ? 0 : 1) -
+    (b.tradability_status === "tradable" ? 0 : 1);
+  if (tradabilityDelta !== 0) return tradabilityDelta;
+  if (b.expected_pnl_usd !== a.expected_pnl_usd) {
+    return b.expected_pnl_usd - a.expected_pnl_usd;
+  }
+  if (b.abs_edge !== a.abs_edge) return b.abs_edge - a.abs_edge;
+  return (
+    (a.days_until_close ?? Number.POSITIVE_INFINITY) -
+    (b.days_until_close ?? Number.POSITIVE_INFINITY)
+  );
+}
+
+function wouldTradeStrategySort(
+  a: PaperTradingWouldTradeStrategy,
+  b: PaperTradingWouldTradeStrategy,
+): number {
+  if (b.tradable_open_expected_pnl_usd !== a.tradable_open_expected_pnl_usd) {
+    return b.tradable_open_expected_pnl_usd - a.tradable_open_expected_pnl_usd;
+  }
+  if (b.tradable_signals !== a.tradable_signals) {
+    return b.tradable_signals - a.tradable_signals;
+  }
+  if (b.open_expected_pnl_usd !== a.open_expected_pnl_usd) {
+    return b.open_expected_pnl_usd - a.open_expected_pnl_usd;
+  }
+  return a.strategy_label.localeCompare(b.strategy_label);
+}
+
+function buildWouldTradeStrategy(
+  evaluation: StrategyEvaluation,
+  now: Date,
+): PaperTradingWouldTradeStrategy {
+  const summary = evaluation.summary;
+  const signals = evaluation.acceptedTrades
+    .filter((trade) => !trade.is_backfill && trade.pnl_usd === null)
+    .map((trade) => buildWouldTradeSignal(trade, now))
+    .sort(wouldTradeSignalSort);
+  const tradableSignals = signals.filter(
+    (signal) => signal.tradability_status === "tradable",
+  );
+  const reviewRequiredSignals = signals.filter(
+    (signal) => signal.tradability_status === "needs_review",
+  );
+  const avgEdge =
+    signals.length > 0
+      ? round4(
+          signals.reduce((sum, signal) => sum + signal.abs_edge, 0) /
+            signals.length,
+        )
+      : 0;
+
+  return {
+    rank: 0,
+    strategy_id: summary.id,
+    strategy_label: summary.label,
+    sample: summary.sample,
+    min_edge: summary.min_edge,
+    stake_mode: summary.stake_mode,
+    proof_status: summary.proof_gate.status,
+    proof_status_label: summary.proof_gate.status_label,
+    open_signals: signals.length,
+    tradable_signals: tradableSignals.length,
+    review_required_signals: reviewRequiredSignals.length,
+    open_exposure_usd: round2(
+      signals.reduce((sum, signal) => sum + signal.stake_usd, 0),
+    ),
+    tradable_open_exposure_usd: round2(
+      tradableSignals.reduce((sum, signal) => sum + signal.stake_usd, 0),
+    ),
+    open_expected_pnl_usd: round2(
+      signals.reduce((sum, signal) => sum + signal.expected_pnl_usd, 0),
+    ),
+    tradable_open_expected_pnl_usd: round2(
+      tradableSignals.reduce((sum, signal) => sum + signal.expected_pnl_usd, 0),
+    ),
+    avg_edge: avgEdge,
+    top_signals: signals.slice(0, 5),
+    paper_only: true,
+    real_money_execution_allowed: false,
+  };
+}
+
+function buildWouldTradeTodayFeed(
+  evaluations: StrategyEvaluation[],
+  selectedEvaluation: StrategyEvaluation,
+  generatedAt: string,
+): PaperTradingWouldTradeFeed {
+  const now = new Date(generatedAt);
+  const liveEvaluations = [selectedEvaluation, ...evaluations].filter(
+    (evaluation) => evaluation.summary.sample === "live_only",
+  );
+  const uniqueSignals = new Map<string, PaperTradingWouldTradeSignal>();
+
+  for (const evaluation of liveEvaluations) {
+    for (const trade of evaluation.acceptedTrades) {
+      if (trade.is_backfill || trade.pnl_usd !== null) continue;
+      const signal = buildWouldTradeSignal(trade, now);
+      const existing = uniqueSignals.get(signal.prediction_id);
+      if (!existing || signal.expected_pnl_usd > existing.expected_pnl_usd) {
+        uniqueSignals.set(signal.prediction_id, signal);
+      }
+    }
+  }
+
+  const uniqueOpenSignals = [...uniqueSignals.values()];
+  const uniqueTradableSignals = uniqueOpenSignals.filter(
+    (signal) => signal.tradability_status === "tradable",
+  );
+  const uniqueReviewRequiredSignals = uniqueOpenSignals.filter(
+    (signal) => signal.tradability_status === "needs_review",
+  );
+  const rankedStrategies = liveEvaluations
+    .map((evaluation) => buildWouldTradeStrategy(evaluation, now))
+    .filter((strategy) => strategy.open_signals > 0)
+    .sort(wouldTradeStrategySort)
+    .map((strategy, index) => ({ ...strategy, rank: index + 1 }));
+  const topStrategies = rankedStrategies.slice(0, 8);
+  const selectedStrategy =
+    rankedStrategies.find(
+      (strategy) => strategy.strategy_id === selectedEvaluation.summary.id,
+    ) ?? null;
+  const status: PaperTradingWouldTradeFeed["status"] =
+    uniqueOpenSignals.length === 0
+      ? "no_live_signals"
+      : uniqueReviewRequiredSignals.length > 0
+        ? "blocked"
+        : "collecting";
+
+  return {
+    schema_version: "1",
+    generated_at: generatedAt,
+    status,
+    status_label:
+      status === "blocked"
+        ? "Blocked"
+        : status === "collecting"
+          ? "Paper watchlist"
+          : "No live signals",
+    message:
+      status === "blocked"
+        ? `${uniqueReviewRequiredSignals.length} live paper signal${
+            uniqueReviewRequiredSignals.length === 1 ? "" : "s"
+          } need resolution review before open EV is trusted.`
+        : status === "collecting"
+          ? "Live paper candidates are ranked for observation only; execution remains disabled until the 30-day proof gate passes capital review."
+          : "No live paper candidates are currently open under the lab rules.",
+    execution_recommendation: "paper_watch_only",
+    capital_review_allowed: false,
+    paper_only: true,
+    real_money_execution_allowed: false,
+    selected_strategy_id: selectedEvaluation.summary.id,
+    selected_strategy: selectedStrategy,
+    unique_open_signals: uniqueOpenSignals.length,
+    unique_tradable_signals: uniqueTradableSignals.length,
+    unique_review_required_signals: uniqueReviewRequiredSignals.length,
+    unique_open_exposure_usd: round2(
+      uniqueOpenSignals.reduce((sum, signal) => sum + signal.stake_usd, 0),
+    ),
+    unique_tradable_open_exposure_usd: round2(
+      uniqueTradableSignals.reduce((sum, signal) => sum + signal.stake_usd, 0),
+    ),
+    unique_open_expected_pnl_usd: round2(
+      uniqueOpenSignals.reduce(
+        (sum, signal) => sum + signal.expected_pnl_usd,
+        0,
+      ),
+    ),
+    unique_tradable_open_expected_pnl_usd: round2(
+      uniqueTradableSignals.reduce(
+        (sum, signal) => sum + signal.expected_pnl_usd,
+        0,
+      ),
+    ),
+    top_strategies: topStrategies,
   };
 }
 
@@ -1857,6 +2151,11 @@ export async function getTradingSnapshot(
     config: PAPER_TRADING_CONFIG,
     controls,
     strategy_registry: buildPaperTradingStrategyRegistry(controls, generatedAt),
+    would_trade_today: buildWouldTradeTodayFeed(
+      evaluatedStrategies,
+      selectedEvaluation,
+      generatedAt,
+    ),
     totals: summarizeTotals(allTrades),
     live_totals: summarizeTotals(liveTrades),
     backfill_totals: summarizeTotals(backfillTrades),
