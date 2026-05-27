@@ -82,6 +82,13 @@ open tickets lose, exposure percentage of bankroll, and remaining paper capacity
 This is a risk display only; it does not change capital-review gates or enable
 execution.
 
+The same selected replay also exposes `selected_open_outcome_scenarios`. It
+turns unresolved paper tickets into three read-only resolution cases: all open
+tickets lose, model-expected value, and all open tickets win. It also computes
+the minimum number/rate of open wins needed for the selected replay to stay
+above break-even after pending markets resolve. These fields explain pending
+proof runway; they do not count as realized profit.
+
 ## Canonical Agent Edge Matrix
 
 The lab now tracks every house agent with two live-only rules:

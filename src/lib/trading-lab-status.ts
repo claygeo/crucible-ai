@@ -163,6 +163,10 @@ export type PaperTradingLabStatus = {
     selected_worst_case_open_loss_usd: number;
     selected_bankroll_after_worst_case_usd: number;
     selected_remaining_open_capacity_usd: number;
+    selected_best_case_total_pnl_usd: number;
+    selected_model_expected_total_pnl_usd: number;
+    selected_break_even_open_wins_required: number | null;
+    selected_break_even_open_win_rate_required: number | null;
     selected_peak_open_exposure_usd: number;
     selected_max_open_exposure_usd: number;
     skipped_open_signals: number;
@@ -800,6 +804,20 @@ export function buildPaperTradingLabStatus(args: {
         args.snapshot.selected_bankroll_risk.bankroll_after_worst_case_usd,
       selected_remaining_open_capacity_usd:
         args.snapshot.selected_bankroll_risk.remaining_open_capacity_usd,
+      selected_best_case_total_pnl_usd:
+        args.snapshot.selected_open_outcome_scenarios.scenarios.find(
+          (scenario) => scenario.id === "best_case",
+        )?.total_pnl_usd ?? 0,
+      selected_model_expected_total_pnl_usd:
+        args.snapshot.selected_open_outcome_scenarios.scenarios.find(
+          (scenario) => scenario.id === "model_expected",
+        )?.total_pnl_usd ?? 0,
+      selected_break_even_open_wins_required:
+        args.snapshot.selected_open_outcome_scenarios
+          .break_even_open_wins_required,
+      selected_break_even_open_win_rate_required:
+        args.snapshot.selected_open_outcome_scenarios
+          .break_even_open_win_rate_required,
       selected_peak_open_exposure_usd: exposureLedger.peak_open_exposure_usd,
       selected_max_open_exposure_usd: exposureLedger.max_open_exposure_usd,
       skipped_open_signals: exposureLedger.skipped_open_signals,

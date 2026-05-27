@@ -513,6 +513,31 @@ export type SelectedBankrollRisk = {
   real_money_execution_allowed: false;
 };
 
+export type SelectedOpenOutcomeScenario = {
+  id: "worst_case" | "model_expected" | "best_case";
+  label: string;
+  open_wins: number | null;
+  open_losses: number | null;
+  open_pnl_usd: number;
+  total_pnl_usd: number;
+  bankroll_after_resolution_usd: number;
+};
+
+export type SelectedOpenOutcomeScenarios = {
+  open_ticket_count: number;
+  total_open_stake_usd: number;
+  best_case_open_pnl_usd: number;
+  worst_case_open_pnl_usd: number;
+  model_expected_open_pnl_usd: number;
+  break_even_open_wins_required: number | null;
+  break_even_open_win_rate_required: number | null;
+  break_even_open_profit_needed_usd: number;
+  break_even_reachable: boolean;
+  scenarios: SelectedOpenOutcomeScenario[];
+  paper_only: true;
+  real_money_execution_allowed: false;
+};
+
 export type AgentEdgeRuleSummary = {
   strategy_id: string;
   strategy_label: string;
@@ -891,6 +916,7 @@ export type TradingSnapshot = {
   resolution_watch: TradingResolutionWatch;
   selected_strategy: StrategyVariantSummary;
   selected_bankroll_risk: SelectedBankrollRisk;
+  selected_open_outcome_scenarios: SelectedOpenOutcomeScenarios;
   proof_gates: StrategyProofGate[];
   selected_exposure_ledger: ExposureLedgerSummary;
   selected_open_signals: PaperTrade[];
@@ -2401,6 +2427,111 @@ function buildSelectedBankrollRisk(
   };
 }
 
+function buildSelectedOpenOutcomeScenarios(
+  strategy: StrategyVariantSummary,
+  selectedTrades: PaperTrade[],
+): SelectedOpenOutcomeScenarios {
+  const openTrades = selectedTrades.filter((trade) => trade.pnl_usd === null);
+  const openTicketCount = openTrades.length;
+  const totalOpenStakeUsd = openTrades.reduce(
+    (sum, trade) => sum + trade.stake_usd,
+    0,
+  );
+  const bestCaseOpenPnlUsd = openTrades.reduce(
+    (sum, trade) => sum + trade.profit_if_correct_usd,
+    0,
+  );
+  const worstCaseOpenPnlUsd = -totalOpenStakeUsd;
+  const modelExpectedOpenPnlUsd = openTrades.reduce(
+    (sum, trade) => sum + trade.expected_pnl_usd,
+    0,
+  );
+  const realizedPnlUsd = strategy.net_pnl_usd;
+  const bankrollUsd = strategy.bankroll_usd;
+  const neededFromWorstCase = Math.max(
+    0,
+    -(realizedPnlUsd + worstCaseOpenPnlUsd),
+  );
+  const swings = openTrades
+    .map((trade) => trade.profit_if_correct_usd + trade.stake_usd)
+    .sort((a, b) => b - a);
+  let accumulatedSwing = 0;
+  let breakEvenOpenWinsRequired: number | null =
+    realizedPnlUsd + worstCaseOpenPnlUsd >= 0 ? 0 : null;
+  for (let index = 0; index < swings.length; index += 1) {
+    accumulatedSwing += swings[index];
+    if (
+      breakEvenOpenWinsRequired === null &&
+      accumulatedSwing >= neededFromWorstCase
+    ) {
+      breakEvenOpenWinsRequired = index + 1;
+      break;
+    }
+  }
+  const breakEvenReachable =
+    realizedPnlUsd + bestCaseOpenPnlUsd >= 0 &&
+    breakEvenOpenWinsRequired !== null;
+
+  const scenario = (
+    id: SelectedOpenOutcomeScenario["id"],
+    label: string,
+    openPnlUsd: number,
+    openWins: number | null,
+    openLosses: number | null,
+  ): SelectedOpenOutcomeScenario => {
+    const totalPnlUsd = realizedPnlUsd + openPnlUsd;
+    return {
+      id,
+      label,
+      open_wins: openWins,
+      open_losses: openLosses,
+      open_pnl_usd: round2(openPnlUsd),
+      total_pnl_usd: round2(totalPnlUsd),
+      bankroll_after_resolution_usd: round2(bankrollUsd + totalPnlUsd),
+    };
+  };
+
+  return {
+    open_ticket_count: openTicketCount,
+    total_open_stake_usd: round2(totalOpenStakeUsd),
+    best_case_open_pnl_usd: round2(bestCaseOpenPnlUsd),
+    worst_case_open_pnl_usd: round2(worstCaseOpenPnlUsd),
+    model_expected_open_pnl_usd: round2(modelExpectedOpenPnlUsd),
+    break_even_open_wins_required: breakEvenOpenWinsRequired,
+    break_even_open_win_rate_required:
+      openTicketCount > 0 && breakEvenOpenWinsRequired !== null
+        ? round4(breakEvenOpenWinsRequired / openTicketCount)
+        : null,
+    break_even_open_profit_needed_usd: round2(neededFromWorstCase),
+    break_even_reachable: breakEvenReachable,
+    scenarios: [
+      scenario(
+        "worst_case",
+        "All open tickets lose",
+        worstCaseOpenPnlUsd,
+        0,
+        openTicketCount,
+      ),
+      scenario(
+        "model_expected",
+        "Model expected value",
+        modelExpectedOpenPnlUsd,
+        null,
+        null,
+      ),
+      scenario(
+        "best_case",
+        "All open tickets win",
+        bestCaseOpenPnlUsd,
+        openTicketCount,
+        0,
+      ),
+    ],
+    paper_only: true,
+    real_money_execution_allowed: false,
+  };
+}
+
 function isAgentEdgeVariant(strategy: StrategyVariantSummary): boolean {
   return (
     strategy.sample === "live_only" &&
@@ -3827,6 +3958,10 @@ export async function getTradingSnapshot(
     .slice(0, 24);
   const selectedStrategy = selectedEvaluation.summary;
   const selectedBankrollRisk = buildSelectedBankrollRisk(selectedStrategy);
+  const selectedOpenOutcomeScenarios = buildSelectedOpenOutcomeScenarios(
+    selectedStrategy,
+    selectedTrades,
+  );
   const resolutionWatch = buildResolutionWatch(
     liveTrades,
     new Date(generatedAt),
@@ -3852,6 +3987,7 @@ export async function getTradingSnapshot(
     resolution_watch: resolutionWatch,
     selected_strategy: selectedStrategy,
     selected_bankroll_risk: selectedBankrollRisk,
+    selected_open_outcome_scenarios: selectedOpenOutcomeScenarios,
     proof_gates: [selectedStrategy, ...strategyVariants].map(
       (strategy) => strategy.proof_gate,
     ),
