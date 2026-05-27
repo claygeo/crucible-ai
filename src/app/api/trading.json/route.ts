@@ -8,7 +8,10 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
-import { buildResolutionReviewQueue } from "@/lib/trading-resolution-review";
+import {
+  buildResolutionReviewQueue,
+  enrichResolutionReviewQueueWithProviderResolution,
+} from "@/lib/trading-resolution-review";
 import {
   buildPaperTradingCapitalReviewPacket,
   buildPaperTradingProofEvidenceSources,
@@ -77,10 +80,13 @@ export async function GET(request: Request) {
     proofRunway,
     resolutionWatch: snapshot.resolution_watch,
   });
-  const resolutionReviewQueue = buildResolutionReviewQueue({
-    resolutionWatch: snapshot.resolution_watch,
-    publishedArtifactProof,
-  });
+  const resolutionReviewQueue =
+    await enrichResolutionReviewQueueWithProviderResolution(
+      buildResolutionReviewQueue({
+        resolutionWatch: snapshot.resolution_watch,
+        publishedArtifactProof,
+      }),
+    );
 
   return NextResponse.json(
     {

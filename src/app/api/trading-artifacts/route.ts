@@ -4,7 +4,10 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
-import { buildResolutionReviewQueue } from "@/lib/trading-resolution-review";
+import {
+  buildResolutionReviewQueue,
+  enrichResolutionReviewQueueWithProviderResolution,
+} from "@/lib/trading-resolution-review";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,9 +17,12 @@ export async function GET() {
     loadPaperTradingArtifactWorkflowStatus(5),
     loadPublishedPaperTradingArtifactProof(),
   ]);
-  const resolutionReviewQueue = buildResolutionReviewQueue({
-    publishedArtifactProof: publishedProof,
-  });
+  const resolutionReviewQueue =
+    await enrichResolutionReviewQueueWithProviderResolution(
+      buildResolutionReviewQueue({
+        publishedArtifactProof: publishedProof,
+      }),
+    );
   const artifactHistory = buildPaperTradingArtifactHistory({
     publishedArtifactProof: publishedProof,
   });

@@ -11,7 +11,10 @@ import {
   loadPaperTradingArtifactWorkflowStatus,
   loadPublishedPaperTradingArtifactProof,
 } from "@/lib/trading-artifacts";
-import { buildResolutionReviewQueue } from "@/lib/trading-resolution-review";
+import {
+  buildResolutionReviewQueue,
+  enrichResolutionReviewQueueWithProviderResolution,
+} from "@/lib/trading-resolution-review";
 import { dollars, int, pct, prob, relativeTime, signed } from "@/lib/format";
 import {
   TRADING_CATEGORY_OPTIONS,
@@ -357,10 +360,13 @@ export default async function TradingPage({
     proofRunway,
     resolutionWatch,
   });
-  const resolutionReviewQueue = buildResolutionReviewQueue({
-    resolutionWatch,
-    publishedArtifactProof,
-  });
+  const resolutionReviewQueue =
+    await enrichResolutionReviewQueueWithProviderResolution(
+      buildResolutionReviewQueue({
+        resolutionWatch,
+        publishedArtifactProof,
+      }),
+    );
   const latestArtifactRun = artifactWorkflow.latest_successful_artifact_run;
   const latestWorkflowRun = artifactWorkflow.latest_run;
   const publishedAudit = publishedArtifactProof.artifact_audit;
@@ -1603,7 +1609,7 @@ export default async function TradingPage({
                 {resolutionReviewQueue.status_label}
               </span>
             </div>
-            <div className="grid sm:grid-cols-4 gap-3">
+            <div className="grid sm:grid-cols-5 gap-3">
               <div>
                 <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                   Current
@@ -1626,6 +1632,16 @@ export default async function TradingPage({
                 </div>
                 <div className="heading text-xl text-text-primary mt-1">
                   {int(resolutionReviewQueue.item_count)}
+                </div>
+              </div>
+              <div>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Provider
+                </div>
+                <div className="heading text-xl text-text-primary mt-1">
+                  {int(
+                    resolutionReviewQueue.provider_resolution_resolved_item_count
+                  )}
                 </div>
               </div>
               <div>
@@ -1680,6 +1696,24 @@ export default async function TradingPage({
                             >
                               source market
                             </a>
+                          ) : null}
+                          {item.provider_resolution ? (
+                            <div
+                              className={`mono text-[10px] uppercase tracking-wider ${
+                                item.provider_resolution.status === "resolved"
+                                  ? "text-positive"
+                                  : item.provider_resolution.status === "open"
+                                    ? "text-text-muted"
+                                    : "text-warn"
+                              }`}
+                            >
+                              {item.provider_resolution.status_label}
+                              {item.provider_resolution.resolved_at
+                                ? ` / ${relativeTime(
+                                    item.provider_resolution.resolved_at
+                                  )}`
+                                : ""}
+                            </div>
                           ) : null}
                         </td>
                         <td className="py-3 px-3 mono text-right text-text-secondary">
