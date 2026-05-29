@@ -35,6 +35,20 @@ export default async function LivePage() {
   const openCount = rows.filter((r) => r.market.status === "open").length;
   const resolvedCount = rows.filter((r) => r.market.status === "resolved").length;
 
+  const agentSummary = AGENTS
+    .map((agent) => {
+      const preds = rows.flatMap((r) =>
+        r.agentPreds.filter((p) => p.agent_id === agent.id)
+      );
+      if (preds.length === 0) return null;
+      const avgProb = preds.reduce((sum, p) => sum + p.probability, 0) / preds.length;
+      const scoredMarkets = rows.filter(
+        (r) => r.market.status === "resolved" && r.agentPreds.some((p) => p.agent_id === agent.id)
+      ).length;
+      return { agent, count: preds.length, avgProb, scoredMarkets };
+    })
+    .filter((s): s is NonNullable<typeof s> => s !== null);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -84,6 +98,44 @@ export default async function LivePage() {
             <span>new locks every 12 h</span>
           </div>
         </section>
+
+        {/* Per-agent locked forecast receipt */}
+        {agentSummary.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+              Locked forecasts per agent
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              {agentSummary.map(({ agent, count, avgProb, scoredMarkets }) => (
+                <Link
+                  key={agent.id}
+                  href={`/agents/${agent.id}`}
+                  className="panel px-3 py-3 flex flex-col gap-1 hover:border-accent/30 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${HUE_TO_BG[agent.hue]}`}
+                      aria-hidden="true"
+                    />
+                    <span className={`text-xs font-medium truncate ${HUE_TO_TEXT[agent.hue]}`}>
+                      {agent.name}
+                    </span>
+                  </div>
+                  <div className="mono text-2xl font-bold text-text-primary tabular-nums leading-tight mt-0.5">
+                    {count}
+                  </div>
+                  <div className="mono text-[10px] text-text-muted leading-tight">
+                    avg {prob(avgProb)}
+                    {scoredMarkets > 0 && (
+                      <> · <span className="text-positive">{scoredMarkets} scored</span></>
+                    )}
+                    {scoredMarkets === 0 && <> · pending</>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {rows.length === 0 ? (
           <section className="panel px-6 py-12 flex flex-col items-center gap-3 text-center">
