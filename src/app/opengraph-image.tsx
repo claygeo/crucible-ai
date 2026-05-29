@@ -377,7 +377,7 @@ export default async function OG() {
               <span>open</span>
             </div>
             <span>·</span>
-            <span style={{ color: COL.accent }}>Max subscription</span>
+            <span style={{ color: COL.accent }}>eivra.xyz</span>
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
             {[
@@ -385,8 +385,8 @@ export default async function OG() {
               "Manifold",
               "Opus 4.7",
               "Sonnet 4.6",
-              "Haiku 4.5",
-              "Max sub",
+              "GPT-5",
+              "eivra.xyz",
             ].map((b, i) => (
               <div
                 key={b}
