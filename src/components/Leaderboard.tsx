@@ -95,13 +95,20 @@ export function Leaderboard({
             </tr>
           </thead>
           <tbody>
-            {stats.map((s, i) => {
+            {(() => {
+              // Find the best-ranked reasoning agent (not Echo baseline, not synthetic ensemble).
+              // stats is rank-sorted, so the first qualifying entry is the top reasoner.
+              const topReasoningId = stats.find((s) => {
+                const a = AGENTS.find((ag) => ag.id === s.agent_id);
+                return a && !a.synthetic && s.agent_id !== "echo";
+              })?.agent_id;
+              return stats.map((s) => {
               const agent = AGENTS.find((a) => a.id === s.agent_id);
               if (!agent) return null;
               const isBaseline = agent.id === "echo";
               const isEnsemble = agent.synthetic;
               // Highlight the top-ranked reasoning agent (not baseline, not ensemble)
-              const isTopReasoning = !isBaseline && !isEnsemble && i === 0;
+              const isTopReasoning = !isBaseline && !isEnsemble && agent.id === topReasoningId;
               const delta = s.rank_delta_24h;
               return (
                 <tr
@@ -189,7 +196,8 @@ export function Leaderboard({
                   </td>
                 </tr>
               );
-            })}
+            });
+            })()}
           </tbody>
         </table>
       </div>
