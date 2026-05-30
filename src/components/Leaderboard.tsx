@@ -29,8 +29,8 @@ export function Leaderboard({
 
   return (
     <section className="panel panel-live">
-      <div className="px-5 py-4 flex items-center justify-between border-b border-border-subtle">
-        <h2 className="heading text-base text-text-primary flex items-center gap-3">
+      <div className="px-5 py-4 flex items-center justify-between gap-3 border-b border-border-subtle">
+        <h2 className="heading text-base text-text-primary flex items-center gap-3 shrink-0">
           Leaderboard
           <span
             className={`mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${
@@ -42,7 +42,7 @@ export function Leaderboard({
             {source}
           </span>
         </h2>
-        <div className="mono text-xs text-text-muted uppercase tracking-wider">
+        <div className="mono text-xs text-text-muted uppercase tracking-wider hidden sm:block truncate">
           {rankingBasis}
         </div>
       </div>
@@ -67,7 +67,7 @@ export function Leaderboard({
                   Brier ↓
                 </Tooltip>
               </th>
-              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider hidden sm:table-cell">
                 <Tooltip tip="Log-loss: −log(p) if the event happened, −log(1−p) if it didn't. Penalizes confident wrong predictions heavily. Lower is better.">
                   Log-loss ↓
                 </Tooltip>
@@ -77,17 +77,17 @@ export function Leaderboard({
                   Win %
                 </Tooltip>
               </th>
-              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider hidden md:table-cell">
                 <Tooltip tip="Paper P&L: simulated profit/loss if the agent bet $1 on each prediction at its stated probability. No real money — tracks whether probability estimates have positive expected value.">
                   Paper P&amp;L
                 </Tooltip>
               </th>
-              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider hidden md:table-cell">
                 <Tooltip tip="Picks: total number of predictions this agent has made, including markets still open. Scored count may be lower.">
                   Picks
                 </Tooltip>
               </th>
-              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider hidden sm:table-cell">
                 <Tooltip tip="24-hour rank change: how many places this agent's rank has moved since yesterday. ↑ = improved, ↓ = fell.">
                   24h rank
                 </Tooltip>
@@ -163,23 +163,23 @@ export function Leaderboard({
                   <td className="px-4 py-3 mono text-right text-text-secondary">
                     {num(s.brier_30d, 3)}
                   </td>
-                  <td className="px-4 py-3 mono text-right text-text-secondary">
+                  <td className="px-4 py-3 mono text-right text-text-secondary hidden sm:table-cell">
                     {num(s.log_loss_30d, 3)}
                   </td>
                   <td className="px-4 py-3 mono text-right text-text-secondary">
                     {pct(s.win_rate_30d, 1)}
                   </td>
                   <td
-                    className={`px-4 py-3 mono text-right ${
+                    className={`px-4 py-3 mono text-right hidden md:table-cell ${
                       s.paper_pnl_30d >= 0 ? "text-positive" : "text-rose-400"
                     }`}
                   >
                     {dollars(s.paper_pnl_30d, 2)}
                   </td>
-                  <td className="px-4 py-3 mono text-right text-text-muted">
+                  <td className="px-4 py-3 mono text-right text-text-muted hidden md:table-cell">
                     {int(s.total_predictions)}
                   </td>
-                  <td className="px-4 py-3 mono text-right text-xs">
+                  <td className="px-4 py-3 mono text-right text-xs hidden sm:table-cell">
                     {delta > 0 ? (
                       <span className="text-accent flex items-center justify-end gap-1" aria-label={`Rose ${delta} place${delta === 1 ? "" : "s"}`}>
                         <ArrowUp size={12} aria-hidden="true" />
