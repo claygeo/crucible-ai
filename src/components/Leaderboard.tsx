@@ -98,13 +98,16 @@ export function Leaderboard({
             {stats.map((s, i) => {
               const agent = AGENTS.find((a) => a.id === s.agent_id);
               if (!agent) return null;
-              const isTop = i === 0;
+              const isBaseline = agent.id === "echo";
+              const isEnsemble = agent.synthetic;
+              // Highlight the top-ranked reasoning agent (not baseline, not ensemble)
+              const isTopReasoning = !isBaseline && !isEnsemble && i === 0;
               const delta = s.rank_delta_24h;
               return (
                 <tr
                   key={s.agent_id}
                   className={`border-b border-border-subtle/60 panel-hover transition-colors ${
-                    isTop ? "border-l-2 border-l-accent" : ""
+                    isTopReasoning ? "border-l-2 border-l-accent" : isBaseline ? "border-l-2 border-l-border-subtle" : ""
                   }`}
                 >
                   <td className="px-4 py-3 mono text-text-secondary">
@@ -119,9 +122,27 @@ export function Leaderboard({
                         className={`w-2 h-2 rounded-full ring-2 ring-offset-2 ring-offset-panel ${HUE_TO_BG[agent.hue]}`}
                         aria-hidden="true"
                       />
-                      <span className="flex flex-col gap-0">
-                        <span className="text-text-primary text-sm group-hover:text-accent transition-colors">
-                          {agent.name}
+                      <span className="flex flex-col gap-0.5">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-text-primary text-sm group-hover:text-accent transition-colors">
+                            {agent.name}
+                          </span>
+                          {isBaseline && (
+                            <span
+                              className="mono text-[9px] uppercase tracking-wider px-1 py-0.5 rounded bg-border-subtle/80 text-text-muted leading-none"
+                              title="Echo mirrors the market price — it's the control baseline, not a reasoning agent"
+                            >
+                              baseline
+                            </span>
+                          )}
+                          {isEnsemble && (
+                            <span
+                              className="mono text-[9px] uppercase tracking-wider px-1 py-0.5 rounded bg-border-subtle/80 text-text-muted leading-none"
+                              title="Crowd is a uniform-weight average of all non-abstaining agents"
+                            >
+                              ensemble
+                            </span>
+                          )}
                         </span>
                         <span className="text-text-muted text-xs">
                           {agent.persona}
