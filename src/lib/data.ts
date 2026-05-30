@@ -107,6 +107,53 @@ export async function getAgentStats(): Promise<{
   }
 }
 
+export type AlltimeStat = {
+  agent_id: string;
+  brier_alltime: number;
+  log_loss_alltime: number;
+  paper_pnl_alltime: number;
+  total_scored: number;
+};
+
+function demoAlltimeRows(): AlltimeStat[] {
+  return DEMO_AGENT_STATS.map((s) => ({
+    agent_id: s.agent_id,
+    brier_alltime: s.brier_30d,
+    log_loss_alltime: s.log_loss_30d,
+    paper_pnl_alltime: s.paper_pnl_30d,
+    total_scored: s.total_scored,
+  }));
+}
+
+export async function getAgentAlltimeStats(): Promise<{
+  source: Source;
+  rows: AlltimeStat[];
+}> {
+  if (FORCE_DEMO) return { source: "demo", rows: demoAlltimeRows() };
+  const client = sb();
+  if (!client) return { source: "demo", rows: demoAlltimeRows() };
+  try {
+    const { data, error } = await client
+      .from("agent_stats")
+      .select("agent_id, brier_alltime, log_loss_alltime, paper_pnl_alltime, total_scored, rank")
+      .order("brier_alltime", { ascending: true });
+    if (error || !data || data.length === 0) throw new Error("no data");
+    const rows = (data as Array<Record<string, unknown>>)
+      .filter((s) => Number(s.total_scored) > 0)
+      .map((s) => ({
+        agent_id: s.agent_id as string,
+        brier_alltime: Number(s.brier_alltime ?? 0),
+        log_loss_alltime: Number(s.log_loss_alltime ?? 0),
+        paper_pnl_alltime: Number(s.paper_pnl_alltime ?? 0),
+        total_scored: Number(s.total_scored ?? 0),
+      }));
+    if (rows.length === 0) throw new Error("no data");
+    return { source: "live", rows };
+  } catch {
+    return { source: "demo", rows: demoAlltimeRows() };
+  }
+}
+
 export async function getMarkets(opts: {
   status?: "open" | "resolved";
   limit?: number;

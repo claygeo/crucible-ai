@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { CalibrationPlot } from "@/components/CalibrationPlot";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_TEXT, HUE_TO_BG } from "@/lib/agents";
-import { getAgentStats, getDisagreements } from "@/lib/data";
+import { getAgentStats, getAgentAlltimeStats, getDisagreements } from "@/lib/data";
 import { num, int, pct, signed, dollars } from "@/lib/format";
 
 export const revalidate = 120;
@@ -21,9 +21,10 @@ export const metadata = {
 };
 
 export default async function BenchmarkPage() {
-  const [statsRes, disagreementsRes] = await Promise.all([
+  const [statsRes, disagreementsRes, alltimeRes] = await Promise.all([
     getAgentStats(),
     getDisagreements(5),
+    getAgentAlltimeStats(),
   ]);
 
   const stats = statsRes.rows;
@@ -252,6 +253,77 @@ export default async function BenchmarkPage() {
               an agent that shadows consensus has near-zero edge per bet, so small mispricings compound into a loss.
               An agent that diverges from the market earns outsized wins when the crowd is wrong — even if its overall accuracy is lower.
             </p>
+          </section>
+        )}
+
+        {/* ── All-time standings ──────────────────────────────────── */}
+        {alltimeRes.rows.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="heading text-xl text-text-primary">All-time standings</h2>
+              <p className="text-text-secondary text-sm">
+                Full-history Brier and log-loss across all{" "}
+                <span className="text-text-primary">
+                  {int(Math.max(...alltimeRes.rows.map((r) => r.total_scored)))}
+                </span>{" "}
+                resolved markets. More statistically robust than the 30-day
+                window — the signal that accumulates over time.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full" aria-label="Agent all-time standings">
+                <thead>
+                  <tr className="border-b border-border-subtle">
+                    <th className="text-left py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">Agent</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
+                      <Tooltip tip="All-time Brier score: mean squared error between predicted probability and outcome across every scored prediction. Lower is better — 0 is perfect, 0.25 is chance.">
+                        Brier ↓
+                      </Tooltip>
+                    </th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
+                      <Tooltip tip="All-time log-loss: −log(p) if the event happened, −log(1−p) if it didn't. Penalizes confident wrong predictions heavily. Lower is better.">
+                        Log-loss ↓
+                      </Tooltip>
+                    </th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
+                      <Tooltip tip="All-time paper P&L: cumulative simulated Kelly-fraction (0.25×) profit/loss on a $100 bankroll from every scored prediction.">
+                        Paper P&amp;L
+                      </Tooltip>
+                    </th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
+                      <Tooltip tip="Total markets scored: number of resolved predictions with ground-truth outcome.">
+                        n
+                      </Tooltip>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle">
+                  {alltimeRes.rows.map((s, i) => {
+                    const agent = AGENTS.find((a) => a.id === s.agent_id);
+                    const hueTxt = agent ? HUE_TO_TEXT[agent.hue] : "text-text-primary";
+                    return (
+                      <tr key={s.agent_id} className="hover:bg-surface-elevated/40 transition-colors">
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-2">
+                            {i === 0 && (
+                              <span className="mono text-[9px] text-accent uppercase tracking-wider">★</span>
+                            )}
+                            <span className={`font-medium ${hueTxt}`}>{agent?.name ?? s.agent_id}</span>
+                            <span className="mono text-[10px] text-text-muted hidden sm:inline">{agent?.persona}</span>
+                          </div>
+                        </td>
+                        <td className="text-right py-3 px-3 mono text-sm">{num(s.brier_alltime, 3)}</td>
+                        <td className="text-right py-3 px-3 mono text-sm">{num(s.log_loss_alltime, 3)}</td>
+                        <td className={`text-right py-3 px-3 mono text-sm ${
+                          s.paper_pnl_alltime >= 0 ? "text-positive" : "text-rose-400"
+                        }`}>{dollars(s.paper_pnl_alltime, 2)}</td>
+                        <td className="text-right py-3 px-3 mono text-sm text-text-muted">{int(s.total_scored)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
 
