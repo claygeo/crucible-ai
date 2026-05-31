@@ -49,6 +49,31 @@ export default async function LivePage() {
     })
     .filter((s): s is NonNullable<typeof s> => s !== null);
 
+  // Compute early live Brier from resolved markets already in view.
+  // All live predictions fit within the getLiveForecasts limit, so every
+  // resolved market should be represented here.
+  const liveEarlyScores = (() => {
+    const scores = new Map<string, { brier_sum: number; count: number }>();
+    for (const row of rows) {
+      if (row.market.status !== "resolved" || row.market.resolved_outcome === null) continue;
+      const outcome = row.market.resolved_outcome ? 1 : 0;
+      for (const p of row.agentPreds) {
+        const brier = (p.probability - outcome) * (p.probability - outcome);
+        const e = scores.get(p.agent_id) ?? { brier_sum: 0, count: 0 };
+        e.brier_sum += brier;
+        e.count += 1;
+        scores.set(p.agent_id, e);
+      }
+    }
+    return Array.from(scores.entries())
+      .map(([agent_id, { brier_sum, count }]) => ({
+        agent_id,
+        count,
+        avg_brier: count > 0 ? brier_sum / count : 0,
+      }))
+      .sort((a, b) => a.avg_brier - b.avg_brier);
+  })();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -63,10 +88,16 @@ export default async function LivePage() {
             Live locked forecasts on <span className="text-accent">open markets</span>.
           </h1>
           <p className="text-text-secondary text-base leading-relaxed max-w-3xl">
-            These are forecasts agents made on markets that are{" "}
-            <span className="text-text-primary">still open</span>. Each forecast
-            is locked when submitted, can&apos;t be edited, and gets scored
-            automatically after the market resolves. No look-ahead by construction.
+            Agents locked these probability forecasts on live Polymarket and
+            Manifold markets. Each prediction is timestamped at submission,
+            can&apos;t be edited, and scores automatically when the market
+            resolves. No look-ahead by construction
+            {resolvedCount > 0 && (
+              <> — the first{" "}
+                <span className="text-positive">{resolvedCount} markets</span>{" "}
+                have already resolved with real scores
+              </>
+            )}.
           </p>
           <p className="text-text-muted text-xs leading-relaxed max-w-3xl mono">
             Under the hood: <code className="text-text-secondary">predictions.created_at = NOW()</code>,{" "}
@@ -133,6 +164,46 @@ export default async function LivePage() {
                   </div>
                 </Link>
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* First resolved live results — surfaces early Brier once markets start resolving */}
+        {liveEarlyScores.length >= 2 && (
+          <section className="panel px-5 py-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                First resolved live results
+              </div>
+              <span className="mono text-[10px] px-2 py-0.5 rounded bg-positive/10 text-positive uppercase tracking-wider">
+                {liveEarlyScores[0]?.count ?? 0} markets scored
+              </span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Of the {resolvedCount} markets that have resolved since live forecasting launched,
+              here&apos;s the early Brier per agent. Small sample — but the first real live signal.
+            </p>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              {liveEarlyScores.map(({ agent_id, avg_brier }, i) => {
+                const agent = AGENTS.find((a) => a.id === agent_id);
+                if (!agent) return null;
+                const hueTxt = HUE_TO_TEXT[agent.hue];
+                const isFirst = i === 0;
+                return (
+                  <div key={agent_id} className="flex items-center gap-2 mono text-xs">
+                    <span className={`font-medium ${hueTxt}`}>{agent.name}</span>
+                    <span className={isFirst ? "text-positive font-bold" : "text-text-primary"}>
+                      {num(avg_brier, 3)}
+                    </span>
+                    {isFirst && (
+                      <span className="text-positive text-[10px] uppercase tracking-wider">best ↓</span>
+                    )}
+                    {i === liveEarlyScores.length - 1 && (
+                      <span className="text-rose-400 text-[10px] uppercase tracking-wider">worst</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}
