@@ -122,9 +122,9 @@ export default async function MarketsPage({
               filteredOpen.map((m) => (
                 <div
                   key={m.id}
-                  className="px-5 py-4 panel-hover flex items-start gap-4"
+                  className="px-5 py-4 panel-hover flex items-start gap-3"
                 >
-                  <div className="shrink-0 flex flex-col items-start gap-1">
+                  <div className="shrink-0 flex flex-col items-start gap-1 pt-0.5">
                     {activeCategory === "all" && (
                       <span
                         className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
@@ -136,30 +136,31 @@ export default async function MarketsPage({
                       {m.source}
                     </span>
                   </div>
-                  <Link
-                    href={`/markets/${m.id}`}
-                    className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
-                  >
-                    {m.question}
-                  </Link>
-                  {m.url && m.url !== "#" && (
-                    <a
-                      href={m.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 mt-0.5"
-                      aria-label="View on source"
-                    >
-                      <ExternalLink size={12} className="text-text-muted hover:text-accent transition-colors" />
-                    </a>
-                  )}
-                  <div className="shrink-0 flex flex-col items-end gap-0.5">
-                    <span className="mono text-xs text-text-muted whitespace-nowrap">
-                      closes {relativeTime(m.closes_at)}
-                    </span>
-                    <span className="mono text-xs text-text-primary">
-                      P={pct(m.outcome_yes_price)}
-                    </span>
+                  <div className="flex-1 min-w-0 flex flex-col gap-1">
+                    <div className="flex items-start gap-2">
+                      <Link
+                        href={`/markets/${m.id}`}
+                        className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
+                      >
+                        {m.question}
+                      </Link>
+                      {m.url && m.url !== "#" && (
+                        <a
+                          href={m.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 mt-0.5"
+                          aria-label={`View "${m.question}" on ${m.source}`}
+                        >
+                          <ExternalLink size={12} className="text-text-muted hover:text-accent transition-colors" />
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mono text-[11px] text-text-muted">
+                      <span className="whitespace-nowrap">closes {relativeTime(m.closes_at)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="text-text-secondary tabular-nums">P={pct(m.outcome_yes_price)}</span>
+                    </div>
                   </div>
                 </div>
               ))
@@ -181,9 +182,9 @@ export default async function MarketsPage({
               filteredResolved.map((m) => (
                 <div
                   key={m.id}
-                  className="px-5 py-4 panel-hover flex items-start gap-4"
+                  className="px-5 py-4 panel-hover flex items-start gap-3"
                 >
-                  <div className="shrink-0 flex flex-col items-start gap-1">
+                  <div className="shrink-0 flex flex-col items-start gap-1 pt-0.5">
                     {activeCategory === "all" && (
                       <span
                         className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
@@ -195,25 +196,26 @@ export default async function MarketsPage({
                       {m.source}
                     </span>
                   </div>
-                  <Link
-                    href={`/markets/${m.id}`}
-                    className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
-                  >
-                    {m.question}
-                  </Link>
-                  <div className="shrink-0 flex flex-col items-end gap-0.5">
-                    <span className="mono text-xs text-text-muted whitespace-nowrap">
-                      resolved {relativeTime(m.resolved_at ?? m.closes_at)}
-                    </span>
-                    <span
-                      className={`mono text-xs px-2 py-0.5 rounded ${
-                        m.resolved_outcome
-                          ? "bg-positive/10 text-positive"
-                          : "bg-rose-400/10 text-rose-400"
-                      }`}
+                  <div className="flex-1 min-w-0 flex flex-col gap-1">
+                    <Link
+                      href={`/markets/${m.id}`}
+                      className="text-text-primary text-sm hover:text-accent transition-colors"
                     >
-                      {m.resolved_outcome ? "YES" : "NO"}
-                    </span>
+                      {m.question}
+                    </Link>
+                    <div className="flex items-center gap-2 mono text-[11px] text-text-muted">
+                      <span className="whitespace-nowrap">resolved {relativeTime(m.resolved_at ?? m.closes_at)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${
+                          m.resolved_outcome
+                            ? "bg-positive/10 text-positive"
+                            : "bg-rose-400/10 text-rose-400"
+                        }`}
+                      >
+                        {m.resolved_outcome ? "YES" : "NO"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))
