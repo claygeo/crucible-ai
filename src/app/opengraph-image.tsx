@@ -156,7 +156,7 @@ export default async function OG() {
               gap: "48px",
             }}
           >
-            {/* Win rate huge */}
+            {/* Brier score — huge, primary metric */}
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div
                 style={{
@@ -168,7 +168,7 @@ export default async function OG() {
                   textTransform: "uppercase",
                 }}
               >
-                {`${bestAgent?.name ?? "—"} win rate`}
+                {`${bestAgent?.name ?? "—"} Brier ↓`}
               </div>
               <div
                 style={{
@@ -180,34 +180,7 @@ export default async function OG() {
                   fontFamily: "monospace",
                 }}
               >
-                {best ? `${(best.win_rate_30d * 100).toFixed(1)}%` : "—"}
-              </div>
-            </div>
-
-            {/* Brier */}
-            <div style={{ display: "flex", flexDirection: "column", paddingBottom: "12px" }}>
-              <div
-                style={{
-                  fontSize: "11px",
-                  color: COL.muted,
-                  fontFamily: "monospace",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Brier score
-              </div>
-              <div
-                style={{
-                  fontSize: "60px",
-                  fontWeight: 600,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1,
-                  color: COL.text,
-                  fontFamily: "monospace",
-                }}
-              >
-                {best ? best.brier_30d.toFixed(3) : "—"}
+                {best ? (best.brier_30d ?? 0).toFixed(3) : "—"}
               </div>
             </div>
 
@@ -234,9 +207,44 @@ export default async function OG() {
                   fontFamily: "monospace",
                 }}
               >
-                {best ? best.log_loss_30d.toFixed(3) : "—"}
+                {best ? (best.log_loss_30d ?? 0).toFixed(3) : "—"}
               </div>
             </div>
+
+            {/* Spread: last-place Brier vs best */}
+            {ranked.length >= 2 && (() => {
+              const last = ranked[ranked.length - 1];
+              const lastBrier = last?.brier_30d ?? 0;
+              const bestBrier = best?.brier_30d ?? 1;
+              const ratio = bestBrier > 0 ? lastBrier / bestBrier : 0;
+              return (
+                <div style={{ display: "flex", flexDirection: "column", paddingBottom: "12px" }}>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: COL.muted,
+                      fontFamily: "monospace",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    worst/best gap
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "60px",
+                      fontWeight: 600,
+                      letterSpacing: "-0.02em",
+                      lineHeight: 1,
+                      color: COL.negative,
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    {`${ratio.toFixed(1)}×`}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <div
@@ -249,7 +257,7 @@ export default async function OG() {
               fontFamily: "monospace",
             }}
           >
-            {`Beats 5 rival agents across ${best?.total_scored ?? 0} resolved Polymarket + Manifold markets.`}
+            {`Lowest Brier across ${best?.total_scored ?? 0} resolved Polymarket + Manifold markets. Lower = better calibration.`}
           </div>
         </div>
 
@@ -320,10 +328,10 @@ export default async function OG() {
                   {agent?.persona ?? ""}
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", width: "90px", color: COL.text }}>
-                  {`${(s.win_rate_30d * 100).toFixed(1)}%`}
+                  {`${((s.win_rate_30d ?? 0) * 100).toFixed(1)}%`}
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", width: "90px", color: COL.text }}>
-                  {s.brier_30d.toFixed(3)}
+                  {(s.brier_30d ?? 0).toFixed(3)}
                 </div>
                 <div
                   style={{
