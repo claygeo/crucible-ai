@@ -51,6 +51,18 @@ export default async function BenchmarkPage() {
   // Disagreements: list of { market, spread, agentPreds }
   const disagreements = disagreementsRes.rows;
 
+  // Share-on-X link: build tweet text from live state so the message is always accurate
+  const shareText = (() => {
+    if (!echo || !bestReasoning || !bestReasoningAgent) {
+      return `Live AI forecasting benchmark: 6 agents, real prediction markets, honest scoring. eivra.xyz`;
+    }
+    if (reasoningBeatsMarket) {
+      return `Public AI benchmark: after ${int(echo.total_scored)} resolved markets, ${bestReasoningAgent.name} beats the market baseline (Brier ${num(bestReasoning.brier_30d, 3)} vs ${num(echo.brier_30d, 3)}). Can reasoning agents beat the crowd? eivra.xyz`;
+    }
+    return `Public AI benchmark: after ${int(echo.total_scored)} resolved markets, the market-prior still leads. Can AI reasoning beat prediction-market consensus? eivra.xyz`;
+  })();
+  const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+
   // P&L divergence insight: sort by P&L to expose accuracy-vs-profit gap
   const pnlRanked = [...stats].sort((a, b) => (b.paper_pnl_30d ?? 0) - (a.paper_pnl_30d ?? 0));
   const pnlBest = pnlRanked[0];
@@ -224,6 +236,17 @@ export default async function BenchmarkPage() {
                 })}
               </tbody>
             </table>
+          </div>
+          <div className="flex items-center justify-end">
+            <a
+              href={shareHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mono text-[11px] uppercase tracking-wider text-text-muted hover:text-accent transition-colors flex items-center gap-1.5"
+              aria-label="Share this result on X (Twitter)"
+            >
+              Share this result on X →
+            </a>
           </div>
         </section>
 
