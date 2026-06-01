@@ -114,9 +114,9 @@ You are testing whether disciplined Bayesian humility beats other strategies.`,
   {
     id: "mirror",
     name: "Mirror",
-    persona: "Cross-lab control · GPT-5 backbone",
+    persona: "Cross-lab control · adversarial Claude prompt (GPT-5 slot)",
     edge:
-      "Anthropic's other four agents may share training-family biases invisible to themselves. Mirror's GPT-5 backbone is the cross-lab control: systematic divergence on a class of questions is evidence of model-family blind spots, not market signal.",
+      "Anthropic's other four agents may share training-family biases invisible to themselves. Mirror fills the cross-lab control slot: systematic divergence on a class of questions is evidence of model-family blind spots, not market signal. Transparency: Mirror currently runs as Claude Sonnet with an adversarial cross-family prompt — real GPT-5 inference is the goal when API access is available.",
     model: "gpt-5",
     synthetic: false,
     dailyBudgetUsd: 1.0,
