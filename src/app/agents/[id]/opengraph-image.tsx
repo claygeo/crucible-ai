@@ -15,6 +15,25 @@ const MODEL_LABEL: Record<string, string> = {
   synthetic: "Ensemble",
 };
 
+const COL = {
+  bg: "#0a0b0d",
+  text: "#e6e9ee",
+  muted: "#7B8595",
+  border: "#1f2530",
+  accent: "#00C2A8",
+  positive: "#22c55e",
+  negative: "#f87171",
+};
+
+const HUE_HEX: Record<string, string> = {
+  teal: COL.accent,
+  amber: "#FBBF24",
+  rose: "#F87171",
+  indigo: "#818CF8",
+  lime: "#A3E635",
+  white: "#FFFFFF",
+};
+
 export default async function AgentOG({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const agent = AGENTS.find((a) => a.id === id);
@@ -23,16 +42,14 @@ export default async function AgentOG({ params }: { params: Promise<{ id: string
   }
   const statsRes = await getAgentStats();
   const s = statsRes.rows.find((x) => x.agent_id === id);
+  const echo = statsRes.rows.find((x) => x.agent_id === "echo");
 
-  const hueHex: Record<string, string> = {
-    teal: "#00C2A8",
-    amber: "#FBBF24",
-    rose: "#F87171",
-    indigo: "#818CF8",
-    lime: "#A3E635",
-    white: "#FFFFFF",
-  };
-  const hue = hueHex[agent.hue] ?? "#00C2A8";
+  const hue = HUE_HEX[agent.hue] ?? COL.accent;
+
+  // delta vs market baseline (Echo mirrors market price — it's the bar to beat)
+  const brierDelta = s && echo ? s.brier_30d - echo.brier_30d : null;
+  const beatsMarket = brierDelta !== null && brierDelta < 0;
+  const isBaseline = agent.id === "echo";
 
   return new ImageResponse(
     (
@@ -40,134 +57,381 @@ export default async function AgentOG({ params }: { params: Promise<{ id: string
         style={{
           width: "100%",
           height: "100%",
-          background: "#0a0b0d",
+          background: COL.bg,
           display: "flex",
           flexDirection: "column",
-          padding: "60px",
-          color: "#e6e9ee",
+          padding: "36px 48px",
+          color: COL.text,
           fontFamily: "Inter, system-ui",
         }}
       >
+        {/* Header strip */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "16px",
-            fontSize: "20px",
-            color: "#7B8595",
-            fontFamily: "monospace",
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
+            justifyContent: "space-between",
+            paddingBottom: "16px",
+            borderBottom: `1px solid ${COL.border}`,
           }}
         >
           <div
             style={{
-              width: "10px",
-              height: "10px",
-              borderRadius: "50%",
-              background: "#00C2A8",
-            }}
-          />
-          eivra_ · agent profile
-        </div>
-
-        <div style={{ display: "flex", marginTop: "60px", alignItems: "center", gap: "20px" }}>
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              background: hue,
-            }}
-          />
-          <div style={{ fontSize: "84px", fontWeight: 700, letterSpacing: "-0.02em" }}>
-            {agent.name}
-          </div>
-          <div
-            style={{
-              fontSize: "16px",
-              color: "#7B8595",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              fontSize: "15px",
+              color: COL.muted,
               fontFamily: "monospace",
-              padding: "6px 12px",
-              border: "1px solid #2A313B",
-              borderRadius: "4px",
-              marginLeft: "16px",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
             }}
           >
-            {MODEL_LABEL[agent.model] ?? agent.model}
+            <div
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: COL.accent,
+              }}
+            />
+            <span style={{ color: COL.text, fontWeight: 600 }}>eivra_</span>
+            <span style={{ color: COL.muted }}>·</span>
+            <span>agent profile</span>
+          </div>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: COL.muted,
+                border: `1px solid ${COL.border}`,
+                borderRadius: "2px",
+                padding: "3px 10px",
+                fontFamily: "monospace",
+                letterSpacing: "0.04em",
+              }}
+            >
+              {MODEL_LABEL[agent.model] ?? agent.model}
+            </div>
+            {s && (
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: hue,
+                  border: `1px solid ${hue}`,
+                  borderRadius: "2px",
+                  padding: "3px 10px",
+                  fontFamily: "monospace",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {`RANK #${s.rank}`}
+              </div>
+            )}
           </div>
         </div>
 
-        <div style={{ fontSize: "26px", color: "#9AA4B2", marginTop: "20px", maxWidth: "900px" }}>
-          {agent.persona}
+        {/* Agent name + persona */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            marginTop: "24px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <div
+              style={{
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                background: hue,
+              }}
+            />
+            <div
+              style={{
+                fontSize: "80px",
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                lineHeight: 1,
+              }}
+            >
+              {agent.name}
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: "22px",
+              color: COL.muted,
+              fontFamily: "monospace",
+              marginLeft: "42px",
+            }}
+          >
+            {agent.persona}
+          </div>
+        </div>
+
+        {/* Performance hero row */}
+        <div
+          style={{
+            display: "flex",
+            gap: "52px",
+            marginTop: "20px",
+            alignItems: "flex-end",
+          }}
+        >
+          {/* Brier — primary metric */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                fontSize: "11px",
+                color: COL.muted,
+                fontFamily: "monospace",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Brier (30d) ↓
+            </div>
+            <div
+              style={{
+                fontSize: "100px",
+                fontWeight: 700,
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
+                color: hue,
+                fontFamily: "monospace",
+              }}
+            >
+              {s ? s.brier_30d.toFixed(3) : "—"}
+            </div>
+          </div>
+
+          {/* vs market baseline verdict */}
+          {s && !isBaseline && brierDelta !== null && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                paddingBottom: "10px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: COL.muted,
+                  fontFamily: "monospace",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                vs market-prior
+              </div>
+              <div
+                style={{
+                  fontSize: "52px",
+                  fontWeight: 700,
+                  letterSpacing: "-0.03em",
+                  lineHeight: 1,
+                  color: beatsMarket ? COL.positive : COL.negative,
+                  fontFamily: "monospace",
+                }}
+              >
+                {`${brierDelta >= 0 ? "+" : ""}${brierDelta.toFixed(3)}`}
+              </div>
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: beatsMarket ? COL.positive : COL.negative,
+                  fontFamily: "monospace",
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {beatsMarket ? "✓ Beats market-prior" : "✗ Trails market-prior"}
+              </div>
+            </div>
+          )}
+
+          {/* Echo: "sets the bar" label instead of delta */}
+          {isBaseline && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                paddingBottom: "10px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: COL.muted,
+                  fontFamily: "monospace",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                baseline
+              </div>
+              <div
+                style={{
+                  fontSize: "26px",
+                  fontWeight: 600,
+                  color: COL.accent,
+                  fontFamily: "monospace",
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  marginTop: "4px",
+                }}
+              >
+                This IS the bar to beat
+              </div>
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: COL.muted,
+                  fontFamily: "monospace",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                mirrors market price · small Bayesian steps
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: "flex", flex: 1 }} />
+
+          {/* Win rate */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              paddingBottom: "10px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "11px",
+                color: COL.muted,
+                fontFamily: "monospace",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Win rate
+            </div>
+            <div
+              style={{
+                fontSize: "52px",
+                fontWeight: 600,
+                letterSpacing: "-0.02em",
+                lineHeight: 1,
+                color: COL.text,
+                fontFamily: "monospace",
+              }}
+            >
+              {s ? `${(s.win_rate_30d * 100).toFixed(1)}%` : "—"}
+            </div>
+          </div>
+
+          {/* Log-loss */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              paddingBottom: "10px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "11px",
+                color: COL.muted,
+                fontFamily: "monospace",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Log-loss ↓
+            </div>
+            <div
+              style={{
+                fontSize: "52px",
+                fontWeight: 600,
+                letterSpacing: "-0.02em",
+                lineHeight: 1,
+                color: COL.text,
+                fontFamily: "monospace",
+              }}
+            >
+              {s ? s.log_loss_30d.toFixed(3) : "—"}
+            </div>
+          </div>
         </div>
 
         <div style={{ display: "flex", flex: 1 }} />
 
-        {/* Edge description — what makes this agent distinctive */}
+        {/* Bottom strip */}
         <div
           style={{
             display: "flex",
-            fontSize: "16px",
-            color: "#6B7685",
-            fontFamily: "monospace",
-            maxWidth: "840px",
-            lineHeight: 1.55,
-            marginBottom: "24px",
-            paddingTop: "16px",
-            borderTop: "1px solid #1f2530",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingTop: "14px",
+            borderTop: `1px solid ${COL.border}`,
           }}
         >
-          {`→ ${agent.edge}`}
-        </div>
-
-        <div style={{ display: "flex", gap: "60px" }}>
-          <Stat label="Eivra Score" value={s ? s.eivra_score.toFixed(3) : "—"} />
-          <Stat label="Brier (30d)" value={s ? s.brier_30d.toFixed(3) : "—"} />
-          <Stat label="Win rate" value={s ? `${(s.win_rate_30d * 100).toFixed(1)}%` : "—"} />
-          <Stat
-            label="Rank"
-            value={s ? `#${s.rank}` : "—"}
-            highlight={hue}
-          />
+          <div
+            style={{
+              display: "flex",
+              gap: "20px",
+              alignItems: "center",
+              fontSize: "13px",
+              color: COL.muted,
+              fontFamily: "monospace",
+            }}
+          >
+            <div style={{ display: "flex", gap: "6px" }}>
+              <span style={{ color: COL.text, fontWeight: 600 }}>
+                {s?.total_scored ?? 0}
+              </span>
+              <span>markets scored</span>
+            </div>
+            <span>·</span>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <span style={{ color: COL.text, fontWeight: 600 }}>
+                {s?.total_predictions ?? 0}
+              </span>
+              <span>total forecasts</span>
+            </div>
+            <span>·</span>
+            <span style={{ color: COL.accent }}>eivra.xyz</span>
+          </div>
+          <div style={{ display: "flex", gap: "6px" }}>
+            {[MODEL_LABEL[agent.model] ?? agent.model, "Polymarket", "Manifold", "eivra.xyz"].map(
+              (b, i) => (
+                <div
+                  key={b}
+                  style={{
+                    fontSize: "11px",
+                    color: i === 0 ? hue : i === 3 ? COL.accent : COL.muted,
+                    border: `1px solid ${i === 0 ? hue : i === 3 ? COL.accent : COL.border}`,
+                    borderRadius: "2px",
+                    padding: "3px 8px",
+                    fontFamily: "monospace",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {b}
+                </div>
+              )
+            )}
+          </div>
         </div>
       </div>
     ),
     { ...size }
-  );
-}
-
-function Stat({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: string;
-}) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#7B8595",
-          fontFamily: "monospace",
-          letterSpacing: "0.05em",
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: "48px",
-          fontFamily: "monospace",
-          color: highlight ?? "#e6e9ee",
-        }}
-      >
-        {value}
-      </div>
-    </div>
   );
 }
