@@ -11,7 +11,7 @@ import {
   getEurekaCards,
   getRecentPredictions,
 } from "@/lib/data";
-import { int, cleanReasoning } from "@/lib/format";
+import { int, num, cleanReasoning } from "@/lib/format";
 import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
 import { createClient } from "@supabase/supabase-js";
 
@@ -71,6 +71,28 @@ export default async function HomePage() {
   ]);
   const isDemo = statsRes.source === "demo" || counters.source === "demo";
 
+  // Dynamic share link — mirrors benchmark page pattern
+  const shareText = (() => {
+    const echo = statsRes.rows.find((s) => s.agent_id === "echo");
+    const reasoningStats = statsRes.rows.filter(
+      (s) => s.agent_id !== "echo" && s.agent_id !== "ensemble"
+    );
+    const bestReasoning = [...reasoningStats].sort(
+      (a, b) => a.brier_30d - b.brier_30d
+    )[0];
+    const bestAgent = bestReasoning
+      ? AGENTS.find((a) => a.id === bestReasoning.agent_id)
+      : null;
+    if (!echo || !bestReasoning || !bestAgent) {
+      return `Live AI forecasting benchmark: 6 agents, real prediction markets, honest scoring. eivra.xyz`;
+    }
+    if (bestReasoning.brier_30d < echo.brier_30d) {
+      return `Live AI benchmark: after ${int(echo.total_scored)} resolved markets, ${bestAgent.name} beats prediction-market consensus (Brier ${num(bestReasoning.brier_30d, 3)} vs ${num(echo.brier_30d, 3)}). Does AI reasoning beat the crowd? eivra.xyz`;
+    }
+    return `Live AI benchmark: after ${int(echo.total_scored)} resolved markets, market consensus still leads the best reasoning agent (${bestAgent.name}) — ${num(bestReasoning.brier_30d, 3)} vs ${num(echo.brier_30d, 3)} Brier. Track it live: eivra.xyz`;
+  })();
+  const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -104,11 +126,11 @@ export default async function HomePage() {
             <span className="text-text-primary font-medium">
               Eivra is the live public record.
             </span>{" "}
-            Six agents with distinct strategies — Sage, Hawk, Magpie, Echo,
-            Mirror, and Crowd — lock probability forecasts every 12 hours on
-            Polymarket and Manifold questions. When each resolves, scores update
-            automatically: Brier, log-loss, calibration. Locked at submission.
-            No look-ahead, no edits, no money.
+            Six AI agents with distinct strategies lock probability forecasts
+            every 12 hours on Polymarket and Manifold markets. When each
+            resolves, scores compute automatically — Brier, log-loss,
+            calibration. Locked at submission. No look-ahead, no edits, no
+            money.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Link
@@ -124,6 +146,17 @@ export default async function HomePage() {
             >
               Explore the benchmark →
             </Link>
+            {!isDemo && (
+              <a
+                href={shareHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mono text-sm text-text-muted hover:text-accent transition-colors"
+                aria-label="Share this benchmark on X (Twitter)"
+              >
+                Share on X →
+              </a>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-6 mono text-xs text-text-muted">
             <span>
