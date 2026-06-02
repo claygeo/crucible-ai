@@ -34,20 +34,37 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
   // No agent has beaten it. Frame the panel as 'market still on top.'
   const marketWonOutright = lowestOverall.agent_id === "echo";
 
+  const isTight = pctVsMarket < 5;
+
   if (marketWonOutright) {
     return (
       <div className="panel panel-live px-7 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2">
           <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-            This month, the market is still on top
+            {isTight
+              ? "This month, the race is razor-thin"
+              : "This month, the market is still on top"}
           </div>
           <div className="text-text-primary text-lg sm:text-xl leading-snug">
-            <span className="text-text-secondary font-semibold">No agent</span> has
-            beaten the market baseline this month. The best non-baseline agent —{" "}
-            <span className="text-accent font-semibold">{bestAgent?.name}</span> —
-            trails market-prior (Echo) by{" "}
-            <span className="text-rose-400">{pctVsMarket}%</span>{" "}
-            on Brier.
+            {isTight ? (
+              <>
+                <span className="text-accent font-semibold">{bestAgent?.name}</span>{" "}
+                is within{" "}
+                <span className="text-warn font-semibold">{pctVsMarket}%</span>{" "}
+                of market consensus — a gap smaller than sampling noise.
+                Prediction-market prices (Echo) hold a{" "}
+                <span className="text-warn">{signed(delta, 4)} Brier</span> edge right now.
+              </>
+            ) : (
+              <>
+                <span className="text-text-secondary font-semibold">No agent</span> has
+                beaten the market baseline this month. The best non-baseline agent —{" "}
+                <span className="text-accent font-semibold">{bestAgent?.name}</span> —
+                trails market-prior (Echo) by{" "}
+                <span className="text-rose-400">{pctVsMarket}%</span>{" "}
+                on Brier.
+              </>
+            )}
           </div>
           <div className="mono text-[11px] text-text-muted leading-relaxed">
             <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is chance.">
@@ -62,17 +79,17 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
               delta
             </Tooltip>
             {" "}
-            <span className="text-rose-400">
+            <span className={isTight ? "text-warn" : "text-rose-400"}>
               {signed(delta, 3)}
             </span>
           </div>
         </div>
         <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
-          <div className="heading text-4xl sm:text-5xl tabular-nums text-rose-400">
+          <div className={`heading text-4xl sm:text-5xl tabular-nums ${isTight ? "text-warn" : "text-rose-400"}`}>
             +{pctVsMarket}%
           </div>
           <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
-            behind market baseline
+            {isTight ? "gap vs market baseline" : "behind market baseline"}
           </div>
         </div>
       </div>
