@@ -132,6 +132,7 @@ export default async function AgentDetailPage({
 
   // Hero metric: this agent's brier vs market-anchor (Echo) brier
   const echoStats = statsRes.rows.find((s) => s.agent_id === "echo");
+  const isBaseline = agent.id === "echo";
   const brierDelta = echoStats ? stats.brier_30d - echoStats.brier_30d : 0;
   const beatsMarket = brierDelta < 0;
 
@@ -173,21 +174,37 @@ export default async function AgentDetailPage({
           </div>
 
           <div className="flex flex-col gap-1 panel px-5 py-4 min-w-[220px]">
-            <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              <Tooltip tip="Brier delta: this agent's 30-day Brier score minus the market-baseline (Echo, which just mirrors prediction-market prices). Negative = beats the crowd. Lower Brier is better.">
-                vs market baseline
-              </Tooltip>
-            </div>
-            <div
-              className={`heading text-3xl ${
-                beatsMarket ? "text-positive" : "text-rose-400"
-              }`}
-            >
-              {signed(brierDelta, 3)}
-            </div>
-            <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
-              {beatsMarket ? "Beats consensus" : "Trails consensus"}
-            </div>
+            {isBaseline ? (
+              <>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Market baseline
+                </div>
+                <div className="heading text-3xl text-white">
+                  {num(stats.brier_30d, 3)}
+                </div>
+                <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
+                  Brier · bar to beat
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  <Tooltip tip="Brier delta: this agent's 30-day Brier score minus the market-baseline (Echo, which just mirrors prediction-market prices). Negative = beats the crowd. Lower Brier is better.">
+                    vs market baseline
+                  </Tooltip>
+                </div>
+                <div
+                  className={`heading text-3xl ${
+                    beatsMarket ? "text-positive" : "text-rose-400"
+                  }`}
+                >
+                  {signed(brierDelta, 3)}
+                </div>
+                <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
+                  {beatsMarket ? "Beats consensus" : "Trails consensus"}
+                </div>
+              </>
+            )}
           </div>
         </section>
 
