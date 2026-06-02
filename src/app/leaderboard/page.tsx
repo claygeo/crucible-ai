@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Leaderboard } from "@/components/Leaderboard";
+import { Tooltip } from "@/components/Tooltip";
 import { getAgentStats } from "@/lib/data";
 import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
 import { num, pct, int } from "@/lib/format";
@@ -29,6 +30,23 @@ export default async function LeaderboardPage() {
     .sort((a, b) => a.rank - b.rank)[0];
   const leaderAgent = leader ? AGENTS.find((a) => a.id === leader.agent_id) : null;
   const leaderHue = leaderAgent ? HUE_TO_TEXT[leaderAgent.hue] : "text-accent";
+
+  // Best reasoning agent = top ranked excluding Echo (baseline) and ensemble
+  const bestReasoner = stats.rows
+    .filter((s) => s.agent_id !== "ensemble" && s.agent_id !== "echo")
+    .sort((a, b) => a.rank - b.rank)[0];
+  const bestReasonerAgent = bestReasoner
+    ? AGENTS.find((a) => a.id === bestReasoner.agent_id)
+    : null;
+  const bestReasonerHue = bestReasonerAgent
+    ? HUE_TO_TEXT[bestReasonerAgent.hue]
+    : "text-accent";
+
+  const echoStats = stats.rows.find((s) => s.agent_id === "echo");
+  const brierGap =
+    echoStats && bestReasoner
+      ? bestReasoner.brier_30d - echoStats.brier_30d
+      : null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -77,13 +95,41 @@ export default async function LeaderboardPage() {
               </Link>
             </div>
           )}
-          {isLive && leader?.agent_id === "echo" && (
-            <p className="text-text-muted text-xs mono max-w-2xl">
-              Echo mirrors the market price — it&apos;s the control baseline. The benchmark question is whether reasoning agents will beat it.{" "}
-              <Link href="/benchmark" className="text-accent hover:underline">
-                See the gap →
-              </Link>
-            </p>
+          {isLive && leader?.agent_id === "echo" && bestReasoner && bestReasonerAgent && brierGap !== null && (
+            <div className="panel px-5 py-4 border-l-2 border-l-accent/50 flex flex-col gap-2 max-w-2xl">
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                The benchmark question
+              </div>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                After{" "}
+                <span className="text-text-primary font-medium">{int(echoStats?.total_scored ?? 0)} resolved markets</span>,
+                market consensus{" "}
+                <Tooltip tip="Echo is the control baseline — it mirrors the current market price with only small Bayesian adjustments. Beating Echo means beating a crowd of real-money forecasters.">
+                  <span className="text-white">(Echo)</span>
+                </Tooltip>{" "}
+                leads the best reasoning agent{" "}
+                <span className={`font-medium ${bestReasonerHue}`}>
+                  ({bestReasonerAgent.name})
+                </span>{" "}
+                by{" "}
+                <Tooltip tip={`Echo Brier: ${num(echoStats?.brier_30d ?? 0, 4)} vs ${bestReasonerAgent.name} Brier: ${num(bestReasoner.brier_30d, 4)}. Brier score: lower = better.`}>
+                  <span className="text-accent font-medium mono">
+                    {num(brierGap, 4)} Brier
+                  </span>
+                </Tooltip>
+                {" "}({num(echoStats?.brier_30d ?? 0, 3)} vs{" "}
+                {num(bestReasoner.brier_30d, 3)}).
+                Can reasoning agents close the gap?
+              </p>
+              <div className="flex flex-wrap items-center gap-3 mono text-[11px] text-text-muted">
+                <Link href="/benchmark" className="text-accent hover:underline">
+                  Calibration plots →
+                </Link>
+                <Link href="/live" className="text-text-secondary hover:text-text-primary transition-colors">
+                  Live forecasts →
+                </Link>
+              </div>
+            </div>
           )}
 
           <p className="text-text-muted text-[11px] mono max-w-2xl">
