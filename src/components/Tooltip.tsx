@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useId, type ReactNode } from "react";
+import { useState, useId, useEffect, useRef, type ReactNode } from "react";
 
 export function Tooltip({
   children,
@@ -11,14 +11,36 @@ export function Tooltip({
 }) {
   const [visible, setVisible] = useState(false);
   const id = useId();
+  const ref = useRef<HTMLSpanElement>(null);
+
+  // Close on tap outside (mobile)
+  useEffect(() => {
+    if (!visible) return;
+    function handleOutside(e: MouseEvent | TouchEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setVisible(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
+  }, [visible]);
 
   return (
     <span
+      ref={ref}
       className="relative inline-flex items-center cursor-help border-b border-dotted border-[rgba(123,133,149,0.4)]"
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
       onFocus={() => setVisible(true)}
       onBlur={() => setVisible(false)}
+      onClick={(e) => {
+        e.stopPropagation();
+        setVisible((v) => !v);
+      }}
       tabIndex={0}
       aria-describedby={visible ? id : undefined}
     >
