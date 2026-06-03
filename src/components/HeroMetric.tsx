@@ -71,16 +71,16 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
               Brier
             </Tooltip>
             {" "}
-            <span className="text-text-primary">{num(bestNonEcho.brier_30d, 3)}</span>
+            <span className="text-text-primary">{num(bestNonEcho.brier_30d, 4)}</span>
             {" "}vs market{" "}
-            <span className="text-text-secondary">{num(echo.brier_30d, 3)}</span>
+            <span className="text-text-secondary">{num(echo.brier_30d, 4)}</span>
             {" · "}
             <Tooltip tip="Brier delta: best non-baseline agent's Brier minus Echo's (market-anchor). Positive = market is still ahead.">
               delta
             </Tooltip>
             {" "}
             <span className={isTight ? "text-warn" : "text-rose-400"}>
-              {signed(delta, 3)}
+              {signed(delta, 4)}
             </span>
           </div>
         </div>
@@ -115,16 +115,16 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
             Brier
           </Tooltip>
           {" "}
-          <span className="text-text-primary">{num(bestNonEcho.brier_30d, 3)}</span>
+          <span className="text-text-primary">{num(bestNonEcho.brier_30d, 4)}</span>
           {" "}vs market{" "}
-          <span className="text-text-secondary">{num(echo.brier_30d, 3)}</span>
+          <span className="text-text-secondary">{num(echo.brier_30d, 4)}</span>
           {" · "}
           <Tooltip tip="Brier delta: best non-baseline agent's Brier minus Echo's (market-anchor) Brier. Negative = beats the market. Lower Brier is better.">
             delta
           </Tooltip>
           {" "}
           <span className={beatsMarket ? "text-positive" : "text-rose-400"}>
-            {signed(delta, 3)}
+            {signed(delta, 4)}
           </span>
         </div>
       </div>
