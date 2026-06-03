@@ -149,8 +149,10 @@ export default async function AboutPage() {
               polled every 15 min.
             </li>
             <li>
-              Agents call Claude (Opus / Sonnet / Haiku) and GPT (Mirror). 90s
-              per-forecast budget. Hard daily $ cap per agent.
+              Agents call Claude (Opus / Sonnet / Haiku). Mirror runs an
+              adversarial cross-family system prompt on Claude Sonnet — a real
+              cross-lab slot (GPT-5) is planned once API access is available.
+              90s per-forecast budget. Hard daily $ cap per agent.
             </li>
             <li>
               All predictions written with idempotency keys. All scoring
