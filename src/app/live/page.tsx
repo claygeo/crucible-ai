@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_BG, HUE_TO_TEXT } from "@/lib/agents";
-import { getLiveForecasts, getCounters } from "@/lib/data";
+import { getLiveForecasts } from "@/lib/data";
 import { prob, num, signed, relativeTime } from "@/lib/format";
 
 export const revalidate = 120;
@@ -20,10 +20,7 @@ export const metadata = {
 };
 
 export default async function LivePage() {
-  const [liveRes, counters] = await Promise.all([
-    getLiveForecasts(60),
-    getCounters(),
-  ]);
+  const liveRes = await getLiveForecasts(60);
   // Sort by spread descending: highest inter-agent disagreement surfaces first
   const rows = [...liveRes.rows].sort((a, b) => b.spread - a.spread);
 
@@ -73,6 +70,11 @@ export default async function LivePage() {
       }))
       .sort((a, b) => a.avg_brier - b.avg_brier);
   })();
+
+  const shareText = totalLockedAgentForecasts > 0
+    ? `${totalLockedAgentForecasts} AI forecasts locked on open prediction markets — scored automatically when they resolve, no edits allowed. Live benchmark: eivra.xyz/live`
+    : `Live AI forecasting: 6 agents lock probability forecasts on Polymarket & Manifold, scored on resolution. No look-ahead. eivra.xyz/live`;
+  const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -127,6 +129,16 @@ export default async function LivePage() {
             )}
             <span aria-hidden="true">·</span>
             <span>new locks every 12 h</span>
+            <span aria-hidden="true">·</span>
+            <a
+              href={shareHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-muted hover:text-accent transition-colors"
+              aria-label="Share live forecasts on X (Twitter)"
+            >
+              Share on X →
+            </a>
           </div>
         </section>
 
@@ -388,7 +400,7 @@ export default async function LivePage() {
 
         <section className="panel px-5 py-5 flex flex-col gap-2">
           <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-            How this is anti-cheat
+            Integrity by design
           </div>
           <p className="text-sm text-text-secondary leading-relaxed">
             The database prevents duplicate live submissions. For any (agent,
@@ -401,6 +413,29 @@ export default async function LivePage() {
             Polymarket / Manifold APIs via a separate scoring job — the model
             cannot influence either.
           </p>
+        </section>
+
+        {/* Closing nav */}
+        <section className="flex flex-wrap items-center gap-4 mono text-xs text-text-muted border-t border-border-subtle pt-6">
+          <span>Explore more:</span>
+          <Link
+            href="/leaderboard"
+            className="text-text-secondary hover:text-accent transition-colors"
+          >
+            Leaderboard →
+          </Link>
+          <Link
+            href="/benchmark"
+            className="text-text-secondary hover:text-accent transition-colors"
+          >
+            Benchmark (historical scores) →
+          </Link>
+          <Link
+            href="/agents"
+            className="text-text-secondary hover:text-accent transition-colors"
+          >
+            Agent profiles →
+          </Link>
         </section>
       </main>
       <Footer />
