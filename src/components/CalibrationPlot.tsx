@@ -29,6 +29,23 @@ export function CalibrationPlot({
   width?: number;
   height?: number;
 }) {
+  // Weighted mean signed calibration error across bins with n >= 5.
+  // Positive = agent predicts higher than reality (overconfident).
+  // Negative = agent predicts lower than reality (underconfident).
+  const calibrationSummary = (() => {
+    const valid = bins.filter((b) => b.n >= 5);
+    if (valid.length < 2) return null;
+    const totalN = valid.reduce((s, b) => s + b.n, 0);
+    const wErr =
+      valid.reduce((s, b) => s + ((b.bin_low + b.bin_high) / 2 - b.observed_rate) * b.n, 0) /
+      totalN;
+    if (wErr > 0.05)
+      return { label: "Overconfident", cls: "text-rose-400", tip: "Agent's stated probabilities are systematically higher than actual win rates. Tends to be too confident in YES outcomes." };
+    if (wErr < -0.05)
+      return { label: "Underconfident", cls: "text-amber-400", tip: "Agent's stated probabilities are systematically lower than actual win rates. Tends to hedge more than the data warrants." };
+    return { label: "Well-calibrated", cls: "text-positive", tip: "Agent's stated probabilities closely match observed frequencies. The reliability curve hugs the diagonal." };
+  })();
+
   const padLeft = 44;
   const padRight = 16;
   const padTop = 16;
@@ -225,7 +242,14 @@ export function CalibrationPlot({
         <span>
           Total predictions: {totalPredictions} · Resolved: {totalScored}
         </span>
-        <span>Hollow dots = sparse bin (n &lt; 5)</span>
+        <div className="flex items-center gap-3">
+          {calibrationSummary && (
+            <Tooltip tip={calibrationSummary.tip}>
+              <span className={calibrationSummary.cls}>{calibrationSummary.label}</span>
+            </Tooltip>
+          )}
+          <span>Hollow dots = sparse bin (n &lt; 5)</span>
+        </div>
       </div>
     </figure>
   );
