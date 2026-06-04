@@ -177,6 +177,27 @@ export async function getMarkets(opts: {
   }
 }
 
+export async function getOpenMarketForecastCounts(): Promise<Record<string, number>> {
+  if (FORCE_DEMO) return {};
+  const client = sb();
+  if (!client) return {};
+  try {
+    const { data, error } = await client
+      .from("predictions")
+      .select("market_id")
+      .eq("is_backfill", false)
+      .eq("abstained", false);
+    if (error || !data) return {};
+    const counts: Record<string, number> = {};
+    for (const row of data as Array<{ market_id: string }>) {
+      counts[row.market_id] = (counts[row.market_id] ?? 0) + 1;
+    }
+    return counts;
+  } catch {
+    return {};
+  }
+}
+
 export async function getMarketById(
   id: string
 ): Promise<{ source: Source; market: LiveMarket | null }> {
