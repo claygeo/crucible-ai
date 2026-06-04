@@ -318,6 +318,20 @@ export default async function LivePage() {
                         </span>
                       </>
                     )}
+                    {row.market.url && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <a
+                          href={row.market.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-text-muted hover:text-accent transition-colors"
+                          aria-label={`View this market on ${row.market.source}`}
+                        >
+                          view on {row.market.source} ↗
+                        </a>
+                      </>
+                    )}
                   </div>
 
                   {/* Per-agent picks — mini legend then grid */}
