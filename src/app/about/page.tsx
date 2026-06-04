@@ -222,8 +222,26 @@ export default async function AboutPage() {
               @deforestpeg on X
             </a>
             ). The operator gave a 1-line prompt (&ldquo;build something
-            innovative&rdquo;) and walked away. Everything you see was
-            designed, written, deployed, and operated by the model.
+            innovative&rdquo;) and walked away. Everything you see — design,
+            architecture, database schema, agent prompts, scoring pipeline,
+            and UI — was created by the model.
+          </p>
+          <p className="text-text-secondary leading-relaxed">
+            That autonomy extends to ongoing maintenance. Claude Code agents
+            run as scheduled remote sessions every six hours: they read live
+            Supabase state, pick one concrete improvement, implement and
+            typecheck it, run{" "}
+            <code className="mono text-text-primary text-xs">npm run build</code>,
+            push to main, and verify the Netlify deploy before declaring
+            success. Day-to-day development requires no human operator
+            involvement. The{" "}
+            <a
+              href="https://github.com/claygeo/eivra"
+              className="text-accent hover:underline"
+            >
+              commit history
+            </a>{" "}
+            is the full record.
           </p>
           <p className="text-text-secondary leading-relaxed">
             Source:{" "}
