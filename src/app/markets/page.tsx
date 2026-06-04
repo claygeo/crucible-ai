@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { getMarkets } from "@/lib/data";
+import { Tooltip } from "@/components/Tooltip";
+import { getMarkets, getOpenMarketForecastCounts } from "@/lib/data";
 import { relativeTime, pct } from "@/lib/format";
 
 export const revalidate = 120;
@@ -38,9 +39,10 @@ export default async function MarketsPage({
   const activeCategory: CategoryKey =
     (CATEGORY_TABS.find((c) => c.key === category)?.key as CategoryKey) ?? "all";
 
-  const [openRes, resolvedRes] = await Promise.all([
+  const [openRes, resolvedRes, forecastCounts] = await Promise.all([
     getMarkets({ status: "open", limit: 200 }),
     getMarkets({ status: "resolved", limit: 200 }),
+    getOpenMarketForecastCounts(),
   ]);
   const allOpen = openRes.rows;
   const allResolved = resolvedRes.rows;
@@ -63,6 +65,8 @@ export default async function MarketsPage({
         : allOpen.filter((m) => m.category === c.key).length,
   })).filter((c) => c.count > 0 || c.key === "all");
 
+  const marketsWithForecasts = allOpen.filter((m) => (forecastCounts[m.id] ?? 0) > 0).length;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -82,6 +86,11 @@ export default async function MarketsPage({
           <p className="text-text-secondary text-sm max-w-2xl">
             Every question Eivra&apos;s agents are currently forecasting, plus the
             archive of resolved events with outcome verdicts.
+            {marketsWithForecasts > 0 && (
+              <span className="text-text-primary"> AI forecasts are locked on{" "}
+                <span className="text-accent">{marketsWithForecasts}</span> open markets.
+              </span>
+            )}
           </p>
         </div>
 
@@ -119,51 +128,64 @@ export default async function MarketsPage({
                 [ ] No{activeCategory !== "all" ? ` ${activeCategory}` : ""} markets open right now.
               </div>
             ) : (
-              filteredOpen.map((m) => (
-                <div
-                  key={m.id}
-                  className="px-5 py-4 panel-hover flex items-start gap-3"
-                >
-                  <div className="shrink-0 flex flex-col items-start gap-1 pt-0.5">
-                    {activeCategory === "all" && (
-                      <span
-                        className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
-                      >
-                        {m.category}
-                      </span>
-                    )}
-                    <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${sourceClass(m.source)}`}>
-                      {m.source}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0 flex flex-col gap-1">
-                    <div className="flex items-start gap-2">
-                      <Link
-                        href={`/markets/${m.id}`}
-                        className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
-                      >
-                        {m.question}
-                      </Link>
-                      {m.url && m.url !== "#" && (
-                        <a
-                          href={m.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 mt-0.5"
-                          aria-label={`View "${m.question}" on ${m.source}`}
+              filteredOpen.map((m) => {
+                const agentCount = forecastCounts[m.id] ?? 0;
+                return (
+                  <div
+                    key={m.id}
+                    className="px-5 py-4 panel-hover flex items-start gap-3"
+                  >
+                    <div className="shrink-0 flex flex-col items-start gap-1 pt-0.5">
+                      {activeCategory === "all" && (
+                        <span
+                          className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}
                         >
-                          <ExternalLink size={12} className="text-text-muted hover:text-accent transition-colors" />
-                        </a>
+                          {m.category}
+                        </span>
                       )}
+                      <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${sourceClass(m.source)}`}>
+                        {m.source}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 mono text-[11px] text-text-muted">
-                      <span className="whitespace-nowrap">closes {relativeTime(m.closes_at)}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="text-text-secondary tabular-nums">P={pct(m.outcome_yes_price)}</span>
+                    <div className="flex-1 min-w-0 flex flex-col gap-1">
+                      <div className="flex items-start gap-2">
+                        <Link
+                          href={`/markets/${m.id}`}
+                          className="flex-1 min-w-0 text-text-primary text-sm hover:text-accent transition-colors"
+                        >
+                          {m.question}
+                        </Link>
+                        {m.url && m.url !== "#" && (
+                          <a
+                            href={m.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 mt-0.5"
+                            aria-label={`View "${m.question}" on ${m.source}`}
+                          >
+                            <ExternalLink size={12} className="text-text-muted hover:text-accent transition-colors" />
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mono text-[11px] text-text-muted">
+                        <span className="whitespace-nowrap">closes {relativeTime(m.closes_at)}</span>
+                        <span aria-hidden="true">·</span>
+                        <Tooltip tip="Current market consensus probability from Polymarket / Manifold">
+                          <span className="text-text-secondary tabular-nums">P={pct(m.outcome_yes_price)}</span>
+                        </Tooltip>
+                        {agentCount > 0 && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <Tooltip tip="AI agents with locked forecasts on this market — scored when it resolves">
+                              <span className="text-accent/80">{agentCount} agents</span>
+                            </Tooltip>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </section>
