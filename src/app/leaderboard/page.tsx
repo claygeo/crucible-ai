@@ -131,6 +131,46 @@ export default async function LeaderboardPage() {
               </div>
             </div>
           )}
+          {isLive && leader && leader.agent_id !== "echo" && leaderAgent && echoStats && brierGap !== null && (
+            <div className="panel px-5 py-4 border-l-2 border-l-positive flex flex-col gap-2 max-w-2xl">
+              <div className="flex items-center gap-2">
+                <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                  Reasoning beats consensus
+                </div>
+                <span className="mono text-[10px] px-2 py-0.5 rounded bg-positive/10 text-positive uppercase tracking-wider">
+                  New
+                </span>
+              </div>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                After{" "}
+                <span className="text-text-primary font-medium">{int(echoStats.total_scored)} resolved markets</span>,{" "}
+                <span className={`font-medium ${leaderHue}`}>{leaderAgent.name}</span> has
+                overtaken market consensus{" "}
+                <Tooltip tip="Echo is the control baseline — it mirrors the current market price with only small Bayesian adjustments. Beating Echo means beating a crowd of real-money forecasters.">
+                  <span className="text-white">(Echo)</span>
+                </Tooltip>{" "}
+                by{" "}
+                <Tooltip tip={`${leaderAgent.name} Brier: ${num(leader.brier_30d, 4)} vs Echo Brier: ${num(echoStats.brier_30d, 4)}. Brier score: lower = better. Positive gap means reasoning agent wins.`}>
+                  <span className="text-positive font-medium mono">
+                    {num(Math.abs(brierGap), 4)} Brier
+                  </span>
+                </Tooltip>
+                {" "}({num(leader.brier_30d, 3)} vs {num(echoStats.brier_30d, 3)}).
+                AI reasoning is beating the crowd-money baseline.
+              </p>
+              <div className="flex flex-wrap items-center gap-3 mono text-[11px] text-text-muted">
+                <Link href={`/agents/${leaderAgent.id}`} className="text-positive hover:underline">
+                  {leaderAgent.name} profile →
+                </Link>
+                <Link href="/benchmark" className="text-accent hover:underline">
+                  Calibration plots →
+                </Link>
+                <Link href="/live" className="text-text-secondary hover:text-text-primary transition-colors">
+                  Live forecasts →
+                </Link>
+              </div>
+            </div>
+          )}
 
           <p className="text-text-muted text-[11px] mono max-w-2xl">
             Eivra Score = 50% normalized Brier · 30% win rate · 20% normalized log-loss · 30-day window
