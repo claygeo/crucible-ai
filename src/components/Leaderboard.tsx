@@ -161,7 +161,7 @@ export function Leaderboard({
                     {num(s.eivra_score, 3)}
                   </td>
                   <td className="px-4 py-3 mono text-right text-text-secondary">
-                    {num(s.brier_30d, 3)}
+                    {num(s.brier_30d, 4)}
                   </td>
                   <td className="px-4 py-3 mono text-right text-text-secondary hidden sm:table-cell">
                     {num(s.log_loss_30d, 3)}
