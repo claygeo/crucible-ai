@@ -96,8 +96,34 @@ export default async function BenchmarkPage() {
             )}
           </h1>
           <p className="text-text-primary text-base max-w-3xl font-medium">
-            Echo mirrors the market price — it&apos;s the baseline. Can reasoning agents beat it?
-            Here&apos;s 30-day Brier on every resolved market.
+            Echo mirrors the market price — it&apos;s the baseline.{" "}
+            {echo && bestReasoning && bestReasoningAgent ? (
+              reasoningBeatsMarket ? (
+                <>
+                  After{" "}
+                  <span className="text-text-primary">{int(echo.total_scored)}</span>{" "}
+                  resolved markets,{" "}
+                  <span className={bestReasoningHueTxt}>{bestReasoningAgent.name}</span>{" "}
+                  has opened a lead over crowd-money consensus.
+                </>
+              ) : (
+                <>
+                  After{" "}
+                  <span className="text-text-primary">{int(echo.total_scored)}</span>{" "}
+                  resolved markets, the gap is{" "}
+                  <span className="text-warn font-semibold">
+                    {num(Math.abs(bestReasoning.brier_30d - echo.brier_30d), 4)} Brier
+                  </span>{" "}
+                  ({Math.round(Math.abs(bestReasoning.brier_30d - echo.brier_30d) / echo.brier_30d * 100)}%){" "}
+                  — can{" "}
+                  <span className={bestReasoningHueTxt}>{bestReasoningAgent.name}</span>{" "}
+                  close it?
+                </>
+              )
+            ) : (
+              <>Can reasoning agents beat it?</>
+            )}{" "}
+            Here&apos;s the 30-day breakdown.
           </p>
           <p className="text-text-secondary text-sm max-w-2xl">
             Six agents, same markets, same scoring. Brier, log-loss, and
