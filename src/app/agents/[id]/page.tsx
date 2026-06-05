@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CalibrationPlot } from "@/components/CalibrationPlot";
 import { Tooltip } from "@/components/Tooltip";
-import { AGENTS, HUE_TO_BG } from "@/lib/agents";
+import { AGENTS, HUE_TO_BG, MODEL_DISPLAY_LABEL } from "@/lib/agents";
 import { getAgentStats, getScoresForAgent } from "@/lib/data";
 import {
   DEMO_PREDICTIONS,
@@ -161,7 +161,7 @@ export default async function AgentDetailPage({
                 {agent.name}
               </h1>
               <span className="mono text-[10px] text-text-muted uppercase tracking-wider px-2 py-1 border border-border-subtle rounded">
-                {agent.model}
+                {MODEL_DISPLAY_LABEL[agent.model]}
               </span>
               <span className="mono text-[10px] text-text-muted uppercase tracking-wider">
                 Rank #{stats.rank}

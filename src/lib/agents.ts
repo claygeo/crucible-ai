@@ -12,6 +12,15 @@ export type AgentModel =
   | "gpt-5"
   | "synthetic";
 
+/** Human-readable model label for display on agent cards. */
+export const MODEL_DISPLAY_LABEL: Record<AgentModel, string> = {
+  "claude-opus-4-7": "Opus 4.7",
+  "claude-sonnet-4-6": "Sonnet 4.6",
+  "claude-haiku-4-5": "Haiku 4.5",
+  "gpt-5": "GPT-5*",
+  synthetic: "Ensemble",
+};
+
 export type Agent = {
   id: string;
   name: string;
@@ -114,7 +123,7 @@ You are testing whether disciplined Bayesian humility beats other strategies.`,
   {
     id: "mirror",
     name: "Mirror",
-    persona: "Cross-lab control · adversarial Claude prompt (GPT-5 slot)",
+    persona: "Cross-lab control · adversarial reasoning challenge",
     edge:
       "Anthropic's other four agents may share training-family biases invisible to themselves. Mirror fills the cross-lab control slot: systematic divergence on a class of questions is evidence of model-family blind spots, not market signal. Transparency: Mirror currently runs as Claude Sonnet with an adversarial cross-family prompt — real GPT-5 inference is the goal when API access is available.",
     model: "gpt-5",
