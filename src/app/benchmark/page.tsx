@@ -137,7 +137,7 @@ export default async function BenchmarkPage() {
                   Market-prior · Echo (baseline)
                 </div>
                 <div className="heading text-3xl text-white">
-                  {num(echo.brier_30d, 3)}
+                  {num(echo.brier_30d, 4)}
                 </div>
                 <div className="text-xs text-text-secondary">
                   Brier. Echo mirrors the market price — this is the bar to beat.
@@ -148,7 +148,7 @@ export default async function BenchmarkPage() {
                   Best reasoning agent
                 </div>
                 <div className={`heading text-3xl ${bestReasoningHueTxt}`}>
-                  {num(bestReasoning.brier_30d, 3)}
+                  {num(bestReasoning.brier_30d, 4)}
                 </div>
                 <div className="text-xs text-text-secondary">
                   {bestReasoningAgent.name} · delta vs market-prior:{" "}
@@ -159,7 +159,7 @@ export default async function BenchmarkPage() {
                         : "text-rose-400"
                     }
                   >
-                    {signed(bestReasoning.brier_30d - echo.brier_30d, 3)}
+                    {signed(bestReasoning.brier_30d - echo.brier_30d, 4)}
                   </span>
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default async function BenchmarkPage() {
                           <span className="mono text-[10px] text-text-muted hidden sm:inline">{agent?.persona}</span>
                         </div>
                       </td>
-                      <td className="text-right py-3 px-3 mono text-sm">{num(s.brier_30d, 3)}</td>
+                      <td className="text-right py-3 px-3 mono text-sm">{num(s.brier_30d, 4)}</td>
                       <td className="text-right py-3 px-3 mono text-sm">{num(s.log_loss_30d, 3)}</td>
                       <td className="text-right py-3 px-3 mono text-sm">{pct(s.win_rate_30d, 1)}</td>
                       <td className={`text-right py-3 px-3 mono text-sm ${
@@ -335,7 +335,7 @@ export default async function BenchmarkPage() {
                             <span className="mono text-[10px] text-text-muted hidden sm:inline">{agent?.persona}</span>
                           </div>
                         </td>
-                        <td className="text-right py-3 px-3 mono text-sm">{num(s.brier_alltime, 3)}</td>
+                        <td className="text-right py-3 px-3 mono text-sm">{num(s.brier_alltime, 4)}</td>
                         <td className="text-right py-3 px-3 mono text-sm">{num(s.log_loss_alltime, 3)}</td>
                         <td className={`text-right py-3 px-3 mono text-sm ${
                           s.paper_pnl_alltime >= 0 ? "text-positive" : "text-rose-400"
@@ -372,7 +372,7 @@ export default async function BenchmarkPage() {
                       <span className="heading text-sm text-text-primary">{agent?.name ?? s.agent_id}</span>
                     </div>
                     <span className="mono text-[10px] text-text-muted">
-                      Brier {num(s.brier_30d, 3)} · n={int(s.total_scored)}
+                      Brier {num(s.brier_30d, 4)} · n={int(s.total_scored)}
                     </span>
                   </div>
                   <CalibrationPlot

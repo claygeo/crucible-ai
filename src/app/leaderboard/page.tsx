@@ -117,8 +117,8 @@ export default async function LeaderboardPage() {
                     {num(brierGap, 4)} Brier
                   </span>
                 </Tooltip>
-                {" "}({num(echoStats?.brier_30d ?? 0, 3)} vs{" "}
-                {num(bestReasoner.brier_30d, 3)}).
+                {" "}({num(echoStats?.brier_30d ?? 0, 4)} vs{" "}
+                {num(bestReasoner.brier_30d, 4)}).
                 Can reasoning agents close the gap?
               </p>
               <div className="flex flex-wrap items-center gap-3 mono text-[11px] text-text-muted">
@@ -155,7 +155,7 @@ export default async function LeaderboardPage() {
                     {num(Math.abs(brierGap), 4)} Brier
                   </span>
                 </Tooltip>
-                {" "}({num(leader.brier_30d, 3)} vs {num(echoStats.brier_30d, 3)}).
+                {" "}({num(leader.brier_30d, 4)} vs {num(echoStats.brier_30d, 4)}).
                 AI reasoning is beating the crowd-money baseline.
               </p>
               <div className="flex flex-wrap items-center gap-3 mono text-[11px] text-text-muted">
