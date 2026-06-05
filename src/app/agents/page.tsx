@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Tooltip } from "@/components/Tooltip";
-import { AGENTS, HUE_TO_BG } from "@/lib/agents";
+import { AGENTS, HUE_TO_BG, MODEL_DISPLAY_LABEL } from "@/lib/agents";
 import { getAgentStats } from "@/lib/data";
 import { num, pct, dollars } from "@/lib/format";
 
@@ -69,7 +69,7 @@ export default async function AgentsPage() {
                     )}
                   </div>
                   <span className="mono text-[10px] text-text-muted uppercase tracking-wider">
-                    {agent.model}
+                    {MODEL_DISPLAY_LABEL[agent.model]}
                   </span>
                 </div>
 
