@@ -35,6 +35,9 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
   const marketWonOutright = lowestOverall.agent_id === "echo";
 
   const isTight = pctVsMarket < 5;
+  // Win-rate reversal: reasoning agent beats Echo on directional calls even while trailing on Brier
+  const winRateDelta = bestNonEcho.win_rate_30d - echo.win_rate_30d;
+  const winRateReversed = winRateDelta > 0;
 
   if (marketWonOutright) {
     return (
@@ -51,9 +54,20 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
                 <span className="text-accent font-semibold">{bestAgent?.name}</span>{" "}
                 is within{" "}
                 <span className="text-warn font-semibold">{pctVsMarket}%</span>{" "}
-                of market consensus — a gap smaller than sampling noise.
-                Prediction-market prices (Echo) hold a{" "}
-                <span className="text-warn">{signed(delta, 4)} Brier</span> edge right now.
+                of market consensus on Brier — a gap smaller than sampling noise.
+                {winRateReversed ? (
+                  <> But on directional accuracy,{" "}
+                    <span className="text-positive font-semibold">{bestAgent?.name} leads</span>:{" "}
+                    <span className="text-positive">{(bestNonEcho.win_rate_30d * 100).toFixed(1)}%</span>{" "}
+                    vs Echo&apos;s{" "}
+                    <span className="text-text-secondary">{(echo.win_rate_30d * 100).toFixed(1)}%</span>{" "}
+                    win rate.
+                  </>
+                ) : (
+                  <> Prediction-market prices (Echo) hold a{" "}
+                    <span className="text-warn">{signed(delta, 4)} Brier</span> edge right now.
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -82,6 +96,18 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
             <span className={isTight ? "text-warn" : "text-rose-400"}>
               {signed(delta, 4)}
             </span>
+            {winRateReversed && (
+              <>
+                {" · "}
+                <Tooltip tip="Win rate: fraction of resolved predictions where the agent's stated probability was on the correct side of 50%.">
+                  win rate
+                </Tooltip>
+                {" "}
+                <span className="text-positive">{(bestNonEcho.win_rate_30d * 100).toFixed(1)}%</span>
+                {" "}vs market{" "}
+                <span className="text-text-secondary">{(echo.win_rate_30d * 100).toFixed(1)}%</span>
+              </>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
