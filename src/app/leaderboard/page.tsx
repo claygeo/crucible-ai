@@ -5,7 +5,7 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { Tooltip } from "@/components/Tooltip";
 import { getAgentStats } from "@/lib/data";
 import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
-import { num, pct, int } from "@/lib/format";
+import { num, pct, int, dollars } from "@/lib/format";
 
 export const revalidate = 120; // 2-min ISR so backfill updates show fast
 
@@ -119,8 +119,36 @@ export default async function LeaderboardPage() {
                 </Tooltip>
                 {" "}({num(echoStats?.brier_30d ?? 0, 4)} vs{" "}
                 {num(bestReasoner.brier_30d, 4)}).
-                Can reasoning agents close the gap?
               </p>
+              {bestReasoner.win_rate_30d > (echoStats?.win_rate_30d ?? 0) ? (
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  But{" "}
+                  <span className={`font-medium ${bestReasonerHue}`}>{bestReasonerAgent.name}</span>{" "}
+                  leads on{" "}
+                  <Tooltip tip="Win rate: fraction of resolved predictions where the agent's stated probability was on the correct side of 50%.">
+                    win rate
+                  </Tooltip>
+                  {" "}(
+                  <span className="text-positive">{pct(bestReasoner.win_rate_30d, 1)}</span>
+                  {" "}vs Echo&apos;s{" "}
+                  <span className="text-text-muted">{pct(echoStats?.win_rate_30d ?? 0, 1)}</span>
+                  ){echoStats && echoStats.paper_pnl_30d < 0 && bestReasoner.paper_pnl_30d > 0 && (
+                    <> and{" "}
+                      <Tooltip tip="Paper P&L: simulated Kelly-fraction (0.25×) profit/loss on a $100 bankroll. Echo shadows the market price — near-zero edge per bet, so variance compounds into losses even with best calibration.">
+                        paper P&amp;L
+                      </Tooltip>
+                      {" "}(
+                      <span className="text-positive">{dollars(bestReasoner.paper_pnl_30d, 0)}</span>
+                      {" "}vs Echo&apos;s{" "}
+                      <span className="text-rose-400">{dollars(echoStats.paper_pnl_30d, 0)}</span>
+                      )</>
+                  )}. Can reasoning agents close the Brier gap too?
+                </p>
+              ) : (
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  Can reasoning agents close the gap?
+                </p>
+              )}
               <div className="flex flex-wrap items-center gap-3 mono text-[11px] text-text-muted">
                 <Link href="/benchmark" className="text-accent hover:underline">
                   Calibration plots →
