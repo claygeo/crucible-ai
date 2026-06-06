@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -16,6 +17,53 @@ import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
 import { createClient } from "@supabase/supabase-js";
 
 export const revalidate = 120; // 2-min ISR so backfill updates show fast
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const stats = await getAgentStats();
+    const echo = stats.rows.find((s) => s.agent_id === "echo");
+    const reasoningStats = stats.rows.filter(
+      (s) => s.agent_id !== "echo" && s.agent_id !== "ensemble"
+    );
+    const best = [...reasoningStats].sort((a, b) => a.brier_30d - b.brier_30d)[0];
+    const bestAgent = best ? AGENTS.find((a) => a.id === best.agent_id) : null;
+
+    let description =
+      "AI makes predictions. Eivra scores them in public. Six agents on live Polymarket and Manifold markets, tracked with Brier, log-loss, and calibration.";
+    if (echo && best && bestAgent) {
+      const pctGap = Math.round(
+        (Math.abs(best.brier_30d - echo.brier_30d) / echo.brier_30d) * 100
+      );
+      if (best.brier_30d < echo.brier_30d) {
+        description = `After ${int(echo.total_scored)} resolved markets, ${bestAgent.name} beats prediction-market consensus — Brier ${num(best.brier_30d, 3)} vs ${num(echo.brier_30d, 3)}. AI reasoning is winning. Track it live.`;
+      } else {
+        description = `After ${int(echo.total_scored)} resolved markets, market consensus (Echo) leads by ${pctGap}%. Can ${bestAgent.name} close the gap? Six AI agents, real markets, public scoring.`;
+      }
+    }
+
+    const title = "Eivra — Does AI reasoning beat market consensus?";
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: "https://eivra.xyz",
+        siteName: "Eivra",
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        creator: "@deforestpeg",
+        site: "@deforestpeg",
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 async function getTickerItems(): Promise<TickerItem[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
