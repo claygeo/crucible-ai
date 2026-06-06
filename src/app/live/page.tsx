@@ -20,7 +20,7 @@ export const metadata = {
 };
 
 export default async function LivePage() {
-  const liveRes = await getLiveForecasts(60);
+  const liveRes = await getLiveForecasts(100);
   // Sort by spread descending: highest inter-agent disagreement surfaces first
   const rows = [...liveRes.rows].sort((a, b) => b.spread - a.spread);
 
