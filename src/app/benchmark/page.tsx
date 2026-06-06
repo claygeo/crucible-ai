@@ -66,13 +66,14 @@ export default async function BenchmarkPage() {
   // P&L divergence insight: sort by P&L to expose accuracy-vs-profit gap
   const pnlRanked = [...stats].sort((a, b) => (b.paper_pnl_30d ?? 0) - (a.paper_pnl_30d ?? 0));
   const pnlBest = pnlRanked[0];
-  const pnlWorst = pnlRanked[pnlRanked.length - 1];
   const pnlBestAgent = pnlBest ? AGENTS.find((a) => a.id === pnlBest.agent_id) ?? null : null;
-  const pnlWorstAgent = pnlWorst ? AGENTS.find((a) => a.id === pnlWorst.agent_id) ?? null : null;
+  // Compare best P&L agent against the accuracy leader (best Brier) — not against worst P&L
+  const brierLeaderStat = sortedByBrier[0];
+  const brierLeaderAgent = brierLeaderStat ? AGENTS.find((a) => a.id === brierLeaderStat.agent_id) ?? null : null;
   // Only show if best P&L agent ≠ best Brier agent (otherwise the finding is trivial)
   const showPnlInsight =
-    pnlBest && pnlWorst && pnlBestAgent && pnlWorstAgent &&
-    pnlBest.agent_id !== sortedByBrier[0]?.agent_id;
+    pnlBest && pnlBestAgent && brierLeaderStat && brierLeaderAgent &&
+    pnlBest.agent_id !== brierLeaderStat.agent_id;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -277,7 +278,7 @@ export default async function BenchmarkPage() {
         </section>
 
         {/* ── P&L vs accuracy insight ─────────────────────────────── */}
-        {showPnlInsight && pnlBest && pnlBestAgent && pnlWorst && pnlWorstAgent && (
+        {showPnlInsight && pnlBest && pnlBestAgent && brierLeaderStat && brierLeaderAgent && (
           <section className="panel px-5 py-5 flex flex-col gap-3">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="heading text-base text-text-primary">Accuracy ≠ P&amp;L</h2>
@@ -290,12 +291,12 @@ export default async function BenchmarkPage() {
               leads on paper P&amp;L{" "}
               (<span className="text-positive">{dollars(pnlBest.paper_pnl_30d, 0)}</span>) despite a weaker Brier
               ({num(pnlBest.brier_30d, 3)}) than{" "}
-              <span className={`font-medium ${HUE_TO_TEXT[pnlWorstAgent.hue]}`}>{pnlWorstAgent.name}</span>,
-              which scores best on Brier ({num(pnlWorst.brier_30d, 3)}) but{" "}
-              {pnlWorst.paper_pnl_30d < 0 ? (
-                <>lost <span className="text-rose-400">{dollars(Math.abs(pnlWorst.paper_pnl_30d), 0)}</span></>
+              <span className={`font-medium ${HUE_TO_TEXT[brierLeaderAgent.hue]}`}>{brierLeaderAgent.name}</span>,
+              which leads on Brier ({num(brierLeaderStat.brier_30d, 3)}) but{" "}
+              {brierLeaderStat.paper_pnl_30d < 0 ? (
+                <>lost <span className="text-rose-400">{dollars(Math.abs(brierLeaderStat.paper_pnl_30d), 0)}</span></>
               ) : (
-                <>gained <span className="text-positive">{dollars(pnlWorst.paper_pnl_30d, 0)}</span></>
+                <>gained <span className="text-positive">{dollars(brierLeaderStat.paper_pnl_30d, 0)}</span></>
               )}{" "}
               on Kelly bets.
               Kelly rewards <em>beating the market price</em>, not just calibration:
