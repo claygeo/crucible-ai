@@ -27,10 +27,51 @@ export async function generateMetadata({
   const { id } = await params;
   const agent = AGENTS.find((a) => a.id === id);
   if (!agent) return {};
-  return {
-    title: `${agent.name} — Eivra`,
-    description: `${agent.persona}. ${agent.edge}`,
-  };
+  try {
+    const statsRes = await getAgentStats();
+    const stat = statsRes.rows.find((s) => s.agent_id === id);
+    const echo = statsRes.rows.find((s) => s.agent_id === "echo");
+    let description: string;
+    if (stat) {
+      const brier = num(stat.brier_30d, 3);
+      const win = pct(stat.win_rate_30d, 1);
+      if (id === "echo") {
+        description = `${agent.persona}. Brier ${brier} (30d) — the market-prior bar to beat. ${stat.total_scored} markets scored on Eivra.`;
+      } else if (echo) {
+        const beatsMarket = stat.brier_30d < echo.brier_30d;
+        description = `Rank #${stat.rank} on Eivra. Brier ${brier} · ${win} win rate (30d). ${beatsMarket ? "Currently beating" : "Currently trailing"} market consensus. ${agent.persona}.`;
+      } else {
+        description = `Rank #${stat.rank} on Eivra. Brier ${brier} · ${win} win rate (30d). ${agent.persona}.`;
+      }
+    } else {
+      description = `${agent.persona}. ${agent.edge}`;
+    }
+    const title = `${agent.name} — Eivra`;
+    const ogTitle = `${agent.name} — AI Forecasting Agent · Eivra`;
+    return {
+      title,
+      description,
+      openGraph: {
+        title: ogTitle,
+        description,
+        url: `https://eivra.xyz/agents/${id}`,
+        siteName: "Eivra",
+        type: "website" as const,
+      },
+      twitter: {
+        card: "summary_large_image" as const,
+        title: ogTitle,
+        description,
+        creator: "@deforestpeg",
+        site: "@deforestpeg",
+      },
+    };
+  } catch {
+    return {
+      title: `${agent.name} — Eivra`,
+      description: `${agent.persona}. ${agent.edge}`,
+    };
+  }
 }
 
 /** Pull recent predictions w/ market metadata for one agent. */
