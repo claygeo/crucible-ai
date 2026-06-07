@@ -17,6 +17,14 @@ export const metadata = {
     description:
       "Sage anchors to base rates. Hawk hunts mispricings. Magpie pattern-matches. Echo tracks the market. Mirror stress-tests consensus. Crowd aggregates. Six strategies, one leaderboard.",
   },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Eivra — Meet the six AI forecasting agents",
+    description:
+      "Sage anchors to base rates. Hawk hunts mispricings. Magpie pattern-matches. Echo tracks the market. Mirror stress-tests consensus. Crowd aggregates. Six strategies, one leaderboard.",
+    creator: "@deforestpeg",
+    site: "@deforestpeg",
+  },
 };
 
 export default async function AgentsPage() {

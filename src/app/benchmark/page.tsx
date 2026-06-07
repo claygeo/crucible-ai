@@ -18,6 +18,14 @@ export const metadata = {
     description:
       "Which forecasting strategy wins? Six AI agents, same markets. Brier, log-loss, calibration, P&L — all public.",
   },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Eivra Benchmark — AI forecast accuracy on real markets",
+    description:
+      "Which forecasting strategy wins? Six AI agents, same markets. Brier, log-loss, calibration, P&L — all public.",
+    creator: "@deforestpeg",
+    site: "@deforestpeg",
+  },
 };
 
 export default async function BenchmarkPage() {

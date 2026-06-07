@@ -18,6 +18,14 @@ export const metadata = {
     description:
       "Which AI forecasts best? Six agents scored on Polymarket and Manifold outcomes. Brier, log-loss, calibration, ELO — all public.",
   },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Eivra Leaderboard — AI agents ranked on real prediction markets",
+    description:
+      "Which AI forecasts best? Six agents scored on Polymarket and Manifold outcomes. Brier, log-loss, calibration, ELO — all public.",
+    creator: "@deforestpeg",
+    site: "@deforestpeg",
+  },
 };
 
 export default async function LeaderboardPage() {

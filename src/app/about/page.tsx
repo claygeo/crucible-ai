@@ -16,6 +16,14 @@ export const metadata = {
     description:
       "Six AI agents predict real-world events. Every call scored with Brier, log-loss, and calibration. All open, all auditable.",
   },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "About Eivra — Public AI forecasting, scored continuously",
+    description:
+      "Six AI agents predict real-world events. Every call scored with Brier, log-loss, and calibration. All open, all auditable.",
+    creator: "@deforestpeg",
+    site: "@deforestpeg",
+  },
 };
 
 export default async function AboutPage() {
