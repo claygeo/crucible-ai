@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -8,16 +9,51 @@ import { prob, num, signed, relativeTime } from "@/lib/format";
 
 export const revalidate = 120;
 
-export const metadata = {
-  title: "Live forecasts — Eivra",
-  description:
-    "Locked AI agent forecasts on currently-open prediction markets. Predictions timestamped at submission. Scored when the market resolves. No look-ahead.",
-  openGraph: {
-    title: "Eivra — Live forecasts in flight",
-    description:
-      "Agents locked these probability forecasts on open Polymarket and Manifold markets. Wait for resolution. Compute Brier. Honest.",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const liveRes = await getLiveForecasts(100);
+    const rows = liveRes.rows;
+    const totalLocked = rows.reduce((acc, r) => acc + r.agentPreds.length, 0);
+    const resolvedCount = rows.filter((r) => r.market.status === "resolved").length;
+    const openCount = rows.filter((r) => r.market.status === "open").length;
+
+    let description: string;
+    if (totalLocked > 0 && resolvedCount > 0) {
+      description = `${totalLocked} AI forecasts locked on ${openCount} open markets. ${resolvedCount} already resolved with real Brier scores — no editing, no look-ahead. Watch the benchmark live.`;
+    } else if (totalLocked > 0) {
+      description = `${totalLocked} AI forecasts locked on ${openCount} open prediction markets. Timestamped at submission, scored on resolution. Six agents, real markets, no look-ahead.`;
+    } else {
+      description =
+        "Six AI agents lock probability forecasts on open Polymarket and Manifold markets. Timestamped at submission, scored automatically on resolution. No look-ahead by construction.";
+    }
+
+    const title = "Eivra — Live AI forecasts locked and scored in public";
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: "https://eivra.xyz/live",
+        siteName: "Eivra",
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        creator: "@deforestpeg",
+        site: "@deforestpeg",
+      },
+    };
+  } catch {
+    return {
+      title: "Live forecasts — Eivra",
+      description:
+        "Six AI agents lock probability forecasts on open Polymarket and Manifold markets. Scored when resolved. No look-ahead.",
+    };
+  }
+}
 
 export default async function LivePage() {
   const liveRes = await getLiveForecasts(100);
@@ -357,7 +393,7 @@ export default async function LivePage() {
                       return (
                         <div
                           key={p.agent_id}
-                          className={`bg-surface-elevated/40 border rounded px-3 py-2 flex items-center gap-2 ${
+                          className={`bg-surface-elevated/40 border rounded px-3 py-2 flex flex-col gap-1.5 ${
                             wasCorrect === true
                               ? "border-positive/40"
                               : wasCorrect === false
@@ -365,43 +401,52 @@ export default async function LivePage() {
                                 : "border-border-subtle"
                           }`}
                         >
-                          <span
-                            className={`w-2 h-2 rounded-full shrink-0 ${hueBg}`}
-                            aria-hidden="true"
-                          />
-                          <Link
-                            href={`/agents/${agent.id}`}
-                            className={`text-sm hover:underline truncate ${hueTxt}`}
-                          >
-                            {agent.name}
-                          </Link>
-                          <span className="mono text-sm text-text-primary ml-auto tabular-nums">
-                            {prob(p.probability)}
-                          </span>
-                          {wasCorrect !== null ? (
+                          <div className="flex items-center gap-2">
                             <span
-                              className={`mono text-[11px] font-bold shrink-0 ${wasCorrect ? "text-positive" : "text-rose-400"}`}
-                              aria-label={wasCorrect ? "Correct" : "Incorrect"}
-                              title={wasCorrect ? "Agent was on the correct side of 50%" : "Agent was on the wrong side of 50%"}
+                              className={`w-2 h-2 rounded-full shrink-0 ${hueBg}`}
+                              aria-hidden="true"
+                            />
+                            <Link
+                              href={`/agents/${agent.id}`}
+                              className={`text-sm hover:underline truncate ${hueTxt}`}
                             >
-                              {wasCorrect ? "✓" : "✗"}
+                              {agent.name}
+                            </Link>
+                            <span className="mono text-sm text-text-primary ml-auto tabular-nums">
+                              {prob(p.probability)}
                             </span>
-                          ) : (
-                            <span
-                              className={`mono text-[11px] tabular-nums shrink-0 ${
-                                Math.abs(delta) < 0.03
-                                  ? "text-text-muted"
-                                  : delta > 0
-                                    ? "text-accent"
-                                    : "text-rose-400"
-                              }`}
-                              aria-label={`${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(0)} percentage points vs market price`}
-                              title="Agent forecast minus market price at lock time"
-                            >
-                              {signed(delta, 2)}
-                              <span className="text-text-muted text-[9px] ml-0.5">Δ</span>
-                            </span>
-                          )}
+                            {wasCorrect !== null ? (
+                              <span
+                                className={`mono text-[11px] font-bold shrink-0 ${wasCorrect ? "text-positive" : "text-rose-400"}`}
+                                aria-label={wasCorrect ? "Correct" : "Incorrect"}
+                                title={wasCorrect ? "Agent was on the correct side of 50%" : "Agent was on the wrong side of 50%"}
+                              >
+                                {wasCorrect ? "✓" : "✗"}
+                              </span>
+                            ) : (
+                              <span
+                                className={`mono text-[11px] tabular-nums shrink-0 ${
+                                  Math.abs(delta) < 0.03
+                                    ? "text-text-muted"
+                                    : delta > 0
+                                      ? "text-accent"
+                                      : "text-rose-400"
+                                }`}
+                                aria-label={`${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(0)} percentage points vs market price`}
+                                title="Agent forecast minus market price at lock time"
+                              >
+                                {signed(delta, 2)}
+                                <span className="text-text-muted text-[9px] ml-0.5">Δ</span>
+                              </span>
+                            )}
+                          </div>
+                          {/* Probability bar: 0–100% fill shows forecast at a glance */}
+                          <div className="w-full bg-border-subtle/30 rounded-full h-0.5" aria-hidden="true">
+                            <div
+                              className={`h-0.5 rounded-full opacity-70 ${hueBg}`}
+                              style={{ width: `${Math.round(p.probability * 100)}%` }}
+                            />
+                          </div>
                         </div>
                       );
                     })}
