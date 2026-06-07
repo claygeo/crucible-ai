@@ -75,6 +75,14 @@ export default async function BenchmarkPage() {
     pnlBest && pnlBestAgent && brierLeaderStat && brierLeaderAgent &&
     pnlBest.agent_id !== brierLeaderStat.agent_id;
 
+  // Win-rate vs Brier insight: surfaces when the win-rate leader differs from the Brier leader
+  const winRateRanked = [...stats].sort((a, b) => b.win_rate_30d - a.win_rate_30d);
+  const winRateBest = winRateRanked[0];
+  const winRateBestAgent = winRateBest ? AGENTS.find((a) => a.id === winRateBest.agent_id) ?? null : null;
+  const showWinRateInsight =
+    winRateBest && winRateBestAgent && brierLeaderStat && brierLeaderAgent &&
+    winRateBest.agent_id !== brierLeaderStat.agent_id;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -302,6 +310,35 @@ export default async function BenchmarkPage() {
               Kelly rewards <em>beating the market price</em>, not just calibration:
               an agent that shadows consensus has near-zero edge per bet, so small mispricings compound into a loss.
               An agent that diverges from the market earns outsized wins when the crowd is wrong — even if its overall accuracy is lower.
+            </p>
+          </section>
+        )}
+
+        {/* ── Win rate vs Brier insight ───────────────────────────── */}
+        {showWinRateInsight && winRateBest && winRateBestAgent && brierLeaderStat && brierLeaderAgent && (
+          <section className="panel px-5 py-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="heading text-base text-text-primary">Win rate ≠ Brier</h2>
+              <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-warn/10 text-warn">
+                Counterintuitive finding
+              </span>
+            </div>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              <span className={`font-medium ${HUE_TO_TEXT[winRateBestAgent.hue]}`}>{winRateBestAgent.name}</span>{" "}
+              wins more often than{" "}
+              <span className={`font-medium ${HUE_TO_TEXT[brierLeaderAgent.hue]}`}>{brierLeaderAgent.name}</span>{" "}
+              (
+              <span className="text-text-primary">{pct(winRateBest.win_rate_30d, 1)}</span>{" "}
+              vs{" "}
+              <span className="text-text-primary">{pct(brierLeaderStat.win_rate_30d, 1)}</span>
+              ) — but trails on Brier (
+              <span className="text-rose-400">{num(winRateBest.brier_30d, 4)}</span>{" "}
+              vs{" "}
+              <span className="text-positive">{num(brierLeaderStat.brier_30d, 4)}</span>
+              ).{" "}
+              Win rate only checks <em>direction</em>: was the agent&apos;s probability above 50% when the event happened?
+              Brier also penalises <em>confidence</em>: predicting 0.9 on a coin-flip costs four times more than predicting 0.6.
+              An agent can be right more often in direction while still being slightly over-confident on its calls — and Brier catches that gap where win rate does not.
             </p>
           </section>
         )}
