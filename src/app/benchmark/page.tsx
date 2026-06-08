@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { CalibrationPlot } from "@/components/CalibrationPlot";
 import { Tooltip } from "@/components/Tooltip";
 import { AGENTS, HUE_TO_TEXT, HUE_TO_BG } from "@/lib/agents";
-import { getAgentStats, getAgentAlltimeStats, getDisagreements } from "@/lib/data";
+import { getAgentStats, getAgentAlltimeStats, getDisagreements, getLiveBrierScores } from "@/lib/data";
 import { num, int, pct, signed, dollars } from "@/lib/format";
 
 export const revalidate = 120;
@@ -29,10 +29,11 @@ export const metadata = {
 };
 
 export default async function BenchmarkPage() {
-  const [statsRes, disagreementsRes, alltimeRes] = await Promise.all([
+  const [statsRes, disagreementsRes, alltimeRes, liveBrierRes] = await Promise.all([
     getAgentStats(),
     getDisagreements(5),
     getAgentAlltimeStats(),
+    getLiveBrierScores(),
   ]);
 
   const stats = statsRes.rows;
@@ -82,6 +83,22 @@ export default async function BenchmarkPage() {
   const showPnlInsight =
     pnlBest && pnlBestAgent && brierLeaderStat && brierLeaderAgent &&
     pnlBest.agent_id !== brierLeaderStat.agent_id;
+
+  // Live early Brier: detect ranking reversals between live and backfill
+  const liveRows = liveBrierRes.rows;
+  const liveLeader = liveRows[0] ?? null;
+  const liveLeaderAgent = liveLeader ? AGENTS.find((a) => a.id === liveLeader.agent_id) ?? null : null;
+  const liveLeaderHueTxt = liveLeaderAgent ? HUE_TO_TEXT[liveLeaderAgent.hue] : "text-accent";
+  // Reversal = live leader ≠ backfill leader (different strategies winning on live vs historical)
+  const liveReversalDetected =
+    liveLeader &&
+    brierLeaderStat &&
+    liveLeader.agent_id !== brierLeaderStat.agent_id &&
+    liveRows.length >= 2;
+  // Find Echo's position in live rankings for the insight narrative
+  const liveEchoRow = liveRows.find((r) => r.agent_id === "echo");
+  const liveEchoRank = liveEchoRow ? liveRows.indexOf(liveEchoRow) + 1 : null;
+  const backfillEchoRank = sortedByBrier.findIndex((s) => s.agent_id === "echo") + 1;
 
   // Win-rate vs Brier insight: surfaces when the win-rate leader differs from the Brier leader
   const winRateRanked = [...stats].sort((a, b) => b.win_rate_30d - a.win_rate_30d);
@@ -348,6 +365,127 @@ export default async function BenchmarkPage() {
               Brier also penalises <em>confidence</em>: predicting 0.9 on a coin-flip costs four times more than predicting 0.6.
               An agent can be right more often in direction while still being slightly over-confident on its calls — and Brier catches that gap where win rate does not.
             </p>
+          </section>
+        )}
+
+        {/* ── Live early results ──────────────────────────────────── */}
+        {liveRows.length >= 2 && liveLeader && liveLeaderAgent && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="heading text-xl text-text-primary">Live forecast results</h2>
+              <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-accent/10 text-accent inline-flex items-center gap-1.5">
+                <span className="live-dot" aria-hidden="true" />
+                No-look-ahead · locked at submission
+              </span>
+            </div>
+            <p className="text-text-secondary text-sm leading-relaxed max-w-3xl">
+              Since live forecasting launched, agents have locked{" "}
+              <span className="text-text-primary font-medium">{liveBrierRes.totalLivePredictions}</span>{" "}
+              predictions on open markets — timestamped at forecast time,
+              scored only after resolution. Of those,{" "}
+              <span className="text-positive font-medium">{liveLeader.count}</span>{" "}
+              per agent have resolved with real ground-truth outcomes.{" "}
+              {liveReversalDetected && liveEchoRow && liveEchoRank && (
+                <>
+                  The rankings tell a different story from the backfill:{" "}
+                  <span className={`font-medium ${liveLeaderHueTxt}`}>{liveLeaderAgent.name}</span>{" "}
+                  leads on live markets (Brier{" "}
+                  <span className="text-text-primary">{num(liveLeader.avg_brier, 3)}</span>
+                  ){liveEchoRank > backfillEchoRank ? (
+                    <>, while Echo — which leads the backfill — sits #{liveEchoRank} on live (Brier{" "}
+                    <span className="text-rose-400">{num(liveEchoRow.avg_brier, 3)}</span>
+                    ).</>
+                  ) : <>.</>}
+                </>
+              )}
+            </p>
+            {liveReversalDetected && liveEchoRank && liveEchoRank > backfillEchoRank && (
+              <div className="panel px-5 py-4 flex flex-col gap-2 border-warn/30">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="heading text-sm text-text-primary">Backfill ≠ Live</span>
+                  <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-warn/10 text-warn">
+                    Counterintuitive finding
+                  </span>
+                </div>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  On historical backfill markets, Echo (market-follower) leads — because by resolution time the market price had
+                  already converged toward the outcome, making it easy to track. On truly live open markets,
+                  the market price is a genuine crowd estimate under uncertainty, and that changes who wins.{" "}
+                  <span className={`font-medium ${liveLeaderHueTxt}`}>{liveLeaderAgent.name}</span>,
+                  which diverges from consensus, captures the gains when the crowd is wrong before
+                  prices correct. Small sample — but the first real signal.
+                </p>
+              </div>
+            )}
+            <div className="overflow-x-auto">
+              <table className="w-full" aria-label="Live forecast early results by agent">
+                <thead>
+                  <tr className="border-b border-border-subtle">
+                    <th className="text-left py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">Agent</th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
+                      <Tooltip tip="Brier score on live markets only (is_backfill=false). Mean squared error between locked forecast and ground-truth outcome. Lower is better.">
+                        Brier ↓
+                      </Tooltip>
+                    </th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
+                      <Tooltip tip="Win rate on live markets: fraction of resolved live predictions where the agent's stated probability was on the correct side of 50%.">
+                        Win %
+                      </Tooltip>
+                    </th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
+                      <Tooltip tip="Backfill rank: this agent's rank on the historical backfill benchmark. Compare against live rank to spot strategy differences.">
+                        Backfill rank
+                      </Tooltip>
+                    </th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
+                      <Tooltip tip="Sample size: number of live predictions that have resolved so far.">
+                        n
+                      </Tooltip>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle">
+                  {liveRows.map((row, liveRank) => {
+                    const agent = AGENTS.find((a) => a.id === row.agent_id);
+                    const hueTxt = agent ? HUE_TO_TEXT[agent.hue] : "text-text-primary";
+                    const backfillRank = sortedByBrier.findIndex((s) => s.agent_id === row.agent_id) + 1;
+                    const rankChange = backfillRank - (liveRank + 1); // positive = climbed vs backfill
+                    return (
+                      <tr key={row.agent_id} className="hover:bg-surface-elevated/40 transition-colors">
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-2">
+                            {liveRank === 0 && (
+                              <span className="mono text-[9px] text-accent uppercase tracking-wider">★</span>
+                            )}
+                            <span className={`font-medium ${hueTxt}`}>{agent?.name ?? row.agent_id}</span>
+                            <span className="mono text-[10px] text-text-muted hidden sm:inline">{agent?.persona}</span>
+                          </div>
+                        </td>
+                        <td className="text-right py-3 px-3 mono text-sm">{num(row.avg_brier, 3)}</td>
+                        <td className="text-right py-3 px-3 mono text-sm">{pct(row.win_rate, 1)}</td>
+                        <td className="text-right py-3 px-3 mono text-sm">
+                          <span className="text-text-muted">#{backfillRank}</span>
+                          {rankChange !== 0 && (
+                            <span className={`ml-1.5 mono text-[10px] ${rankChange > 0 ? "text-positive" : "text-rose-400"}`}>
+                              {rankChange > 0 ? `▲${rankChange}` : `▼${Math.abs(rankChange)}`}
+                            </span>
+                          )}
+                        </td>
+                        <td className="text-right py-3 px-3 mono text-sm text-text-muted">{row.count}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-end">
+              <Link
+                href="/live"
+                className="mono text-[11px] uppercase tracking-wider text-accent hover:text-text-primary transition-colors flex items-center gap-1.5"
+              >
+                See all live locked forecasts →
+              </Link>
+            </div>
           </section>
         )}
 
