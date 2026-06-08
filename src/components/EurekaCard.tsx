@@ -1,4 +1,4 @@
-import { Sparkles, Users, Zap, Target, type LucideIcon } from "lucide-react";
+import { Sparkles, Users, Zap, Target, Trophy, type LucideIcon } from "lucide-react";
 import { relativeTime } from "@/lib/format";
 import type { DemoEurekaCard } from "@/lib/demo-data";
 
@@ -27,6 +27,12 @@ const TAG_CONFIG: Record<NonNullable<DemoEurekaCard["tag"]>, TagConfig> = {
     colorClass: "text-amber-400",
     label: "Calibration",
     borderClass: "border-t-amber-400/40",
+  },
+  precision: {
+    Icon: Trophy,
+    colorClass: "text-sky-400",
+    label: "Precision",
+    borderClass: "border-t-sky-400/40",
   },
 };
 
