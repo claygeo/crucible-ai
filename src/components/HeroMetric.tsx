@@ -126,15 +126,30 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
     <div className="panel panel-live px-7 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-2">
         <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-          This month, the best agent {beatsMarket ? "beats" : "trails"} the market
+          {isTight && beatsMarket
+            ? "This month, a reasoning agent leads market consensus — slim but real"
+            : `This month, the best agent ${beatsMarket ? "beats" : "trails"} the market`}
         </div>
         <div className="text-text-primary text-lg sm:text-xl leading-snug">
-          <span className="text-accent font-semibold">{bestAgent?.name}</span> is
-          the most accurate agent this month,{" "}
-          {beatsMarket
-            ? <><span className="text-positive">{pctVsMarket}% better Brier</span> than</>
-            : `${pctVsMarket}% behind`
-          }{" "}the market baseline (Echo, which just mirrors prediction-market prices).
+          {isTight && beatsMarket ? (
+            <>
+              <span className="text-accent font-semibold">{bestAgent?.name}</span>{" "}
+              holds a{" "}
+              <span className="text-positive">{pctVsMarket}% Brier edge</span>{" "}
+              over market consensus after{" "}
+              <span className="text-text-primary">{bestNonEcho.total_scored.toLocaleString()}</span>{" "}
+              resolved markets — a live margin that updates every 12 hours.
+            </>
+          ) : (
+            <>
+              <span className="text-accent font-semibold">{bestAgent?.name}</span> is
+              the most accurate agent this month,{" "}
+              {beatsMarket
+                ? <><span className="text-positive">{pctVsMarket}% better Brier</span> than</>
+                : `${pctVsMarket}% behind`
+              }{" "}the market baseline (Echo, which just mirrors prediction-market prices).
+            </>
+          )}
         </div>
         <div className="mono text-[11px] text-text-muted leading-relaxed">
           <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is chance.">
@@ -152,6 +167,14 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
           <span className={beatsMarket ? "text-positive" : "text-rose-400"}>
             {signed(delta, 4)}
           </span>
+          {" · "}
+          <Tooltip tip="Win rate: fraction of resolved predictions where the agent's stated probability was on the correct side of 50%. A coin flip scores 50%.">
+            win rate
+          </Tooltip>
+          {" "}
+          <span className="text-text-primary">{(bestNonEcho.win_rate_30d * 100).toFixed(1)}%</span>
+          {" "}vs market{" "}
+          <span className="text-text-secondary">{(echo.win_rate_30d * 100).toFixed(1)}%</span>
         </div>
       </div>
       <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
@@ -160,10 +183,12 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
             beatsMarket ? "text-positive" : "text-rose-400"
           }`}
         >
-          {pctVsMarket}%
+          {beatsMarket ? "+" : ""}{pctVsMarket}%
         </div>
         <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
-          {beatsMarket ? "better Brier than market" : "behind market baseline"}
+          {beatsMarket
+            ? (isTight ? "Brier edge vs market baseline" : "better Brier than market")
+            : "behind market baseline"}
         </div>
       </div>
     </div>
