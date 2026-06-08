@@ -497,7 +497,8 @@ export async function getEurekaCards(
         const arch = (e.evidence as Record<string, unknown> | null)?.archetype as string | undefined;
         const tag: DemoEurekaCard["tag"] =
           arch === "calibration_surprise" ? "calibration"
-          : arch === "conviction_gap" || arch === "mispricing_hunter" ? "contrarian"
+          : arch === "conviction_gap" ? "precision"
+          : arch === "mispricing_hunter" ? "contrarian"
           : undefined;
         return {
           id: e.id as string,

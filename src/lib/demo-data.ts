@@ -74,7 +74,7 @@ export type DemoEurekaCard = {
   body: string;
   generated_at: string;
   /** Visual variant — drives icon + accent color in EurekaCard */
-  tag?: "consensus" | "contrarian" | "calibration";
+  tag?: "consensus" | "contrarian" | "calibration" | "precision";
 };
 
 export const DEMO_MARKETS: DemoMarket[] = [
