@@ -694,3 +694,95 @@ export async function getDisagreements(
     return { source: "demo", rows: [] };
   }
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Live early Brier scores — per-agent averages on resolved live predictions
+// (is_backfill = false). Powers the "Live vs Backfill" reversal panel on
+// /benchmark. Returns empty rows if no live predictions have resolved yet.
+// ────────────────────────────────────────────────────────────────────────────
+
+export type LiveBrierRow = {
+  agent_id: string;
+  avg_brier: number;
+  avg_log_loss: number;
+  win_rate: number;
+  count: number;
+};
+
+export async function getLiveBrierScores(): Promise<{
+  source: Source;
+  rows: LiveBrierRow[];
+  totalLivePredictions: number;
+}> {
+  const client = sb();
+  if (!client || FORCE_DEMO) return { source: "demo", rows: [], totalLivePredictions: 0 };
+  try {
+    // Step 1: all live prediction IDs (is_backfill=false, not abstained)
+    const { data: preds } = await client
+      .from("predictions")
+      .select("id, agent_id, market_id")
+      .eq("is_backfill", false)
+      .eq("abstained", false);
+    if (!preds || preds.length === 0) return { source: "live", rows: [], totalLivePredictions: 0 };
+    const totalLivePredictions = (preds as Array<unknown>).length;
+
+    // Step 2: which of those markets have resolved?
+    const marketIds = Array.from(
+      new Set((preds as Array<{ market_id: string }>).map((p) => p.market_id))
+    );
+    const { data: markets } = await client
+      .from("markets")
+      .select("id")
+      .in("id", marketIds)
+      .eq("status", "resolved");
+    if (!markets || markets.length === 0) {
+      return { source: "live", rows: [], totalLivePredictions };
+    }
+    const resolvedMarketSet = new Set((markets as Array<{ id: string }>).map((m) => m.id));
+
+    // Step 3: get scores for resolved live predictions
+    const resolvedPredIds = (preds as Array<{ id: string; market_id: string }>)
+      .filter((p) => resolvedMarketSet.has(p.market_id))
+      .map((p) => p.id);
+    if (resolvedPredIds.length === 0) return { source: "live", rows: [], totalLivePredictions };
+
+    const { data: scores } = await client
+      .from("scores")
+      .select("agent_id, brier, log_loss, was_correct")
+      .in("prediction_id", resolvedPredIds);
+    if (!scores || scores.length === 0) return { source: "live", rows: [], totalLivePredictions };
+
+    // Aggregate by agent
+    const byAgent = new Map<
+      string,
+      { brier_sum: number; log_loss_sum: number; correct: number; count: number }
+    >();
+    for (const s of scores as Array<{
+      agent_id: string;
+      brier: number;
+      log_loss: number;
+      was_correct: boolean;
+    }>) {
+      const e = byAgent.get(s.agent_id) ?? { brier_sum: 0, log_loss_sum: 0, correct: 0, count: 0 };
+      e.brier_sum += Number(s.brier);
+      e.log_loss_sum += Number(s.log_loss);
+      e.correct += s.was_correct ? 1 : 0;
+      e.count += 1;
+      byAgent.set(s.agent_id, e);
+    }
+
+    const rows: LiveBrierRow[] = Array.from(byAgent.entries())
+      .map(([agent_id, { brier_sum, log_loss_sum, correct, count }]) => ({
+        agent_id,
+        avg_brier: count > 0 ? brier_sum / count : 0,
+        avg_log_loss: count > 0 ? log_loss_sum / count : 0,
+        win_rate: count > 0 ? correct / count : 0,
+        count,
+      }))
+      .sort((a, b) => a.avg_brier - b.avg_brier);
+
+    return { source: "live", rows, totalLivePredictions };
+  } catch {
+    return { source: "demo", rows: [], totalLivePredictions: 0 };
+  }
+}
