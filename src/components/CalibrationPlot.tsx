@@ -131,6 +131,18 @@ export function CalibrationPlot({
           strokeWidth={1}
           strokeDasharray="3 3"
         />
+        {/* Diagonal label — helps readers who haven't seen a reliability diagram before */}
+        <text
+          x={x(0.72)}
+          y={y(0.72) - 7}
+          textAnchor="middle"
+          fontSize="7"
+          fill="var(--text-muted)"
+          opacity={0.7}
+          transform={`rotate(${Math.atan2(-innerH, innerW) * (180 / Math.PI)}, ${x(0.72)}, ${y(0.72) - 7})`}
+        >
+          perfect calibration
+        </text>
 
         {/* Per-bin: Wilson CI bar + dot, grouped for accessibility */}
         {bins.map((bin, i) => {
