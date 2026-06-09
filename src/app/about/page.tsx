@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Tooltip } from "@/components/Tooltip";
-import { getCounters } from "@/lib/data";
-import { int } from "@/lib/format";
+import { getCounters, getAgentStats } from "@/lib/data";
+import { int, num } from "@/lib/format";
+import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
 
 export const revalidate = 120;
 
@@ -27,7 +28,19 @@ export const metadata = {
 };
 
 export default async function AboutPage() {
-  const counters = await getCounters();
+  const [counters, statsRes] = await Promise.all([getCounters(), getAgentStats()]);
+
+  const echoStat = statsRes.rows.find((s) => s.agent_id === "echo");
+  const reasoningStats = statsRes.rows.filter(
+    (s) => s.agent_id !== "echo" && s.agent_id !== "ensemble"
+  );
+  const bestReasoning = [...reasoningStats].sort((a, b) => a.brier_30d - b.brier_30d)[0];
+  const bestReasoningAgent = bestReasoning ? AGENTS.find((a) => a.id === bestReasoning.agent_id) : null;
+  const bestReasoningHue = bestReasoningAgent ? HUE_TO_TEXT[bestReasoningAgent.hue] : "text-accent";
+  const reasoningBeatsMarket =
+    echoStat && bestReasoning && bestReasoning.brier_30d < echoStat.brier_30d;
+  const totalScoredForEnsemble = echoStat?.total_scored ?? 0;
+  const ensembleThreshold = 500;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -108,13 +121,65 @@ export default async function AboutPage() {
         <section className="flex flex-col gap-3">
           <h2 className="heading text-xl text-text-primary">Why this exists</h2>
           <p className="text-text-secondary leading-relaxed">
-            LLMs are confidently wrong all the time. Eivra measures{" "}
-            <em>how often</em> and <em>how badly</em>, in a domain where the
-            truth resolves on a clock and humans have a strong baseline (the
-            market itself). It also makes calibrated reasoning a leaderboard —
-            model-builders can compare strategies head-to-head instead of
-            arguing in tweet threads.
+            LLMs make confident probabilistic claims. Whether those claims are
+            <em> actually calibrated</em> — whether a model that says
+            &ldquo;70%&rdquo; is right about 70% of the time — is nearly
+            impossible to test on open-ended text. Prediction markets are
+            the exception: the truth resolves on a clock, human-capital is
+            already in the price, and the scoring formula is fixed before any
+            markets close. Eivra exploits that to make calibrated reasoning a
+            leaderboard model-builders can track instead of argue about.
           </p>
+
+          {/* Live finding panel — rendered only when we have real data */}
+          {statsRes.source === "live" && echoStat && bestReasoning && bestReasoningAgent && (
+            <div
+              className={`panel px-5 py-4 border-l-2 flex flex-col gap-2 ${
+                reasoningBeatsMarket ? "border-l-positive" : "border-l-accent/50"
+              }`}
+            >
+              <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
+                Live finding · {int(echoStat.total_scored)} resolved markets
+              </div>
+              {reasoningBeatsMarket ? (
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  After {int(echoStat.total_scored)} resolved markets,{" "}
+                  <span className={`font-medium ${bestReasoningHue}`}>
+                    {bestReasoningAgent.name}
+                  </span>{" "}
+                  leads market consensus (Echo) by{" "}
+                  <span className="text-positive font-medium mono">
+                    {num(Math.abs(bestReasoning.brier_30d - echoStat.brier_30d), 4)} Brier
+                  </span>
+                  {" "}({num(bestReasoning.brier_30d, 4)} vs {num(echoStat.brier_30d, 4)}).
+                  AI reasoning is ahead of the crowd-money baseline. The margin may not hold —
+                  but this is precisely the signal Eivra was designed to detect.
+                </p>
+              ) : (
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  After {int(echoStat.total_scored)} resolved markets, market consensus (Echo)
+                  still leads the best reasoning agent{" "}
+                  <span className={`font-medium ${bestReasoningHue}`}>
+                    ({bestReasoningAgent.name})
+                  </span>{" "}
+                  by{" "}
+                  <span className="text-warn font-medium mono">
+                    {num(Math.abs(bestReasoning.brier_30d - echoStat.brier_30d), 4)} Brier
+                  </span>
+                  {" "}({num(echoStat.brier_30d, 4)} vs {num(bestReasoning.brier_30d, 4)}).
+                  The market-prior is a hard baseline. Watch the gap.
+                </p>
+              )}
+              <div className="flex flex-wrap gap-3 mono text-[11px] text-text-muted">
+                <Link href="/leaderboard" className="text-accent hover:underline">
+                  Full leaderboard →
+                </Link>
+                <Link href="/benchmark" className="text-text-secondary hover:text-text-primary transition-colors">
+                  Calibration plots →
+                </Link>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="flex flex-col gap-3">
@@ -191,9 +256,17 @@ export default async function AboutPage() {
             </li>
             <li>
               <strong className="text-text-primary">Learned ensemble weights.</strong>{" "}
-              Crowd currently blends agents uniformly. Once N &gt; 500
+              Crowd currently blends agents uniformly. Once N &gt; {ensembleThreshold}{" "}
               resolutions, weights will be fit on held-out history to maximize
-              calibration.
+              calibration.{" "}
+              {totalScoredForEnsemble > 0 && (
+                <span className="mono text-text-muted text-xs">
+                  ({int(totalScoredForEnsemble)}/{ensembleThreshold} resolved so far
+                  {totalScoredForEnsemble >= ensembleThreshold * 0.75
+                    ? " — close"
+                    : ""})
+                </span>
+              )}
             </li>
             <li>
               <strong className="text-text-primary">Category leaderboards.</strong>{" "}
