@@ -294,6 +294,21 @@ export default async function BenchmarkPage() {
                     </tr>
                   );
                 })}
+                {/* Reference baseline row: theoretical random-50% guesser */}
+                <tr className="border-t-2 border-border-subtle opacity-50">
+                  <td className="py-2 px-3">
+                    <div className="flex items-center gap-2">
+                      <span className="mono text-[9px] text-text-muted uppercase tracking-wider">ref</span>
+                      <span className="font-medium text-text-muted text-sm">Random (50%)</span>
+                      <span className="mono text-[10px] text-text-muted hidden sm:inline">theoretical baseline · always picks 0.5</span>
+                    </div>
+                  </td>
+                  <td className="text-right py-2 px-3 mono text-sm text-text-muted">0.2500</td>
+                  <td className="text-right py-2 px-3 mono text-sm text-text-muted">0.693</td>
+                  <td className="text-right py-2 px-3 mono text-sm text-text-muted">50.0%</td>
+                  <td className="text-right py-2 px-3 mono text-sm text-text-muted">$0</td>
+                  <td className="text-right py-2 px-3 mono text-sm text-text-muted">—</td>
+                </tr>
               </tbody>
             </table>
           </div>
