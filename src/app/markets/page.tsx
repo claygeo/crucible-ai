@@ -17,6 +17,14 @@ export const metadata = {
     description:
       "Polymarket and Manifold events tracked by six AI forecasters. Open markets watched in real-time; resolved markets scored and archived.",
   },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Markets — Eivra",
+    description:
+      "Polymarket and Manifold events tracked by six AI forecasters. Open markets watched in real-time; resolved markets scored and archived.",
+    creator: "@deforestpeg",
+    site: "@deforestpeg",
+  },
 };
 
 const CATEGORY_TABS = [

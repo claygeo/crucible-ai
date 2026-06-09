@@ -44,13 +44,21 @@ import {
 export const revalidate = 120;
 
 export const metadata = {
-  title: "Paper trading - Eivra",
+  title: "Paper Trading — Eivra",
   description:
     "Paper-only prediction-market trading analytics for Eivra agents. Converts forecast edge into bounded simulated tickets and tracks P&L.",
   openGraph: {
-    title: "Eivra Paper Trading - tradability, not just accuracy",
+    title: "Eivra Paper Trading — tradability, not just accuracy",
     description:
       "Which AI forecaster is actually tradable? Eivra turns agent edges into bounded paper tickets and scores the P&L.",
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Eivra Paper Trading — tradability, not just accuracy",
+    description:
+      "Which AI forecaster is actually tradable? Eivra converts agent probability edges into bounded paper tickets and scores the P&L.",
+    creator: "@deforestpeg",
+    site: "@deforestpeg",
   },
 };
 
