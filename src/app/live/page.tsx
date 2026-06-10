@@ -107,6 +107,16 @@ export default async function LivePage() {
       .sort((a, b) => a.avg_brier - b.avg_brier);
   })();
 
+  const echoLiveScore = liveEarlyScores.find((s) => s.agent_id === "echo") ?? null;
+  const liveLeader = liveEarlyScores[0] ?? null;
+  const liveLeaderAgent = liveLeader ? AGENTS.find((a) => a.id === liveLeader.agent_id) ?? null : null;
+  const liveLeaderBeatsMarket = !!(
+    echoLiveScore &&
+    liveLeader &&
+    liveLeader.agent_id !== "echo" &&
+    liveLeader.avg_brier < echoLiveScore.avg_brier
+  );
+
   const shareText = totalLockedAgentForecasts > 0
     ? `${totalLockedAgentForecasts} AI forecasts locked on open prediction markets — scored automatically when they resolve, no edits allowed. Live benchmark: eivra.xyz/live`
     : `Live AI forecasting: 6 agents lock probability forecasts on Polymarket & Manifold, scored on resolution. No look-ahead. eivra.xyz/live`;
@@ -216,20 +226,53 @@ export default async function LivePage() {
           </section>
         )}
 
-        {/* First resolved live results — surfaces early Brier once markets start resolving */}
+        {/* Live results — surfaces Brier once live markets start resolving */}
         {liveEarlyScores.length >= 2 && (
           <section className="panel px-5 py-4 flex flex-col gap-3">
             <div className="flex items-center gap-2 flex-wrap">
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-                First resolved live results
+                Live results
               </div>
               <span className="mono text-[10px] px-2 py-0.5 rounded bg-positive/10 text-positive uppercase tracking-wider">
-                {liveEarlyScores[0]?.count ?? 0} markets scored
+                {liveLeader?.count ?? 0} markets scored
               </span>
+              {liveLeaderBeatsMarket && (
+                <span className="mono text-[10px] px-2 py-0.5 rounded bg-positive/10 text-positive uppercase tracking-wider">
+                  reasoning beats market ↑
+                </span>
+              )}
             </div>
             <p className="text-xs text-text-muted leading-relaxed">
-              Of the {resolvedCount} markets that have resolved since live forecasting launched,
-              here&apos;s the early Brier per agent. Small sample — but the first real live signal.
+              {liveLeader?.count ?? resolvedCount} live markets resolved.{" "}
+              {liveLeaderAgent && liveLeader && (
+                <>
+                  <span className={`font-medium ${HUE_TO_TEXT[liveLeaderAgent.hue]}`}>
+                    {liveLeaderAgent.name}
+                  </span>{" "}
+                  leads with{" "}
+                  <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is random chance.">
+                    Brier
+                  </Tooltip>{" "}
+                  {num(liveLeader.avg_brier, 3)}
+                  {echoLiveScore && liveLeader.agent_id !== "echo" ? (
+                    liveLeaderBeatsMarket ? (
+                      <> —{" "}
+                        <span className="text-positive">
+                          {num(echoLiveScore.avg_brier - liveLeader.avg_brier, 3)} ahead
+                        </span>{" "}
+                        of market consensus (Echo {num(echoLiveScore.avg_brier, 3)}).
+                      </>
+                    ) : (
+                      <> —{" "}
+                        <span className="text-rose-400">
+                          {num(liveLeader.avg_brier - echoLiveScore.avg_brier, 3)} behind
+                        </span>{" "}
+                        market consensus (Echo {num(echoLiveScore.avg_brier, 3)}).
+                      </>
+                    )
+                  ) : "."}
+                </>
+              )}
             </p>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {liveEarlyScores.map(({ agent_id, avg_brier }, i) => {
@@ -237,16 +280,21 @@ export default async function LivePage() {
                 if (!agent) return null;
                 const hueTxt = HUE_TO_TEXT[agent.hue];
                 const isFirst = i === 0;
+                const isLast = i === liveEarlyScores.length - 1;
+                const beatsEcho = !!(echoLiveScore && agent_id !== "echo" && avg_brier < echoLiveScore.avg_brier);
                 return (
                   <div key={agent_id} className="flex items-center gap-2 mono text-xs">
                     <span className={`font-medium ${hueTxt}`}>{agent.name}</span>
                     <span className={isFirst ? "text-positive font-bold" : "text-text-primary"}>
                       {num(avg_brier, 3)}
                     </span>
-                    {isFirst && (
+                    {isFirst && !beatsEcho && (
                       <span className="text-positive text-[10px] uppercase tracking-wider">best ↓</span>
                     )}
-                    {i === liveEarlyScores.length - 1 && (
+                    {beatsEcho && (
+                      <span className="text-positive text-[10px] uppercase tracking-wider">✓ mkt</span>
+                    )}
+                    {isLast && (
                       <span className="text-rose-400 text-[10px] uppercase tracking-wider">worst</span>
                     )}
                   </div>
