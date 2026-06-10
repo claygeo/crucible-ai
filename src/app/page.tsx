@@ -10,7 +10,6 @@ import {
   getAgentStats,
   getCounters,
   getEurekaCards,
-  getRecentPredictions,
 } from "@/lib/data";
 import { int, num, cleanReasoning } from "@/lib/format";
 import { AGENTS, HUE_TO_TEXT } from "@/lib/agents";
