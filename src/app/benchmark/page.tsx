@@ -582,7 +582,10 @@ export default async function BenchmarkPage() {
             <p className="text-text-secondary text-sm">
               When an agent says &ldquo;70%&rdquo;, does it actually
               happen 70% of the time? Diagonal = perfect calibration. Vertical
-              bars = Wilson 95% confidence intervals.
+              bars ={" "}
+              <Tooltip tip="Wilson interval: a confidence interval formula for proportions that stays reliable even with small bucket sizes and extreme probabilities (near 0% or 100%). More accurate than a standard normal CI when few predictions fall in a given probability bucket — common in calibration plots.">
+                Wilson 95% confidence intervals
+              </Tooltip>.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
