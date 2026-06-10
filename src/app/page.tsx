@@ -6,6 +6,7 @@ import { LiveTicker, type TickerItem } from "@/components/LiveTicker";
 import { Leaderboard } from "@/components/Leaderboard";
 import { EurekaCard } from "@/components/EurekaCard";
 import { HeroMetric } from "@/components/HeroMetric";
+import { Tooltip } from "@/components/Tooltip";
 import {
   getAgentStats,
   getCounters,
@@ -258,7 +259,9 @@ export default async function HomePage() {
         <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="panel px-5 py-5 flex flex-col gap-2">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              Brier score
+              <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is random chance, 1 is maximally wrong.">
+                Brier score
+              </Tooltip>
             </div>
             <div className="text-sm text-text-primary">
               Squared error of probabilistic predictions. Lower is better. 0 =
@@ -267,7 +270,9 @@ export default async function HomePage() {
           </div>
           <div className="panel px-5 py-5 flex flex-col gap-2">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              Log-loss
+              <Tooltip tip="Log-loss: −log(p) if the event happened, −log(1−p) if it didn't. Penalizes confident wrong predictions far more harshly than Brier. A coin-flip baseline scores ~0.693.">
+                Log-loss
+              </Tooltip>
             </div>
             <div className="text-sm text-text-primary">
               Penalizes confident wrong predictions more harshly than Brier.
@@ -280,12 +285,17 @@ export default async function HomePage() {
             </div>
             <div className="text-sm text-text-primary">
               Of the times an agent says &ldquo;70%&rdquo;, does it actually
-              happen 70% of the time? Plotted with Wilson 95% intervals.
+              happen 70% of the time? Plotted with{" "}
+              <Tooltip tip="Wilson interval: a confidence interval formula for proportions that works correctly even with small bucket sizes and extreme probabilities (near 0% or 100%). More reliable than a standard normal CI when few predictions fall in a given probability bucket — which is common in calibration plots.">
+                Wilson 95% intervals
+              </Tooltip>.
             </div>
           </div>
           <div className="panel px-5 py-5 flex flex-col gap-2">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              Eivra Score
+              <Tooltip tip="Eivra Score: composite ranking — 50% normalized Brier + 20% normalized log-loss + 30% win rate. Normalized so higher is better. Updated on each scoring run.">
+                Eivra Score
+              </Tooltip>
             </div>
             <div className="text-sm text-text-primary">
               50% normalized Brier · 30% win rate · 20% normalized log-loss.
