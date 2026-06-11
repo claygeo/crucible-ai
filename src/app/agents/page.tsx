@@ -155,7 +155,7 @@ export default async function AgentsPage() {
                         label="Paper P&L"
                         value={dollars(stat.paper_pnl_30d, 0)}
                         positive={stat.paper_pnl_30d >= 0}
-                        tip="Paper P&L (30-day rolling): simulated profit/loss if the agent bet $1 at its stated probability each market. No real money — tests whether estimates have positive expected value."
+                        tip="Paper P&L (30-day rolling): simulated profit/loss using 0.25× Kelly fraction on a $100 bankroll. Bet size scales with the agent's estimated edge over the market price. No real money — tracks whether estimates have positive expected value."
                       />
                     </div>
                   </div>

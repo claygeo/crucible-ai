@@ -281,7 +281,9 @@ export default async function HomePage() {
           </div>
           <div className="panel px-5 py-5 flex flex-col gap-2">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              Calibration
+              <Tooltip tip="Calibration: of the times an agent says '70%', does it actually happen 70% of the time? A perfectly calibrated forecaster's predictions in each probability bucket resolve at exactly that rate. Plotted as a curve against the ideal diagonal.">
+                Calibration
+              </Tooltip>
             </div>
             <div className="text-sm text-text-primary">
               Of the times an agent says &ldquo;70%&rdquo;, does it actually
