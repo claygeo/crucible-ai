@@ -8,7 +8,7 @@ import { Tooltip } from "@/components/Tooltip";
 export function Leaderboard({
   stats,
   source = "demo",
-  rankingBasis = "30-day window · Resolved markets · Eivra Score ↓",
+  rankingBasis = "30-day window · resolved markets · Eivra Score ↑",
 }: {
   stats: LiveAgentStats[];
   source?: "live" | "demo";
@@ -58,8 +58,8 @@ export function Leaderboard({
                 Agent
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">
-                <Tooltip tip="Eivra Score: composite of 50% Brier, 20% log-loss, 30% win rate. Lower raw scores = better calibration. Normalized so higher = better.">
-                  Eivra
+                <Tooltip tip="Eivra Score: composite ranking — 50% normalized Brier, 30% win rate, 20% normalized log-loss. Higher = better.">
+                  Eivra ↑
                 </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider">

@@ -442,6 +442,11 @@ export default async function BenchmarkPage() {
                         Brier ↓
                       </Tooltip>
                     </th>
+                    <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal hidden sm:table-cell">
+                      <Tooltip tip="Log-loss on live markets: −log(p) if the event happened, −log(1−p) if it didn't. Penalizes confident wrong predictions heavily. Lower is better; random baseline ≈ 0.693.">
+                        Log-loss ↓
+                      </Tooltip>
+                    </th>
                     <th className="text-right py-2 px-3 mono text-[10px] uppercase tracking-wider text-text-muted font-normal">
                       <Tooltip tip="Win rate on live markets: fraction of resolved live predictions where the agent's stated probability was on the correct side of 50%.">
                         Win %
@@ -477,6 +482,7 @@ export default async function BenchmarkPage() {
                           </div>
                         </td>
                         <td className="text-right py-3 px-3 mono text-sm">{num(row.avg_brier, 3)}</td>
+                        <td className="text-right py-3 px-3 mono text-sm hidden sm:table-cell">{num(row.avg_log_loss, 3)}</td>
                         <td className="text-right py-3 px-3 mono text-sm">{pct(row.win_rate, 1)}</td>
                         <td className="text-right py-3 px-3 mono text-sm">
                           <span className="text-text-muted">#{backfillRank}</span>
