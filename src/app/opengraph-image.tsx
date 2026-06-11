@@ -52,6 +52,13 @@ export default async function OG() {
   const bestAgent = best ? AGENTS.find((a) => a.id === best.agent_id) : null;
   const bestHue = bestAgent ? HUE_HEX[bestAgent.hue] ?? COL.accent : COL.accent;
 
+  // Core question: does the leader beat the market-prior baseline (Echo)?
+  const echo = ranked.find((s) => s.agent_id === "echo") ?? null;
+  const brierDelta = best && echo && best.agent_id !== "echo"
+    ? best.brier_30d - echo.brier_30d
+    : null;
+  const leaderBeatsMarket = brierDelta !== null && brierDelta < 0;
+
   return new ImageResponse(
     (
       <div
@@ -211,40 +218,46 @@ export default async function OG() {
               </div>
             </div>
 
-            {/* Spread: last-place Brier vs best */}
-            {ranked.length >= 2 && (() => {
-              const last = ranked[ranked.length - 1];
-              const lastBrier = last?.brier_30d ?? 0;
-              const bestBrier = best?.brier_30d ?? 1;
-              const ratio = bestBrier > 0 ? lastBrier / bestBrier : 0;
-              return (
-                <div style={{ display: "flex", flexDirection: "column", paddingBottom: "12px" }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: COL.muted,
-                      fontFamily: "monospace",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    worst/best gap
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "60px",
-                      fontWeight: 600,
-                      letterSpacing: "-0.02em",
-                      lineHeight: 1,
-                      color: COL.negative,
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    {`${ratio.toFixed(1)}×`}
-                  </div>
+            {/* vs market baseline (Echo) — the core Eivra question */}
+            {brierDelta !== null && (
+              <div style={{ display: "flex", flexDirection: "column", paddingBottom: "12px" }}>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: COL.muted,
+                    fontFamily: "monospace",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  vs market-prior (Echo)
                 </div>
-              );
-            })()}
+                <div
+                  style={{
+                    fontSize: "60px",
+                    fontWeight: 600,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1,
+                    color: leaderBeatsMarket ? COL.positive : COL.negative,
+                    fontFamily: "monospace",
+                  }}
+                >
+                  {`${brierDelta >= 0 ? "+" : ""}${brierDelta.toFixed(4)}`}
+                </div>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: leaderBeatsMarket ? COL.positive : COL.negative,
+                    fontFamily: "monospace",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    marginTop: "4px",
+                  }}
+                >
+                  {leaderBeatsMarket ? "✓ REASONING LEADS" : "✗ MARKET LEADS"}
+                </div>
+              </div>
+            )}
           </div>
 
           <div
@@ -257,7 +270,9 @@ export default async function OG() {
               fontFamily: "monospace",
             }}
           >
-            {`Lowest Brier across ${best?.total_scored ?? 0} resolved Polymarket + Manifold markets. Lower = better calibration.`}
+            {brierDelta !== null
+              ? `Brier across ${best?.total_scored ?? 0} resolved markets. Echo mirrors the market price — beating it means beating real-money forecasters.`
+              : `Lowest Brier across ${best?.total_scored ?? 0} resolved Polymarket + Manifold markets. Lower = better calibration.`}
           </div>
         </div>
 
