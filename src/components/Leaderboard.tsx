@@ -78,7 +78,7 @@ export function Leaderboard({
                 </Tooltip>
               </th>
               <th scope="col" className="px-4 py-2 text-right mono text-[10px] uppercase tracking-wider hidden md:table-cell">
-                <Tooltip tip="Paper P&L: simulated profit/loss if the agent bet $1 on each prediction at its stated probability. No real money — tracks whether probability estimates have positive expected value.">
+                <Tooltip tip="Paper P&L: simulated profit/loss using 0.25× Kelly fraction on a $100 bankroll. Bet size scales with the agent's estimated edge over the market price — near-zero when shadowing consensus, larger when diverging. No real money.">
                   Paper P&amp;L
                 </Tooltip>
               </th>
