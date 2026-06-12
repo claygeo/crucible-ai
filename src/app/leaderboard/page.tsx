@@ -154,7 +154,23 @@ export default async function LeaderboardPage() {
                 </p>
               ) : (
                 <p className="text-sm text-text-secondary leading-relaxed">
-                  Can reasoning agents close the gap?
+                  {echoStats && echoStats.paper_pnl_30d < 0 && bestReasoner.paper_pnl_30d > 0 ? (
+                    <>
+                      But{" "}
+                      <span className={`font-medium ${bestReasonerHue}`}>{bestReasonerAgent.name}</span>
+                      {" "}leads on{" "}
+                      <Tooltip tip="Paper P&L: simulated Kelly-fraction (0.25×) profit/loss on a $100 bankroll. Echo's near-zero edge over the market price compounds into losses under Kelly — close-to-market Brier doesn't translate to positive-EV trading.">
+                        paper P&amp;L
+                      </Tooltip>
+                      {": "}
+                      <span className="text-positive">{dollars(bestReasoner.paper_pnl_30d, 0)}</span>
+                      {" "}vs Echo&apos;s{" "}
+                      <span className="text-rose-400">{dollars(echoStats.paper_pnl_30d, 0)}</span>
+                      {". "}The market-following strategy loses money under Kelly even when Brier is nearly equal.
+                    </>
+                  ) : (
+                    <>Can reasoning agents close the Brier gap?</>
+                  )}
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-3 mono text-[11px] text-text-muted">
