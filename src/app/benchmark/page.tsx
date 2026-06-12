@@ -84,6 +84,9 @@ export default async function BenchmarkPage() {
     pnlBest && pnlBestAgent && brierLeaderStat && brierLeaderAgent &&
     pnlBest.agent_id !== brierLeaderStat.agent_id;
 
+  // Echo's rank by Brier, used to annotate the Echo negative-P&L callout.
+  const echoRankByBrier = sortedByBrier.findIndex((s) => s.agent_id === "echo") + 1;
+
   // Live early Brier: detect ranking reversals between live and backfill
   const liveRows = liveBrierRes.rows;
   const liveLeader = liveRows[0] ?? null;
@@ -361,6 +364,25 @@ export default async function BenchmarkPage() {
               an agent that shadows consensus has near-zero edge per bet, so small mispricings compound into a loss.
               An agent that diverges from the market earns outsized wins when the crowd is wrong — even if its overall accuracy is lower.
             </p>
+            {echo && echo.paper_pnl_30d < 0 && (
+              <p className="text-text-secondary text-sm leading-relaxed border-t border-border-subtle/40 pt-3">
+                The starkest example:{" "}
+                <span className="font-medium text-white">Echo</span>{" "}
+                (the market-mirroring baseline) finished{" "}
+                <span className="text-text-primary">#{echoRankByBrier} in Brier</span>{" "}
+                at {num(echo.brier_30d, 3)} — within{" "}
+                <span className="text-text-primary">
+                  {num(Math.abs(echo.brier_30d - brierLeaderStat.brier_30d), 4)}
+                </span>{" "}
+                of the leader — yet{" "}
+                <span className="text-rose-400">
+                  lost {dollars(Math.abs(echo.paper_pnl_30d), 0)}
+                </span>{" "}
+                on Kelly bets. Shadowing the market price means edge-per-bet ≈ 0:
+                even tiny miscalibrations compound into a loss when Kelly sizes bets on your
+                implied edge over the market. Near-identical Brier does not equal positive-EV trading.
+              </p>
+            )}
           </section>
         )}
 
