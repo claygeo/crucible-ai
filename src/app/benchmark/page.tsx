@@ -108,6 +108,16 @@ export default async function BenchmarkPage() {
     winRateBest && winRateBestAgent && brierLeaderStat && brierLeaderAgent &&
     winRateBest.agent_id !== brierLeaderStat.agent_id;
 
+  // Log-loss vs Brier insight: surfaces when the log-loss leader differs from the Brier leader.
+  // This happens when a contrarian agent (e.g. Hawk) wins Brier via confident correct calls, but
+  // a market-following agent (e.g. Echo) wins log-loss by never making extreme wrong predictions.
+  const sortedByLogLoss = [...stats].sort((a, b) => a.log_loss_30d - b.log_loss_30d);
+  const logLossBest = sortedByLogLoss[0];
+  const logLossBestAgent = logLossBest ? AGENTS.find((a) => a.id === logLossBest.agent_id) ?? null : null;
+  const showLogLossInsight =
+    logLossBest && logLossBestAgent && brierLeaderStat && brierLeaderAgent &&
+    logLossBest.agent_id !== brierLeaderStat.agent_id;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -379,6 +389,34 @@ export default async function BenchmarkPage() {
               Win rate only checks <em>direction</em>: was the agent&apos;s probability above 50% when the event happened?
               Brier also penalises <em>confidence</em>: predicting 0.9 on a coin-flip costs four times more than predicting 0.6.
               An agent can be right more often in direction while still being slightly over-confident on its calls — and Brier catches that gap where win rate does not.
+            </p>
+          </section>
+        )}
+
+        {/* ── Log-loss vs Brier insight ───────────────────────────── */}
+        {showLogLossInsight && logLossBest && logLossBestAgent && brierLeaderStat && brierLeaderAgent && (
+          <section className="panel px-5 py-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="heading text-base text-text-primary">Log-loss ≠ Brier</h2>
+              <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-warn/10 text-warn">
+                Counterintuitive finding
+              </span>
+            </div>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              <span className={`font-medium ${HUE_TO_TEXT[logLossBestAgent.hue]}`}>{logLossBestAgent.name}</span>{" "}
+              leads on{" "}
+              <Tooltip tip="Log-loss: −log(p) if the event happened, −log(1−p) if it didn't. Penalizes confident wrong predictions far more harshly than Brier — the penalty grows without bound as p approaches 0 on an incorrect high-confidence call.">
+                log-loss
+              </Tooltip>{" "}
+              ({num(logLossBest.log_loss_30d, 3)}) while{" "}
+              <span className={`font-medium ${HUE_TO_TEXT[brierLeaderAgent.hue]}`}>{brierLeaderAgent.name}</span>{" "}
+              leads on Brier ({num(brierLeaderStat.brier_30d, 4)}).{" "}
+              The gap reveals a strategy difference: an agent that stays close to the market price
+              never makes extreme wrong calls, so its log-loss stays bounded even when it&apos;s slightly
+              off. A contrarian that takes larger positions can post a lower Brier when right — squared
+              error rewards confident correct calls — but risks a heavier log-loss penalty on a
+              confident miss. Neither metric is strictly better; together they expose whether an
+              agent&apos;s edge comes from accuracy or from risk management.
             </p>
           </section>
         )}
