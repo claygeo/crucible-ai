@@ -195,33 +195,48 @@ export default async function LivePage() {
               Locked forecasts per agent
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-              {agentSummary.map(({ agent, count, avgProb, scoredMarkets }) => (
-                <Link
-                  key={agent.id}
-                  href={`/agents/${agent.id}`}
-                  className="panel px-3 py-3 flex flex-col gap-1 hover:border-accent/30 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`w-2 h-2 rounded-full shrink-0 ${HUE_TO_BG[agent.hue]}`}
-                      aria-hidden="true"
-                    />
-                    <span className={`text-xs font-medium truncate ${HUE_TO_TEXT[agent.hue]}`}>
-                      {agent.name}
-                    </span>
-                  </div>
-                  <div className="mono text-2xl font-bold text-text-primary tabular-nums leading-tight mt-0.5">
-                    {count}
-                  </div>
-                  <div className="mono text-[10px] text-text-muted leading-tight">
-                    avg {prob(avgProb)}
-                    {scoredMarkets > 0 && (
-                      <> · <span className="text-positive">{scoredMarkets} scored</span></>
+              {agentSummary.map(({ agent, count, avgProb, scoredMarkets }) => {
+                const agentLiveScore = liveEarlyScores.find((s) => s.agent_id === agent.id) ?? null;
+                const isLiveLead = agentLiveScore !== null && liveLeader?.agent_id === agent.id;
+                return (
+                  <Link
+                    key={agent.id}
+                    href={`/agents/${agent.id}`}
+                    className="panel px-3 py-3 flex flex-col gap-1 hover:border-accent/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${HUE_TO_BG[agent.hue]}`}
+                        aria-hidden="true"
+                      />
+                      <span className={`text-xs font-medium truncate ${HUE_TO_TEXT[agent.hue]}`}>
+                        {agent.name}
+                      </span>
+                    </div>
+                    <div className="mono text-2xl font-bold text-text-primary tabular-nums leading-tight mt-0.5">
+                      {count}
+                    </div>
+                    <div className="mono text-[10px] text-text-muted leading-tight">
+                      avg {prob(avgProb)}
+                      {scoredMarkets > 0 && (
+                        <> · <span className="text-positive">{scoredMarkets} scored</span></>
+                      )}
+                      {scoredMarkets === 0 && <> · pending</>}
+                    </div>
+                    {agentLiveScore && agentLiveScore.count > 0 && (
+                      <div
+                        className={`mono text-[10px] leading-tight mt-0.5 ${
+                          isLiveLead ? "text-positive font-semibold" : "text-text-muted"
+                        }`}
+                        title="Brier score on resolved live markets — lower is better"
+                      >
+                        Brier {num(agentLiveScore.avg_brier, 3)}
+                        {isLiveLead && <span className="ml-0.5">↑</span>}
+                      </div>
                     )}
-                    {scoredMarkets === 0 && <> · pending</>}
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </section>
         )}
