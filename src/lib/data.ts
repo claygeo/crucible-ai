@@ -515,6 +515,86 @@ export async function getEurekaCards(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Most-contested open markets — ranked by inter-agent probability spread.
+// Used on /markets to highlight where agents most disagree.
+// ────────────────────────────────────────────────────────────────────────────
+
+export type ContestedMarket = {
+  market_id: string;
+  question: string;
+  category: string;
+  url: string;
+  source: string;
+  spread: number;
+  agent_count: number;
+};
+
+export async function getTopContestedMarkets(
+  limit = 3
+): Promise<ContestedMarket[]> {
+  if (FORCE_DEMO) return [];
+  const client = sb();
+  if (!client) return [];
+  try {
+    const { data, error } = await client
+      .from("predictions")
+      .select("market_id, probability")
+      .eq("is_backfill", false)
+      .eq("abstained", false);
+    if (error || !data || data.length === 0) return [];
+
+    const byMarket = new Map<string, number[]>();
+    for (const row of data as Array<{ market_id: string; probability: number }>) {
+      const list = byMarket.get(row.market_id) ?? [];
+      list.push(Number(row.probability));
+      byMarket.set(row.market_id, list);
+    }
+
+    const top = Array.from(byMarket.entries())
+      .filter(([, probs]) => probs.length >= 2)
+      .map(([market_id, probs]) => ({
+        market_id,
+        spread: Math.max(...probs) - Math.min(...probs),
+        agent_count: probs.length,
+      }))
+      .sort((a, b) => b.spread - a.spread)
+      .slice(0, limit);
+
+    if (top.length === 0) return [];
+
+    const { data: markets } = await client
+      .from("markets")
+      .select("id, question, category, url, source")
+      .in("id", top.map((m) => m.market_id))
+      .eq("status", "open");
+    if (!markets) return [];
+
+    const byId = new Map<string, Record<string, unknown>>();
+    for (const m of markets as Array<Record<string, unknown>>) {
+      byId.set(m.id as string, m);
+    }
+
+    return top
+      .map(({ market_id, spread, agent_count }) => {
+        const m = byId.get(market_id);
+        if (!m) return null;
+        return {
+          market_id,
+          question: (m.question as string) ?? "",
+          category: (m.category as string) ?? "other",
+          url: (m.url as string) ?? "",
+          source: (m.source as string) ?? "unknown",
+          spread: Math.round(spread * 1000) / 1000,
+          agent_count,
+        };
+      })
+      .filter((m): m is ContestedMarket => m !== null);
+  } catch {
+    return [];
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────────────────────────────────────
 
