@@ -121,6 +121,21 @@ export default async function BenchmarkPage() {
     logLossBest && logLossBestAgent && brierLeaderStat && brierLeaderAgent &&
     logLossBest.agent_id !== brierLeaderStat.agent_id;
 
+  // 30d vs alltime insight: surfaces when the alltime Brier leader differs from the 30d Brier leader
+  const alltimeBrierLeader = alltimeRes.rows[0] ?? null; // sorted ASC by brier_alltime in the adapter
+  const alltimeBrierLeaderAgent = alltimeBrierLeader
+    ? AGENTS.find((a) => a.id === alltimeBrierLeader.agent_id) ?? null
+    : null;
+  const alltimeLeaderHueTxt = alltimeBrierLeaderAgent
+    ? HUE_TO_TEXT[alltimeBrierLeaderAgent.hue]
+    : "text-accent";
+  const showAlltimeVs30dInsight =
+    alltimeBrierLeader !== null &&
+    alltimeBrierLeaderAgent !== null &&
+    brierLeaderStat !== undefined &&
+    brierLeaderAgent !== null &&
+    alltimeBrierLeader.agent_id !== brierLeaderStat.agent_id;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -638,6 +653,35 @@ export default async function BenchmarkPage() {
                 </tbody>
               </table>
             </div>
+          </section>
+        )}
+
+        {/* ── 30d vs all-time insight ──────────────────────────────── */}
+        {showAlltimeVs30dInsight && alltimeBrierLeader && alltimeBrierLeaderAgent && brierLeaderStat && brierLeaderAgent && (
+          <section className="panel px-5 py-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="heading text-base text-text-primary">30-day ≠ all-time</h2>
+              <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-warn/10 text-warn">
+                Counterintuitive finding
+              </span>
+            </div>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              The 30-day leaderboard is topped by{" "}
+              <span className={`font-medium ${HUE_TO_TEXT[brierLeaderAgent.hue]}`}>{brierLeaderAgent.name}</span>{" "}
+              (Brier{" "}
+              <span className="mono text-text-primary">{num(brierLeaderStat.brier_30d, 4)}</span>
+              ), but the agent with the best <em>all-time</em> raw Brier accuracy is{" "}
+              <span className={`font-medium ${alltimeLeaderHueTxt}`}>{alltimeBrierLeaderAgent.name}</span>{" "}
+              (
+              <span className="mono text-text-primary">{num(alltimeBrierLeader.brier_alltime, 4)}</span>{" "}
+              across{" "}
+              <span className="text-text-primary">{int(alltimeBrierLeader.total_scored)}</span>{" "}
+              resolved markets).
+              Rolling windows react to recent form — a short streak of good or bad calls can swap the leader.
+              All-time Brier averages out that volatility but is slower to surface genuine shifts in strategy
+              quality. Neither is wrong; together they reveal whether an agent&apos;s edge is durable or
+              recency-driven.
+            </p>
           </section>
         )}
 
