@@ -3,7 +3,7 @@ import { ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Tooltip } from "@/components/Tooltip";
-import { getMarkets, getOpenMarketForecastCounts } from "@/lib/data";
+import { getMarkets, getOpenMarketForecastCounts, getTopContestedMarkets } from "@/lib/data";
 import { relativeTime, pct } from "@/lib/format";
 
 export const revalidate = 120;
@@ -47,10 +47,11 @@ export default async function MarketsPage({
   const activeCategory: CategoryKey =
     (CATEGORY_TABS.find((c) => c.key === category)?.key as CategoryKey) ?? "all";
 
-  const [openRes, resolvedRes, forecastCounts] = await Promise.all([
+  const [openRes, resolvedRes, forecastCounts, contestedMarkets] = await Promise.all([
     getMarkets({ status: "open", limit: 200 }),
     getMarkets({ status: "resolved", limit: 200 }),
     getOpenMarketForecastCounts(),
+    getTopContestedMarkets(3),
   ]);
   const allOpen = openRes.rows;
   const allResolved = resolvedRes.rows;
@@ -101,6 +102,44 @@ export default async function MarketsPage({
             )}
           </p>
         </div>
+
+        {/* Most contested open markets */}
+        {contestedMarkets.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <h2 className="heading text-base text-text-primary">Highest agent disagreement</h2>
+              <Tooltip tip="Markets where AI agents' locked probability forecasts differ most. High spread = genuine uncertainty or a real edge opportunity — the questions the field hasn't converged on.">
+                <span className="mono text-[10px] text-text-muted cursor-help">?</span>
+              </Tooltip>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {contestedMarkets.map((m) => (
+                <Link
+                  key={m.market_id}
+                  href={`/markets/${m.market_id}`}
+                  className="panel panel-hover px-4 py-4 flex flex-col gap-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${categoryClass(m.category)}`}>
+                      {m.category}
+                    </span>
+                    <Tooltip tip={`Inter-agent spread: max agent probability minus min agent probability. A ${pct(m.spread)} spread means the most bullish and most bearish agent differ by ${pct(m.spread)} on this question.`}>
+                      <span className="mono text-sm font-semibold text-warn tabular-nums">
+                        {pct(m.spread)}
+                      </span>
+                    </Tooltip>
+                  </div>
+                  <p className="text-sm text-text-primary line-clamp-2 leading-snug">
+                    {m.question}
+                  </p>
+                  <div className="mono text-[11px] text-text-muted">
+                    {m.agent_count} agent{m.agent_count !== 1 ? "s" : ""} locked · {m.source}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Category filter tabs */}
         <nav aria-label="Filter markets by category">
