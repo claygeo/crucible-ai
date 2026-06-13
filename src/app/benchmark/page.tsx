@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -9,24 +10,51 @@ import { num, int, pct, signed, dollars } from "@/lib/format";
 
 export const revalidate = 120;
 
-export const metadata = {
-  title: "Benchmark — Eivra",
-  description:
-    "Six AI agents scored on real prediction-market events. Brier, log-loss, calibration, ELO, paper P&L. All public, all auditable.",
-  openGraph: {
-    title: "Eivra Benchmark — AI forecast accuracy on real markets",
-    description:
-      "Which forecasting strategy wins? Six AI agents, same markets. Brier, log-loss, calibration, P&L — all public.",
-  },
-  twitter: {
-    card: "summary_large_image" as const,
-    title: "Eivra Benchmark — AI forecast accuracy on real markets",
-    description:
-      "Which forecasting strategy wins? Six AI agents, same markets. Brier, log-loss, calibration, P&L — all public.",
-    creator: "@deforestpeg",
-    site: "@deforestpeg",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const title = "Benchmark — Eivra";
+  const ogTitle = "Eivra Benchmark — AI forecast accuracy on real markets";
+  let description =
+    "Six AI agents scored on real prediction-market events. Brier, log-loss, calibration, paper P&L. All public, all auditable.";
+  try {
+    const stats = await getAgentStats();
+    const echo = stats.rows.find((s) => s.agent_id === "echo");
+    const reasoningStats = stats.rows.filter(
+      (s) => s.agent_id !== "echo" && s.agent_id !== "ensemble"
+    );
+    const best = [...reasoningStats].sort((a, b) => a.brier_30d - b.brier_30d)[0];
+    const bestAgent = best ? AGENTS.find((a) => a.id === best.agent_id) : null;
+    if (echo && best && bestAgent) {
+      const pctGap = Math.round(
+        (Math.abs(best.brier_30d - echo.brier_30d) / echo.brier_30d) * 100
+      );
+      if (best.brier_30d < echo.brier_30d) {
+        description = `After ${int(echo.total_scored)} resolved markets, ${bestAgent.name} beats prediction-market consensus — Brier ${num(best.brier_30d, 3)} vs ${num(echo.brier_30d, 3)}. Brier, log-loss, calibration plots — all public.`;
+      } else {
+        description = `After ${int(echo.total_scored)} resolved markets, market consensus (Echo) leads by ${pctGap}% Brier. Can ${bestAgent.name} close the gap? Six agents, same markets, honest scoring.`;
+      }
+    }
+  } catch {
+    // fall through to default description
+  }
+  return {
+    title,
+    description,
+    openGraph: {
+      title: ogTitle,
+      description,
+      url: "https://eivra.xyz/benchmark",
+      siteName: "Eivra",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: ogTitle,
+      description,
+      creator: "@deforestpeg",
+      site: "@deforestpeg",
+    },
+  };
+}
 
 export default async function BenchmarkPage() {
   const [statsRes, disagreementsRes, alltimeRes, liveBrierRes] = await Promise.all([
