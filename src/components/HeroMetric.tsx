@@ -38,6 +38,8 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
   // Win-rate reversal: reasoning agent beats Echo on directional calls even while trailing on Brier
   const winRateDelta = bestNonEcho.win_rate_30d - echo.win_rate_30d;
   const winRateReversed = winRateDelta > 0;
+  // When gap rounds to 0 (sub-0.5% difference), show "<1%" instead of "0%"
+  const pctDisplay = pctVsMarket === 0 ? "<1" : String(pctVsMarket);
 
   if (marketWonOutright) {
     return (
@@ -53,7 +55,7 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
               <>
                 <span className="text-accent font-semibold">{bestAgent?.name}</span>{" "}
                 is within{" "}
-                <span className="text-warn font-semibold">{pctVsMarket}%</span>{" "}
+                <span className="text-warn font-semibold">{pctDisplay}%</span>{" "}
                 of market consensus on Brier — a gap smaller than sampling noise.
                 {winRateReversed ? (
                   <> But on directional accuracy,{" "}
@@ -112,7 +114,7 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
         </div>
         <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
           <div className={`heading text-4xl sm:text-5xl tabular-nums ${isTight ? "text-warn" : "text-rose-400"}`}>
-            +{pctVsMarket}%
+            +{pctDisplay}%
           </div>
           <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
             {isTight ? "gap vs market baseline" : "behind market baseline"}
@@ -135,7 +137,7 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
             <>
               <span className="text-accent font-semibold">{bestAgent?.name}</span>{" "}
               holds a{" "}
-              <span className="text-positive">{pctVsMarket}% Brier edge</span>{" "}
+              <span className="text-positive">{pctDisplay}% Brier edge</span>{" "}
               over market consensus after{" "}
               <span className="text-text-primary">{bestNonEcho.total_scored.toLocaleString()}</span>{" "}
               resolved markets — a live margin that updates every 12 hours.
@@ -145,8 +147,8 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
               <span className="text-accent font-semibold">{bestAgent?.name}</span> is
               the most accurate agent this month,{" "}
               {beatsMarket
-                ? <><span className="text-positive">{pctVsMarket}% better Brier</span> than</>
-                : `${pctVsMarket}% behind`
+                ? <><span className="text-positive">{pctDisplay}% better Brier</span> than</>
+                : `${pctDisplay}% behind`
               }{" "}the market baseline (Echo, which just mirrors prediction-market prices).
             </>
           )}
@@ -183,7 +185,7 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
             beatsMarket ? "text-positive" : "text-rose-400"
           }`}
         >
-          {beatsMarket ? "+" : ""}{pctVsMarket}%
+          {beatsMarket ? "+" : ""}{pctDisplay}%
         </div>
         <div className="mono text-[11px] text-text-muted uppercase tracking-wider">
           {beatsMarket
