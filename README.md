@@ -2,301 +2,294 @@
 
 > Public AI forecasting, scored continuously. Six AI agents make probabilistic predictions on real Polymarket and Manifold markets. Every call is tracked with Brier, log-loss, and 10-bin calibration plots with Wilson 95% intervals. No real money, no hiding, just resolved outcomes.
 
-**Live:** [eivra.xyz](https://eivra.xyz) · **Source:** [github.com/claygeo/eivra](https://github.com/claygeo/eivra) · **Author:** [@deforestpeg](https://x.com/claygdev)
+**Live:** [eivra.xyz](https://eivra.xyz) · **Source:** [github.com/claygeo/eivra](https://github.com/claygeo/eivra) · **Author:** [@deforestpeg](https://x.com/deforestpeg)
 
 ---
 
 ## TL;DR
 
-- **6 AI agents** across 4 model families forecast live prediction markets.
-- **358+ predictions, 50 of them LIVE (locked on still-open markets)**, 31 resolved.
-- **Hawk (contrarian, Opus 4.7) leads** at 0.037 Brier across 28 resolutions, 96% win rate.
-- **Live forecasting shipped 2026-05-20** — agents now lock forecasts on OPEN Polymarket + Manifold markets every 12h, scored when they resolve. Zero look-ahead by construction.
-- **$0 Anthropic API spend** — runs `claude -p` subprocess on a Hetzner VPS via Max subscription.
-- Auto-deploys via GitHub→Netlify CD. Four cron jobs handle ingestion (15m), backfill (6h), **live forecasting (12h)**, and insights (24h).
-- Built autonomously by Claude Opus 4.7 over a week while the operator was AFK.
+- **6 AI agents** across distinct personas forecast live prediction markets and get scored when the markets resolve.
+- **Two scoring lanes:** *backfill* (agents forecast already-resolved historical markets — fast to accumulate, but look-ahead-prone) and *live* (agents lock a forecast on an **open** market, scored only after it resolves — no look-ahead by construction).
+- **Hawk (contrarian, Opus 4.7) leads** the leaderboard. But read the [honesty section](#how-honest-are-these-numbers) first: every agent currently sits near ~0.02 Brier / ~97% win, which is *far* better than human superforecasters (~0.15–0.20) and the best published LLM forecaster (~0.24). That gap is the backfill lane flattering itself, not superhuman skill.
+- **$0 Anthropic API spend** — forecasts run a `claude -p` subprocess on a Hetzner VPS under a Max subscription. No `ANTHROPIC_API_KEY`.
+- **A paper-trading proof lab** (`/trading`) turns each forecast into a bounded quarter-Kelly paper ticket and asks a sharper question: which agent is not just *accurate* but *tradable*? It ships with explicit anti-overclaim guards (no real execution, ever).
+- Auto-deploys via GitHub → Netlify. Cron jobs handle market ingestion, backfill scoring, live forecasting, and nightly insight cards.
+- Built autonomously by Claude Opus 4.7 over roughly two weeks while the operator was away.
+
+> **Numbers drift.** Cron runs change every count on this page hourly. Live, always-current figures are at [`/api/summary.json`](https://eivra.xyz/api/summary.json) and [`/api/leaderboard.json`](https://eivra.xyz/api/leaderboard.json). The snapshots below are dated.
 
 ---
 
 ## What this is
 
-Eivra is a **public benchmark for LLM forecasting accuracy**.
+Eivra is a **public scoreboard for LLM forecasting accuracy**.
 
-Six AI agents — each with a distinct system prompt and model — read real prediction-market questions from [Polymarket](https://polymarket.com) and [Manifold Markets](https://manifold.markets), produce a probability estimate with a reasoning trace, and get scored against the eventual ground-truth resolution.
+Six AI agents — each with a distinct system prompt and model — read real prediction-market questions from [Polymarket](https://polymarket.com) and [Manifold Markets](https://manifold.markets), produce a probability estimate with a short reasoning trace, and get scored against the eventual ground-truth resolution.
 
-The result is the **first live, continuously-updated, stats-honest scoreboard** for AI probabilistic forecasting. Calibration plots have Wilson 95% intervals. Sparse bins are flagged. Backfill predictions are marked. No real money changes hands.
-
-The site updates every 2 minutes (Next.js ISR). New predictions land every 6 hours. New open markets ingest every 15 minutes. Insight cards regenerate nightly.
+The site updates every two minutes (Next.js ISR). New open markets ingest every 15 minutes. New forecasts land on a 6-hour backfill cycle, plus a separate live-forecasting pass that locks predictions on still-open markets. Insight cards regenerate nightly. Without database credentials the whole site renders from a deterministic in-repo seed (`src/lib/demo-data.ts`, 25 markets / 150 predictions) so it loads with zero infrastructure.
 
 ## Why this exists
 
-LLMs are confidently wrong all the time. Existing public LLM benchmarks (MMLU, HumanEval, MTEB) mostly measure narrow correctness on static datasets. **Forecasting is different**: the truth resolves on a clock, humans have a strong baseline (the market itself), and "confidence" can be measured separately from accuracy.
+LLMs are confidently wrong all the time. Existing public LLM benchmarks (MMLU, HumanEval, MTEB) mostly measure narrow correctness on static datasets. Forecasting is different: the truth resolves on a clock, humans have a strong baseline (the market itself), and *confidence* can be measured separately from *accuracy*.
 
-The two questions Eivra answers continuously:
+The two questions Eivra tracks:
 
 1. **Is this LLM accurate?** — Brier and log-loss on resolved markets.
-2. **Is this LLM calibrated?** — when it says 70%, does it win 70% of the time? (Calibration plot, 10 bins, Wilson 95%.)
+2. **Is this LLM calibrated?** — when it says 70%, does it win 70% of the time? (Calibration plot, 10 bins, Wilson 95% intervals.)
 
 A confident-and-wrong model is worse than a humble-and-wrong model. The leaderboard surfaces both.
+
+## How Eivra compares
+
+Eivra is not the first to score LLMs on real-world forecasting, and it does not claim to be the most rigorous. It is a small, fully open-source, opinionated take. Honest landscape:
+
+| Project | What it is | How Eivra differs |
+|---|---|---|
+| [ForecastBench](https://www.forecastbench.org/) (Forecasting Research Institute, ICLR 2025) | Dynamic, contamination-free benchmark; nightly questions from 9 sources incl. prediction markets; human comparison groups; difficulty-adjusted Brier | Academic gold standard. Eivra is smaller and scrappier, but fully open end-to-end (schema, agents, crons, deploy) and adds persona-diverse agents + a paper-trading lane |
+| [Prophet Arena](https://www.prophetarena.co/leaderboard) (2025) | Live benchmark over Kalshi + Polymarket; Brier + simulated betting return; tests frontier models | Eivra's closest sibling. Prophet Arena pits raw frontier models against each other; Eivra studies *forecasting styles* (six house personas, one model family) and is open-source |
+| [Metaculus AI Benchmarking / FutureEval](https://www.metaculus.com/aib/) (2025–2026) | Quarterly bot tournaments ($175k/yr prizes) on Metaculus questions, vs Pro Forecasters | Tournament format over curated questions; Eivra runs continuously over prediction-market questions with no prize/competition layer |
+| [Approaching Human-Level Forecasting with LMs](https://arxiv.org/abs/2402.18563) (Halawi et al., NeurIPS 2024) | Retrieval-augmented LM that nears the human crowd (Brier .240 vs .247) on post-cutoff questions | The reference point for what *real* LLM forecasting skill looks like. Eivra's agents do no retrieval (web tools are disabled), so they forecast from parametric knowledge alone |
+
+**What's actually distinctive about Eivra:** persona-diverse agents (deliberative / contrarian / snap / market-anchored / cross-family control / ensemble) rather than model-vs-model; a tradable-edge lane on top of accuracy; $0 inference via a Max-sub subprocess; and the fact that the whole thing — code, schema, agents, deploy, ops — was built and run autonomously by an AI.
 
 ## The six agents
 
 | # | Name | Model | Persona | Edge |
 |---|------|-------|---------|------|
-| 1 | **Sage** | Claude Opus 4.7 | Deliberative · base-rate-anchored | Reference-class anchoring, slow updates with strong evidence |
-| 2 | **Hawk** | Claude Opus 4.7 | Contrarian · disagrees with consensus | Steelmans both sides, takes positions more extreme than the market when it finds real mispricings, ABSTAINS rather than rubber-stamp |
-| 3 | **Magpie** | Claude Sonnet 4.6 | Snap forecasts · speed over depth | One key fact, one paragraph, ≤200 reasoning tokens |
-| 4 | **Echo** | Claude Haiku 4.5 | Anchors to market price · small Bayesian moves | Market price is the prior; only adjusts on hard new info |
-| 5 | **Mirror** | GPT-5 (cross-family control) | Different model family by design | Control variable — if Claude-family agents share a bias, Mirror exposes it |
-| 6 | **Crowd** | Synthetic ensemble | Uniform-weight average of the rest | Tests whether AI ensembling beats any single agent |
+| 1 | **Sage** | Claude Opus 4.7 (`--effort high`) | Deliberative · base-rate first | Finds the closest historical reference class and anchors to its base rate before adjusting. Wins on slow-moving questions; loses when a market is genuinely unprecedented |
+| 2 | **Hawk** | Claude Opus 4.7 (`--effort high`) | Contrarian · hunts mispricings | Steelmans the crowd, then the opposite. **Abstains** rather than rubber-stamp consensus; only forecasts when it spots a genuine mispricing. High variance, high alpha when right |
+| 3 | **Magpie** | Claude Sonnet 4.6 (`--effort low`) | Snap forecaster | One fact, one sentence, one number. Tests whether snap intuition beats deliberation |
+| 4 | **Echo** | Claude Haiku 4.5 (`--effort low`) | Market-anchored · small Bayesian steps | The market price is the prior; only deviates on hard new info, usually by <5pp. Tests disciplined humility |
+| 5 | **Mirror** | *intended GPT-5, currently Claude Sonnet 4.6* (`--effort medium`) | Cross-family control | Meant to expose biases shared across the Claude-family agents. **Disclosed honestly:** no OpenAI key is configured, so Mirror runs as Sonnet with an adversarial cross-family prompt. It becomes a real A/B the day a GPT key is added |
+| 6 | **Crowd** | Synthetic (no model call) | Uniform ensemble | Equal-weight mean of all non-abstaining agents per market. The wisdom-of-AI-crowds baseline |
 
-Full system prompts in [`src/lib/agents.ts`](./src/lib/agents.ts). Each non-synthetic agent has a hard daily USD cap and an idempotency-keyed run window so it never forecasts the same market twice within 30 minutes.
+Display roster lives in [`src/lib/agents.ts`](./src/lib/agents.ts); the runner duplicates the prompts in [`backfill/run.ts`](./backfill/run.ts) so the backfill script is standalone. Note: the `agents.daily_budget_usd` column exists in the schema but the runner does not read it — actual cost control is a per-call flag (see below).
+
+## How forecasts are produced
+
+Every agent forecast is generated by spawning a `claude -p` (print-mode) subprocess on the VPS, where the operator's **Max subscription** is logged in via `claude login`. The subprocess inherits that auth, makes the call, and emits JSON to stdout. The runner extracts the first `{` to the last `}` and parses it.
+
+The flags that matter, from [`backfill/run.ts`](./backfill/run.ts):
+
+```bash
+claude -p \
+  --model <claude-opus-4-7|claude-sonnet-4-6|claude-haiku-4-5> \
+  --effort <low|medium|high> \
+  --system-prompt "<persona> + strict single-line-JSON output contract" \
+  --disallowedTools WebSearch,WebFetch,Bash,Read,Write,Edit,Glob,Grep,Task \
+  --max-budget-usd 0.30 \
+  --max-turns 5
+```
+
+Details that took a few iterations to get right:
+
+- **No `ANTHROPIC_API_KEY`, no `--bare`.** `--bare` would strip the Max-sub OAuth and force API-key mode. Inference is billed to the Max subscription, not the API. Net Anthropic API spend: **$0**.
+- **Tools disabled** so the model doesn't burn turns on web lookups or permission denials. (Consequence: agents forecast from parametric knowledge only — no retrieval.)
+- **Cost is bounded per call** by `--max-budget-usd 0.30` + `--max-turns 5` + a 90-second subprocess timeout — *not* by the `daily_budget_usd` DB column, which is currently unused by the runner.
+- **`cwd` is set away from the repo** (`/tmp` on the Linux VPS, `%TEMP%` on Windows) so `claude` doesn't auto-load this repo's `CLAUDE.md` as context.
+- **Lenient parsing.** The probability field is read from any of `probability`, `probability_yes`, `p_yes`, `forecast`, `p`, `prob`, `yes` — models pick slightly different keys across runs. Probabilities are clamped to `[0.01, 0.99]`.
+- **Dedup.** Backfill mode caches each result on disk in `.backfill-cache/`, keyed by `(agent_id, market_source, market_source_id)`, so reruns don't re-spawn the same call. Live mode dedups via a Supabase existence check on `(agent_id, market_id, is_backfill=false)`.
+
+### Backfill vs live (and why it matters)
+
+**Backfill mode** (`backfill/run.ts`, default) pulls markets that resolved between 2026-02-01 and 2026-05-08 (after Claude's Jan-2026 training cutoff, to *limit* not eliminate look-ahead), forecasts them, and scores immediately. These rows are flagged `is_backfill = true`. The runner does **not** pass the resolution outcome to the model, and it stamps each backfill prediction with a synthetic `created_at` of `resolved_at − 24h` — a defensible "we forecasted ~a day before close" timestamp. It is still a reconstruction, and the model may have seen news about these outcomes in training. Treat backfill numbers as a warm-up set, not proof of skill.
+
+**Live mode** (`backfill/run.ts --mode=live`) pulls markets that are still **open** (closing >24h out), locks one forecast per agent at `created_at = NOW()` with `is_backfill = false`, and writes nothing to `scores` until the market actually resolves. There is no look-ahead by construction: the lock is the receipt. The locked forecasts are visible at [`/live`](https://eivra.xyz/live). This is the honest signal, and the resolved-live sample is still small.
 
 ## Scoring methodology
 
-All scoring runs server-side from `agent_id`, `market_id`, `predicted_probability`, and `resolved_outcome ∈ {true, false}`.
+Scoring runs server-side from `agent_id`, `market_id`, `predicted_probability`, and `resolved_outcome ∈ {true, false}`.
 
 ### Brier score
 ```
-B = (p − y)²
+B = (p − y)²        y ∈ {0, 1}
 ```
-where `p` is the predicted probability and `y` ∈ {0, 1}. Lower is better. **0** = perfect; **0.25** = naive 50% baseline; **1** = maximally wrong.
+Lower is better. **0** = perfect; **0.25** = the always-50% baseline; **1** = maximally wrong. For reference, Tetlock's superforecasters land around **0.15–0.20**.
 
 ### Log-loss
 ```
 L = −[y · log(p) + (1 − y) · log(1 − p)]
 ```
-Probabilities are **clamped to [1e-4, 1 − 1e-4]** before log-loss so confident-and-wrong predictions don't produce `Infinity`. Lower is better.
+Probabilities are clamped to **`[0.01, 0.99]`** before the log so a single confident-and-wrong call doesn't produce `Infinity`. Lower is better.
 
 ### Calibration plot
-10 equal-width bins on predicted probability. For each bin, plot realized win rate against bin center. Diagonal = perfect calibration. Each dot carries a **Wilson 95% confidence interval**:
+10 equal-width bins on predicted probability. For each bin, plot realized win rate against the bin center; the diagonal is perfect calibration. Each dot carries a **Wilson 95% interval**:
 
 ```
 center = (p̂ + z²/2n) / (1 + z²/n)
-half   = z·√(p̂(1−p̂)/n + z²/4n²) / (1 + z²/n)
+half   = z·√(p̂(1−p̂)/n + z²/4n²) / (1 + z²/n)        z = 1.96
 ```
 
-Bins with `n < 5` render as hollow gray dots and are **excluded** from the over/under-confidence label. Below the chart: `Total predictions: N · Resolved: M`. The site shows a placeholder `[INSUFFICIENT_DATA]` panel when total scored < 20 instead of plotting noise.
+Bins with `n < 5` render as hollow gray dots and are excluded from the over/under-confidence label. The site shows an `[INSUFFICIENT_DATA]` panel instead of plotting noise when the scored sample is tiny.
 
-### ELO
-Pairwise comparison: for every resolved market where both agents predicted, the agent with the lower Brier "wins" that head-to-head. K-factor = 24. Refreshed after each scoring run.
-
-### Paper P&L (Kelly)
-Each forecast is paper-traded against the prevailing market price using fixed-fraction Kelly:
-
-```
-edge   = p − market_price
-stake  = bankroll × 0.25 × |edge| / variance
-pnl    = stake × (y − market_price) / market_price · sign(edge)
-```
-
-No real capital is involved. The P&L column on the leaderboard reflects hypothetical $100 bankroll at Kelly fraction 0.25.
+### Leaderboard paper P&L
+The P&L column on the leaderboard is a **simple flat-$25 directional paper bet** per forecast: take YES if `p > market_price`, NO otherwise, and book `±$25 × (outcome − market_price)`. It is a quick sanity check, not a trading model. The realistic quarter-Kelly model lives in the [paper-trading lab](#the-paper-trading-proof-lab).
 
 ### Eivra Score (composite)
 ```
 S = 0.5 · (1 − Brier_norm) + 0.3 · win_rate + 0.2 · (1 − logloss_norm)
 ```
-Brier and log-loss are min-max normalized across the active agent set. The leaderboard sorts by S descending.
+Brier and log-loss are min-max normalized across the active agent set. The leaderboard sorts by `S` descending. (A separate `agent_elo` table tracks pairwise head-to-head records; ELO does not currently feed the composite.)
+
+## The paper-trading proof lab
+
+The largest subsystem beyond the core scoreboard, reachable at [`/trading`](https://eivra.xyz/trading). It answers a sharper question than Brier: **which agent is not just accurate, but tradable?** A market-anchored agent can have a great Brier score and poor returns; a contrarian can have worse Brier and better paper returns if it finds genuinely mispriced markets.
+
+How it works:
+
+- **Bounded paper tickets.** For each agent forecast, compare the agent's probability to the market price. If the edge clears a threshold (default 5pp), open a paper ticket: YES on positive edge, NO on negative. Stake is **quarter-Kelly** off a $5,000 paper bankroll, **capped at $100/ticket**, with a $500 open-exposure cap. Maximum loss is the stake. No wallet, no leverage, no order placement, no liquidation path.
+- **Proof gate.** A live strategy stays `collecting` until it has **30 live days** and **30 resolved tickets**, then must show positive net P&L, positive ROI, and bounded drawdown (<$500) to be marked a `candidate`. Backfill strategies are `control_only` and can never qualify. Stale captures are flagged.
+- **Durable evidence pipeline.** Daily snapshots are written to `paper_trading_snapshots` (a Netlify scheduled function at 05:12 UTC) with a GitHub Actions fallback recorder (05:22 UTC) that captures artifact proof even when service-role writes are disabled, plus a resolution catch-up pass (05:02 UTC). The whole thing is auditable offline (`npm run paper:artifact-audit`).
+- **Anti-overclaim guards, everywhere.** Every payload carries `paper_only: true` and `real_money_execution_allowed: false`. Missed/skipped signals are tracked but flagged `missed_pnl_counts_as_proof: false`. Pending open-ticket EV is flagged `pending_pnl_counts_as_proof: false`. A liquidity/slippage review is a hard blocker on any "this rule is profitable" claim, because real fill quality isn't modeled. The point of the lab is to make it *hard* to fool yourself, not to look good.
+
+The lab exposes roughly two dozen read-only JSON endpoints under `/api/trading-*` (agent-edge proof matrix, exposure ledger, resolution watch, capital-review packet, evidence SLA, lab status, and so on). The full design spec is in [`docs/designs/eivra-paper-trading-v2.md`](./docs/designs/eivra-paper-trading-v2.md).
 
 ## How honest are these numbers?
 
-The site flags four caveats on every page:
+Read this before trusting the leaderboard.
 
-- **Backfill mode.** Most resolutions in the initial dataset closed *before* this site went live. Backfill forecasts run on resolved markets and may have seen training-data news about the outcome. Every backfill prediction is flagged `is_backfill=true` in Supabase. Live-mode forecasting (on markets that resolve in the future) is the next milestone, and the lookahead concern fully disappears there.
-- **No look-ahead by construction.** Scoring queries gate on `predictions.created_at < markets.resolved_at`. A model forecast made after resolution is dropped from the leaderboard.
-- **Probability clamping.** Probs are clamped to `[1e-4, 1 − 1e-4]` before any log-based scoring so a single confident-and-wrong call doesn't blow up the metric.
-- **Mirror disclosure.** Mirror's "GPT-5" slot currently runs as Sonnet-with-different-prompt. Operator is on a Claude Max sub and not paying for OpenAI API. The agent card discloses this. If OpenAI provides a key, Mirror upgrades — and that A/B becomes interesting.
+- **The headline numbers are too good to be real skill.** As of the latest snapshot every agent sits near **~0.02 Brier and ~97% win rate**. Human superforecasters land around 0.15–0.20; the best published LLM forecasting system (Halawi et al.) reached ~0.24 on genuinely-uncertain post-cutoff questions. Six agents all an order of magnitude better than that is a red flag, not a triumph. The cause is almost certainly the **backfill lane**: resolved markets skew lopsided (many close near 0/1), and the models may have absorbed the outcomes in training. The numbers measure "can the model recognize an already-decided question," not "can it forecast the future."
+- **Backfill dominates the dataset.** Most resolved rows are `is_backfill = true` with a synthetic pre-resolution timestamp. The **live lane** (`is_backfill = false`, locked on open markets) is the honest signal, and its resolved sample is still small. Watch that, not the aggregate.
+- **No retrieval.** Web tools are disabled in the subprocess, so agents forecast from parametric knowledge. That's a deliberate cost/simplicity choice, and a real limitation versus retrieval-augmented systems.
+- **Mirror is not GPT-5 yet.** It runs as Claude Sonnet with a cross-family prompt because no OpenAI key is configured. Disclosed on the agent card and above. Five of six agents are one model family, so "cross-model" comparison is currently weak.
+- **Clamping.** Probabilities are clamped to `[0.01, 0.99]` before log-based scoring so one confident-wrong call doesn't blow up the metric.
 
-The methodology card surfaces all four on `/benchmark`. None of this is hidden.
+None of this is hidden in the code. It shouldn't be hidden here either.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                                                                         │
-│  Polymarket Gamma API           Manifold Markets API                    │
-│         │                              │                                │
-│         └──────────────┬───────────────┘                                │
-│                        ▼                                                │
-│        ┌───────────────────────────────────┐                            │
-│        │ backfill/pull-open.ts (VPS cron)  │   every 15 min             │
-│        │ Normalize → UPSERT markets table  │                            │
-│        └────────────────┬──────────────────┘                            │
-│                         ▼                                               │
-│        ┌───────────────────────────────────┐                            │
-│        │ Supabase Postgres                 │   markets, predictions,    │
-│        │  • agents (the 6)                 │   scores, agent_stats,     │
-│        │  • markets (Polymarket+Manifold)  │   agent_runs, agent_elo,   │
-│        │  • predictions (idempotent)       │   eureka_cards, events     │
-│        │  • scores (Brier, log-loss)       │                            │
-│        │  • agent_stats (aggregated)       │                            │
-│        │  • agent_elo (head-to-head)       │                            │
-│        │  • eureka_cards (insights)        │                            │
-│        └────────────────┬──────────────────┘                            │
-│                         │                                               │
-│                         ├────────────► backfill/run.ts (VPS cron)       │
-│                         │              every 6 hours                    │
-│                         │              ─────────────────                │
-│                         │              For each unscored market:        │
-│                         │                For each active agent:         │
-│                         │                  spawn `claude.cmd -p`        │
-│                         │                  parse JSON forecast          │
-│                         │                  INSERT prediction            │
-│                         │              Score resolved markets           │
-│                         │              Refresh agent_stats              │
-│                         │                                               │
-│                         ├────────────► backfill/generate-eureka.ts      │
-│                         │              every 24 hours                   │
-│                         │              ─────────────────                │
-│                         │              Query agent_stats + scores       │
-│                         │              Auto-generate 3 insight cards    │
-│                         │                                               │
-│                         ▼                                               │
-│        ┌───────────────────────────────────┐                            │
-│        │ Next.js 15 (App Router, ISR=120s) │   src/app/* SSR + ISR      │
-│        │  Deployed to Netlify              │   src/components/* UI      │
-│        │  Auto-deploys on git push to main │   src/lib/data.ts adapter  │
-│        └────────────────┬──────────────────┘                            │
-│                         ▼                                               │
-│                  https://eivra.xyz                                      │
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │ Cloud routine (claude.ai, every 6h, MCP-aware)                  │    │
-│  │  Picks one autonomous polish task per fire (landing copy, OG    │    │
-│  │  image, agent persona text, tooltips, lint fixes) and ships     │    │
-│  │  it via Netlify + Supabase MCP. Pre-commit gates: typecheck +   │    │
-│  │  build must pass.                                               │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────┘
+  Polymarket Gamma API            Manifold Markets API
+         │                               │
+         └───────────────┬───────────────┘
+                         ▼
+        ┌────────────────────────────────────┐
+        │ backfill/pull-open.ts  (15m cron)  │  normalize → UPSERT markets
+        └────────────────┬───────────────────┘
+                         ▼
+        ┌────────────────────────────────────┐
+        │ Supabase Postgres 17 (RLS)         │  agents, markets, predictions,
+        │  public-read · service-write       │  scores, agent_stats, agent_elo,
+        └────────────────┬───────────────────┘  evidence_events, eureka_cards,
+                         │                        paper_trading_snapshots, system_*
+                         ├─► backfill/run.ts            (6h cron)  spawn claude -p,
+                         │     backfill resolved markets, score, refresh stats
+                         │
+                         ├─► backfill/run.ts --mode=live (separate pass) lock
+                         │     forecasts on OPEN markets, score on resolution
+                         │
+                         ├─► backfill/generate-eureka.ts (24h cron) insight cards
+                         │
+                         └─► paper-trading snapshot + resolution-catchup
+                               (Netlify scheduled fns + GitHub Actions fallback)
+                         ▼
+        ┌────────────────────────────────────┐
+        │ Next.js 15 (App Router, ISR=120s)  │  src/app/* SSR + ISR
+        │ Netlify · auto-deploy on push      │  src/lib/data.ts (demo fallback)
+        └────────────────┬───────────────────┘
+                         ▼
+                  https://eivra.xyz
 ```
 
-## The "$0 API cost" trick
+A claude.ai cloud routine also runs periodically, picking one autonomous polish task per fire (landing copy, OG image, agent text, lint fixes) and shipping it via Netlify + Supabase MCP, gated on typecheck + build passing.
 
-Every backfill forecast spawns a `claude.cmd -p` subprocess on the Hetzner VPS, where the operator's Max subscription is logged in via `claude login`. The subprocess inherits that auth, makes the call, and emits JSON to stdout. The runner parses the first `{` to last `}` and inserts into `predictions`.
+## Data sources
 
-Critical details that took a few iterations to get right:
+- **Polymarket Gamma API** — fully public, no auth, free. Eivra reads `?closed=true` for resolved markets (resolution from `outcomePrices`, time from `closedTime`) and open markets for live mode, filtering out joke/low-volume markets.
+- **Manifold Markets API** — public read endpoints, no auth, ~500 req/min. Eivra reads `BINARY` markets only, resolution from `resolution ∈ {YES, NO}` and `resolutionTime`, with quality gates on unique bettors and volume.
+- **Kalshi** — listed as future work. Its API needs RSA-key auth, which is why it's deferred.
 
-- **No `--bare` flag.** It strips Max-sub OAuth and forces API-key mode.
-- **`--disallowedTools WebSearch,WebFetch,Bash,Read,Write,Edit,Glob,Grep`** — without this, Claude wastes turns trying to look things up.
-- **`cwd=/tmp`** so `claude.cmd` doesn't auto-load this repo's CLAUDE.md (~33k tokens of irrelevant context).
-- **Probability aliases accepted.** The parser accepts `probability`, `probability_yes`, `p_yes`, `forecast`, `prob`, `yes`, `p` — Claude picks slightly different keys across runs.
-- **Idempotency cache** in `.backfill-cache/` keyed by `(agent_id, market_id, run_window)` skips already-forecasted markets.
-- **Hard daily $ cap per agent** in `agents.daily_budget_usd` — gates the spawn.
-
-Net result: continuous backfill on a Max subscription. **Zero dollars billed to Anthropic for inference.** (Supabase + Netlify are on free tiers; the only fixed cost is the Hetzner VPS at €4.69/mo.)
-
-## Cron jobs (VPS, user `crucible`)
-
-```cron
-*/15 * * * * cd /opt/crucible-ai && npx tsx backfill/pull-open.ts                >> /var/log/crucible-ai/pull-open.log 2>&1
-11 */6 * * * cd /opt/crucible-ai && git pull && npx tsx backfill/run.ts --limit=30 >> /var/log/crucible-ai/backfill.log 2>&1
-37 3  * * * cd /opt/crucible-ai && npx tsx backfill/generate-eureka.ts          >> /var/log/crucible-ai/eureka.log 2>&1
-```
-
-Idempotent. Resilient to mid-run failures. `git pull` before the backfill run picks up agent prompt edits without redeploy.
-
-## Paper proof snapshots
-
-The 30-day paper-trading lab has two daily capture paths:
-
-- Netlify scheduled function: `netlify/functions/paper-trading-snapshot.ts` posts to `/api/trading-snapshots` at `05:12 UTC` and requires `CRON_SHARED_SECRET` in the deployed site env.
-- GitHub Actions fallback: `.github/workflows/paper-trading-snapshot.yml` runs at `05:22 UTC`, uploads the workflow-mode, snapshot summary, full snapshot rows, soft-audit JSON, and artifact-proof rollup JSON for that run, and writes Supabase rows only when `SUPABASE_SERVICE_ROLE_KEY` is configured.
-
-The GitHub workflow does not depend on the deployed frontend. It uses the public Supabase URL and publishable anon key from this repo by default, with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` available as optional repository-secret overrides. If `SUPABASE_SERVICE_ROLE_KEY` is missing, scheduled runs degrade to read-only live artifact capture instead of failing before evidence is collected. Writes still require the repository secret `SUPABASE_SERVICE_ROLE_KEY`. It sets `NEXT_PUBLIC_USE_DEMO_DATA=false` and the snapshot script refuses to write demo-sourced rows unless `--allow-demo-write` is passed manually.
-
-Manual `workflow_dispatch` dry runs are safe without service-role access and
-exercise the same snapshot and audit artifact path without inserting rows.
-Downloaded artifact directories can be checked offline with
-`npm run paper:artifact-audit -- ./paper-artifacts --json` after
-`gh run download <run_id> --repo claygeo/eivra --dir ./paper-artifacts`. The
-artifact audit fails non-v1, demo-sourced, malformed, duplicate-day, or
-under-covered proof rows before the files are counted as evidence. When the
-artifact checks pass, the same command also emits `artifact_proof`: a read-only
-strategy rollup, agent-edge matrix, readiness, and runway report built from the
-downloaded rows with the same proof logic used by persisted Supabase snapshots.
-Agent-edge proof separates positive-but-thin rows from proven profitable rows:
-`profitable` only appears after the full live-day, resolved-ticket, positive
-P&L/ROI, and drawdown gates pass. The resolved-ticket ledger also reports each
-rule's payoff ratio, break-even win rate, realized win-rate edge, and average
-P&L per ticket. The companion agent-edge watchlist records open live paper
-signals by canonical rule before they resolve, including tradable/review counts,
-open exposure, and open EV. The agent-edge runway packet then shows, per rule,
-whether current open tickets can close the 30-ticket proof-sample gap.
-When `paper-snapshot-result.json` is present beside the rows, the artifact proof
-also carries live resolution-hygiene context.
+Both sources are polled well under their rate limits. Markets are normalized to one schema and categorized (politics / crypto / sports / ai-tech / other) by keyword.
 
 ## Stack
 
 | Layer | Tech |
 |---|---|
-| Framework | Next.js 15.5.18 (App Router, ISR=120s, RSC server components) |
-| Language | TypeScript 5.7 (strict, `noImplicitAny`) |
-| UI | Tailwind 3.4 · `IBM_Plex_Sans` heading · `JetBrains_Mono` mono · `Inter` body |
-| Data | Supabase Postgres 16 + Row-Level Security (public-read, service-write) |
-| Auth | Supabase Anon key (read) + Service Role (server) via `@supabase/ssr` |
-| LLM | `claude.cmd -p` subprocess via Max sub. No `ANTHROPIC_API_KEY` |
+| Framework | Next.js 15.5 (App Router, ISR=120s, React Server Components) |
+| Language | TypeScript 5.7 (strict) · React 19 |
+| UI | Tailwind 3.4 · `IBM_Plex_Sans` headings · `JetBrains_Mono` mono · `Inter` body |
+| Data | Supabase Postgres 17 + Row-Level Security (public-read, service-write) |
+| Auth | Supabase anon key (read) + service role (server) via `@supabase/ssr` |
+| LLM | `claude -p` subprocess via Max sub. No `ANTHROPIC_API_KEY` |
 | Sources | Polymarket Gamma API, Manifold Markets API |
-| Hosting | Netlify (frontend) + Hetzner CX22 (VPS for cron) |
-| Deploy | GitHub→Netlify CD with `@netlify/plugin-nextjs` pinned in `netlify.toml` |
-| Cloud agent | claude.ai remote-trigger routine, every 6h, Netlify + Supabase MCP attached |
+| Hosting | Netlify (frontend + scheduled functions) + Hetzner CX22 (VPS cron) |
+| Deploy | GitHub → Netlify CD with `@netlify/plugin-nextjs` pinned in `netlify.toml` |
+
+The visual system — fonts, color, spacing, the dark terminal aesthetic, and the per-screen empty/loading/error/degraded state matrix — is specified in [`DESIGN.md`](./DESIGN.md).
 
 ## Schema (key tables)
 
 ```
-agents            6 rows, mirrors src/lib/agents.ts
-markets           116 rows  → UNIQUE(source, source_id), status, resolved_outcome
-agent_runs        observability: per-agent per-market spawn record, idempotent on run_window
-predictions       182 rows  → (agent_id, market_id, probability, reasoning, market_price_at_forecast)
-scores            180 rows  → (prediction_id, brier, log_loss, paper_pnl, was_correct)
-agent_stats       6 rows    → rolling rollup (Brier 30d, win rate, log-loss, eivra_score, rank)
-agent_elo         pairwise  → ELO matrix between agents
-eureka_cards      auto-generated insight tiles, refresh nightly
-system_settings   feature flags + global config
-system_events     log of cron runs, errors, deploys
+agents                  the 6 (mirrors src/lib/agents.ts)
+markets                 Polymarket + Manifold, UNIQUE(source, source_id), status, resolved_outcome
+predictions             (agent_id, market_id, probability, reasoning, market_price_at_forecast, is_backfill)
+scores                  (prediction_id, brier, log_loss, paper_pnl, was_correct)
+agent_stats             rolling rollup (Brier, win rate, log-loss, calibration bins, eivra_score, rank)
+agent_elo               pairwise head-to-head records
+agent_runs              per-agent per-market spawn record (observability)
+evidence_events         reasoning/evidence trace events
+eureka_cards            auto-generated insight tiles, refreshed nightly
+paper_trading_snapshots append-only paper-trading proof log (RLS: public-read, service-write)
+system_settings         feature flags incl. global_pause kill switch
+system_events           cron runs, errors, deploys
 ```
 
-Full DDL in [`supabase/migrations/`](./supabase/migrations).
+Full DDL in [`supabase/migrations/`](./supabase/migrations). The Supabase Edge Functions in [`supabase/functions/`](./supabase/functions) (`pull-markets`, `resolve-markets`, `forecast-market`) are an earlier ingestion path; the live system runs the VPS `backfill/*.ts` scripts instead.
+
+## Cron jobs (VPS)
+
+The VPS bootstrap installs three jobs; live forecasting is the same runner with `--mode=live`, run as a separate pass. The VPS retains its original `crucible-ai` paths from before the project was renamed to Eivra — renaming them risks breaking live cron, so they're left as-is.
+
+```cron
+*/15 * * * *  cd /opt/crucible-ai && npx tsx backfill/pull-open.ts                 # ingest open markets
+11 */6 * * *  cd /opt/crucible-ai && git pull && npx tsx backfill/run.ts --limit=30 # backfill + score
+37 3  * * *   cd /opt/crucible-ai && npx tsx backfill/generate-eureka.ts            # nightly insight cards
+#             cd /opt/crucible-ai && npx tsx backfill/run.ts --mode=live --limit=30 # live lock (separate pass)
+```
+
+`git pull` before the backfill run picks up agent-prompt edits without a redeploy. Runbook: [`scripts/VPS-SETUP.md`](./scripts/VPS-SETUP.md).
 
 ## Project structure
 
 ```
 eivra/
-├── README.md  PLAN.md  DESIGN.md  LAUNCH.md  LAUNCH-X.md  HANDOFF.md
-├── netlify.toml                  ← @netlify/plugin-nextjs pin (required)
-├── .github/workflows/            ← daily paper proof snapshot fallback
+├── README.md  DESIGN.md  LICENSE
+├── netlify.toml                       ← @netlify/plugin-nextjs pin (required)
+├── .github/workflows/                 ← daily paper-proof snapshot fallback
 ├── backfill/
-│   ├── run.ts                    ← claude -p agent forecasts (6h cron)
-│   ├── pull-open.ts              ← scrape open markets (15min cron)
-│   └── generate-eureka.ts        ← daily insight cards (24h cron)
+│   ├── run.ts                         ← claude -p forecasts: backfill + --mode=live
+│   ├── pull-open.ts                   ← ingest open markets
+│   └── generate-eureka.ts             ← nightly insight cards
 ├── scripts/
-│   ├── vps-bootstrap.sh          ← VPS setup, idempotent
-│   ├── paper-trading-snapshot.ts ← persisted paper proof capture
-│   ├── wsl-deploy.sh             ← fallback deploy via WSL Linux build
-│   └── VPS-SETUP.md              ← operator runbook
+│   ├── vps-bootstrap.sh               ← idempotent VPS setup
+│   ├── wsl-deploy.sh                  ← fallback deploy via WSL Linux build
+│   ├── paper-trading-*.ts             ← proof snapshot / audit / smoke / publish
+│   └── VPS-SETUP.md                   ← operator runbook
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx              ← homepage (hero + ticker + eureka + leaderboard)
-│   │   ├── benchmark/page.tsx    ← HN hero / methodology hub
-│   │   ├── leaderboard/page.tsx
-│   │   ├── agents/page.tsx + [id]/page.tsx
-│   │   ├── markets/page.tsx + [id]/page.tsx
-│   │   ├── about/page.tsx
-│   │   ├── opengraph-image.tsx + agents/[id]/opengraph-image.tsx
-│   │   └── api/health/route.ts
-│   ├── components/
-│   │   ├── Header  Footer  HeroMetric  Leaderboard  EurekaCard
-│   │   ├── LiveTicker            ← server-fetched, client-cycled
-│   │   ├── CalibrationPlot       ← 10-bin SVG, Wilson 95%, hollow sparse-bin dots
-│   │   └── StatePanel
+│   │   ├── page.tsx                   ← homepage (hero + ticker + eureka + leaderboard)
+│   │   ├── benchmark  leaderboard  about
+│   │   ├── agents/ + agents/[id]/     ← profiles (+ per-agent OG image)
+│   │   ├── markets/ + markets/[id]/
+│   │   ├── live/                      ← locked live forecasts (no look-ahead)
+│   │   ├── trading/                   ← paper-trading proof lab dashboard
+│   │   ├── api/
+│   │   │   ├── summary  leaderboard  agents  markets  predictions
+│   │   │   │   calibration  diverge  eureka  health (.json routes)
+│   │   │   └── trading-*  (≈20 read-only paper-lab endpoints)
+│   │   ├── opengraph-image.tsx  robots.ts  sitemap.ts
+│   ├── components/                    ← Header Footer HeroMetric Leaderboard
+│   │   ├── LiveTicker  EurekaCard  StatePanel  Tooltip
+│   │   └── CalibrationPlot            ← 10-bin SVG, Wilson 95%, hollow sparse bins
 │   └── lib/
-│       ├── agents.ts             ← the 6 (id, model, persona, hue, systemPrompt)
-│       ├── data.ts               ← Supabase adapter with demo fallback
-│       ├── demo-data.ts          ← deterministic seed (offline preview)
-│       ├── format.ts             ← prob/num/relativeTime helpers
-│       └── supabase/             ← server + browser client factories
-└── supabase/
-    ├── migrations/               ← schema DDL (applied to prod)
-    └── functions/                ← Edge Functions (pull-markets, resolve-markets)
+│       ├── agents.ts  data.ts  demo-data.ts  format.ts
+│       ├── supabase/                  ← server + browser client factories
+│       └── trading-*.ts               ← paper-lab logic (proof, evidence, liquidity, …)
+├── supabase/
+│   ├── migrations/                    ← schema DDL (incl. paper_trading_snapshots)
+│   └── functions/                     ← earlier Edge Functions (pull/resolve/forecast)
+├── netlify/functions/                 ← paper-trading snapshot + resolution catch-up
+└── public/paper-trading/              ← published artifact-proof JSON
 ```
 
 ## Run it locally
@@ -305,80 +298,77 @@ eivra/
 git clone https://github.com/claygeo/eivra.git
 cd eivra
 npm install
-cp .env.example .env.local        # fill in Supabase URL + anon key
+cp .env.example .env.local        # publishable Supabase URL + anon key are prefilled
 npm run dev                       # http://localhost:3000
 ```
 
-Without Supabase credentials it falls back to `src/lib/demo-data.ts` (deterministic seed of 6 agents, 8 demo markets, mocked stats) so the UI loads with zero infra.
+With `NEXT_PUBLIC_USE_DEMO_DATA=true` (the default) the site renders entirely from `src/lib/demo-data.ts` — 6 agents, 25 demo markets, 150 mocked predictions — so the UI loads with zero infrastructure.
 
 ### Run the backfill yourself
 
 ```bash
-# Requires:  claude.cmd / claude on PATH, logged in via `claude login`
+# Requires:  claude on PATH, logged in via `claude login` (Max sub)
 # Optional:  SUPABASE_SERVICE_ROLE_KEY in .env.local for live writes
-npx tsx backfill/pull-open.ts            # scrape ~30 open markets
-npx tsx backfill/run.ts --limit=10       # forecast 10 markets across all agents
-npx tsx backfill/generate-eureka.ts      # regenerate insight cards
+npx tsx backfill/pull-open.ts                 # ingest open markets
+npx tsx backfill/run.ts --limit=10            # backfill-forecast 10 markets across agents
+npx tsx backfill/run.ts --mode=live --limit=10 # lock forecasts on open markets (no look-ahead)
+npx tsx backfill/generate-eureka.ts           # regenerate insight cards
+```
+
+### Paper-trading proof commands
+
+```bash
+npm run paper:snapshot           # build today's proof snapshot (dry run)
+npm run paper:snapshot:write     # write it (needs SUPABASE_SERVICE_ROLE_KEY)
+npm run paper:audit              # non-mutating capital-review gate (exits nonzero until gates pass)
+npm run paper:artifact-audit -- ./paper-artifacts --json   # audit downloaded GitHub artifacts offline
 ```
 
 ### Deploy your own
 
-1. Fork the repo
-2. Create a Supabase project, run `supabase/migrations/` DDL
-3. Connect to Netlify, add env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-4. Push to `main` → Netlify auto-deploys
-5. For continuous backfill: provision a VPS (Hetzner CX22 is plenty), run `scripts/vps-bootstrap.sh`, log in via `claude login`, install the crontab in `scripts/VPS-SETUP.md`
+1. Fork the repo.
+2. Create a Supabase project, run the DDL in `supabase/migrations/`.
+3. Connect to Netlify, add env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SHARED_SECRET` (for the paper-proof writer).
+4. Push to `main` → Netlify auto-deploys.
+5. For continuous forecasting: provision a VPS (Hetzner CX22 is plenty), run `scripts/vps-bootstrap.sh`, `claude login`, and install the crontab from [`scripts/VPS-SETUP.md`](./scripts/VPS-SETUP.md).
 
 ## What's next
 
-In rough priority order:
-
-- [ ] **Live-mode forecasting** on markets that resolve in the future (eliminates the backfill look-ahead concern)
-- [ ] **User-submitted agents.** Submit a system prompt + model choice, get scored alongside the house agents. Sandboxed, daily budget cap.
-- [ ] **GPT-5 in Mirror** when an OpenAI key is available
-- [ ] **More sources** — Kalshi API once approved, additional Manifold subcategories
-- [ ] **Embeddable leaderboard widget** — `<iframe>` snippet for HN / blog posts
-- [ ] **Slack / Discord webhook** when an agent makes a high-conviction call (probability outside [0.2, 0.8] on a high-volume market)
-- [ ] **Per-category leaderboards** — politics, crypto, sports, AI/tech separately
+- **Grow the live lane** until resolved-live forecasts outnumber backfill, so headline numbers reflect real (not reconstructed) skill.
+- **Real GPT-5 in Mirror** once an OpenAI key is available — turns the cross-family slot into an actual A/B.
+- **Retrieval** for at least one agent, to compare parametric-only forecasting against a Halawi-style retrieval pipeline.
+- **More sources** — Kalshi (needs RSA-key auth), additional Manifold subcategories.
+- **User-submitted agents** — paste a system prompt + model choice, get scored alongside the house agents. Sandboxed, budget-capped.
+- **Per-category leaderboards** — politics, crypto, sports, AI/tech separately.
+- **Embeddable leaderboard widget** for blog posts and HN.
 
 ## Honest limits
 
-- **Sample size.** 31 resolved markets is small. Brier scores will shift as N grows. Don't anchor too hard on the current rankings.
-- **Selection.** Polymarket and Manifold skew toward US politics, crypto, AI/tech. Performance there may not generalize to other categories.
-- **Backfill dominance.** Most current resolutions are backfill (model may have seen training-data news). The flag is there, but it pollutes the headline numbers.
-- **One operator.** This is a solo project. No team review. Bugs likely exist. Issues welcome.
+- **Sample size.** The resolved-live sample is small; rankings will move as it grows. Don't anchor on today's order.
+- **Backfill dominance.** Most current resolutions are backfill and probably look-ahead-contaminated (see the [honesty section](#how-honest-are-these-numbers)).
+- **Selection bias.** Polymarket and Manifold skew toward US politics, crypto, and AI/tech. Performance there may not generalize.
+- **One model family.** Five of six agents are Claude until Mirror gets a real GPT key. The "ensemble beats individuals" story is within-family for now.
+- **One operator, AI-built.** Solo project, no team review, bugs likely. Issues welcome.
 
 ## Contributing
 
-This is currently a one-operator project, but contributions are welcome:
+This is a one-operator project, but contributions are welcome:
 
-- **File an issue** if you spot a methodology problem, scoring bug, or UI quirk
-- **Submit a market source** — open a PR adding a new ingestion script to `backfill/`
-- **Suggest an agent prompt** — open an issue with your proposed `systemPrompt` and the angle it tests
-- **Improve calibration math** — Wilson interval is the current default; happy to discuss Clopper-Pearson, Jeffreys, or beta-binomial alternatives
+- **File an issue** for a methodology problem, scoring bug, or UI quirk.
+- **Submit a market source** — open a PR adding an ingestion path to `backfill/`.
+- **Suggest an agent prompt** — open an issue with a proposed `systemPrompt` and the angle it tests.
+- **Improve the calibration math** — Wilson is the current default; happy to discuss Clopper-Pearson, Jeffreys, or beta-binomial.
 
 For larger changes, open an issue first to discuss the approach.
 
 ## Credits
 
-Built **autonomously** by [Claude Opus 4.7](https://www.anthropic.com/news/claude-4-7) over the week. The operator ([@claygeo](https://github.com/claygeo)) gave a single instruction — *"build something innovative, like ML, game changer"* — and walked away.
-
-Everything you see was designed, written, deployed, and operated by the model:
-
-- 1 codebase (Next.js + TypeScript + Supabase)
-- 1 schema (Postgres DDL with idempotency keys, RLS, indexes)
-- 6 agents (system prompts, persona, model choice, budget)
-- 3 cron scripts (open-market pull, forecast backfill, eureka cards)
-- 1 VPS deployment (Hetzner bootstrap, claude login, cron install)
-- 1 cloud routine (autonomous polish every 6h, Netlify + Supabase MCP)
-- Original brand name `Crucible.AI` → renamed to **Eivra** mid-project after `/codex` identified a trademark collision with an existing AI workflow company
-
-The full conversation history is preserved at `~/.claude/projects/...` — see [HANDOFF.md](./HANDOFF.md) for the session checkpoint.
+Built **autonomously** by [Claude Opus 4.7](https://www.anthropic.com/news/claude-4-7). The operator ([@claygeo](https://github.com/claygeo)) gave a single instruction — *"build something innovative, like ML, game changer"* — and walked away. The model designed the schema, wrote the agents, built the dashboard and the paper-trading lab, deployed to Netlify, provisioned the VPS, and ran the cron. The original brand `Crucible.AI` was renamed to **Eivra** mid-project after a `/codex` check flagged a trademark collision (the VPS paths still carry the old `crucible-ai` name).
 
 ## Related work
 
-- [solhunt](https://github.com/claygeo/solhunt) — autonomous AI agent that finds + exploits smart-contract vulnerabilities. 67.7% on DeFiHackLabs, dropped to 13% on a random sample. The honesty gap drove the verifier-gate design in solhunt-duel.
-- [solhunt-duel](https://github.com/claygeo/solhunt-duel) — adversarial red/blue agent system for smart-contract auditing. Red writes exploits, Blue writes patches, four server-side Forge-verified gates decide the verdict.
+- [solhunt](https://github.com/claygeo/solhunt) — autonomous AI agent that finds and exploits smart-contract vulnerabilities. 67.7% on a curated DeFiHackLabs subset, 13% on a random sample. That honesty gap drove the verifier-gate design in solhunt-duel.
+- [solhunt-duel](https://github.com/claygeo/solhunt-duel) — adversarial red/blue agent system for smart-contract auditing. Red writes exploits, Blue writes patches, server-side Forge-verified gates decide the verdict.
 
 ## License
 
@@ -386,4 +376,4 @@ MIT. See [LICENSE](./LICENSE).
 
 ---
 
-**Built autonomously by Claude Opus 4.7. Curated by [@deforestpeg](https://x.com/claygdev).**
+**Built autonomously by Claude Opus 4.7. Curated by [@deforestpeg](https://x.com/deforestpeg).**
