@@ -187,7 +187,7 @@ export default async function OG() {
                   fontFamily: "monospace",
                 }}
               >
-                {best ? (best.brier_30d ?? 0).toFixed(3) : "—"}
+                {best ? (best.brier_30d ?? 0).toFixed(4) : "—"}
               </div>
             </div>
 
@@ -346,7 +346,7 @@ export default async function OG() {
                   {`${((s.win_rate_30d ?? 0) * 100).toFixed(1)}%`}
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", width: "90px", color: COL.text }}>
-                  {(s.brier_30d ?? 0).toFixed(3)}
+                  {(s.brier_30d ?? 0).toFixed(4)}
                 </div>
                 <div
                   style={{
