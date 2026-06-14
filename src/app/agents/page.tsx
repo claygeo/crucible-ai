@@ -41,6 +41,11 @@ export default async function AgentsPage() {
     echoStats && topReasoner ? topReasoner.brier_30d < echoStats.brier_30d : false;
   const totalScored = echoStats?.total_scored ?? topReasoner?.total_scored ?? 0;
 
+  const pnlLeader = [...statsRes.rows].sort((a, b) => b.paper_pnl_30d - a.paper_pnl_30d)[0] ?? null;
+  const pnlLeaderAgent = pnlLeader ? AGENTS.find((a) => a.id === pnlLeader.agent_id) : null;
+  const echoPnl = echoStats?.paper_pnl_30d ?? null;
+  const showPnlInsight = isLive && echoPnl !== null && echoPnl < -10 && !!pnlLeader && !!pnlLeaderAgent;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -80,6 +85,30 @@ export default async function AgentsPage() {
                 className="mono text-[11px] text-accent hover:underline shrink-0"
               >
                 Full leaderboard →
+              </Link>
+            </div>
+          )}
+          {showPnlInsight && pnlLeader && pnlLeaderAgent && echoPnl !== null && (
+            <div className="panel px-4 py-3 border-l-2 border-l-amber-400/60 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 max-w-xl">
+              <p className="text-sm text-text-secondary flex-1">
+                Calibration ≠ profit.{" "}
+                <span className="text-text-primary font-medium">Echo</span> tracks the market
+                (rank #2 Brier) yet sits at{" "}
+                <Tooltip tip="Paper P&L: simulated profit/loss using 0.25× Kelly on a $100 bankroll. Mirroring the market price leaves no edge to trade on.">
+                  <span className="text-rose-400 mono font-medium">{dollars(echoPnl, 0)}</span>
+                </Tooltip>{" "}
+                paper — no deviation means no edge. The P&L leader is{" "}
+                <span className={`font-medium ${HUE_TO_TEXT[pnlLeaderAgent.hue]}`}>
+                  {pnlLeaderAgent.name}
+                </span>{" "}
+                at{" "}
+                <span className="text-positive mono font-medium">{dollars(pnlLeader.paper_pnl_30d, 0)}</span>.
+              </p>
+              <Link
+                href="/benchmark"
+                className="mono text-[11px] text-accent hover:underline shrink-0"
+              >
+                P&amp;L breakdown →
               </Link>
             </div>
           )}
