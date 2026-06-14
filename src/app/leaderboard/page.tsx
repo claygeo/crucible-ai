@@ -189,8 +189,9 @@ export default async function LeaderboardPage() {
                 <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
                   Reasoning beats consensus
                 </div>
-                <span className="mono text-[10px] px-2 py-0.5 rounded bg-positive/10 text-positive uppercase tracking-wider">
-                  New
+                <span className="mono text-[10px] px-2 py-0.5 rounded bg-positive/10 text-positive uppercase tracking-wider inline-flex items-center gap-1">
+                  <span className="live-dot" aria-hidden="true" />
+                  live
                 </span>
               </div>
               <p className="text-sm text-text-secondary leading-relaxed">
@@ -202,13 +203,25 @@ export default async function LeaderboardPage() {
                   <span className="text-white">(Echo)</span>
                 </Tooltip>{" "}
                 by{" "}
-                <Tooltip tip={`${leaderAgent.name} Brier: ${num(leader.brier_30d, 4)} vs Echo Brier: ${num(echoStats.brier_30d, 4)}. Brier score: lower = better. Positive gap means reasoning agent wins.`}>
+                <Tooltip tip={`${leaderAgent.name} Brier: ${num(leader.brier_30d, 4)} vs Echo Brier: ${num(echoStats.brier_30d, 4)}. Brier score: lower = better. Negative delta means reasoning agent wins.`}>
                   <span className="text-positive font-medium mono">
                     {num(Math.abs(brierGap), 4)} Brier
                   </span>
                 </Tooltip>
-                {" "}({num(leader.brier_30d, 4)} vs {num(echoStats.brier_30d, 4)}).
-                AI reasoning is beating the crowd-money baseline.
+                {" "}({num(leader.brier_30d, 4)} vs {num(echoStats.brier_30d, 4)}).{" "}
+                {leader.paper_pnl_30d > 0 && echoStats.paper_pnl_30d < 0 ? (
+                  <>
+                    The same edge shows in paper P&amp;L:{" "}
+                    <Tooltip tip="Paper P&L: simulated Kelly-fraction (0.25×) profit/loss on a $100 bankroll. Echo mirrors the market price, so its edge per bet is near zero — small mispricings compound into losses. An agent that diverges from consensus earns when the crowd is wrong.">
+                      <span className="text-positive font-medium">{dollars(leader.paper_pnl_30d, 0)}</span>
+                    </Tooltip>{" "}
+                    vs Echo&apos;s{" "}
+                    <span className="text-rose-400">{dollars(echoStats.paper_pnl_30d, 0)}</span>.
+                    AI reasoning leads the market baseline on both accuracy and edge.
+                  </>
+                ) : (
+                  <>AI reasoning is beating the crowd-money baseline.</>
+                )}
               </p>
               <div className="flex flex-wrap items-center gap-3 mono text-[11px] text-text-muted">
                 <Link href={`/agents/${leaderAgent.id}`} className="text-positive hover:underline">
