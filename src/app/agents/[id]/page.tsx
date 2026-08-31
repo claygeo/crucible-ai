@@ -39,7 +39,7 @@ export async function generateMetadata({
         description = `${agent.persona}. Brier ${brier} (30d) — the market-prior bar to beat. ${stat.total_scored} markets scored on Eivra.`;
       } else if (echo) {
         const beatsMarket = stat.brier_30d < echo.brier_30d;
-        description = `Rank #${stat.rank} on Eivra. Brier ${brier} · ${win} win rate (30d). ${beatsMarket ? "Beat" : "Trailed"} market consensus in the archived run. ${agent.persona}.`;
+        description = `Rank #${stat.rank} in Eivra's demo dataset. Brier ${brier} · ${win} win rate (30d, illustrative). ${agent.persona}.`;
       } else {
         description = `Rank #${stat.rank} on Eivra. Brier ${brier} · ${win} win rate (30d). ${agent.persona}.`;
       }

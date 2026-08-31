@@ -2,15 +2,15 @@
 
 > Public AI forecasting, scored on resolved outcomes. Six AI agents made probabilistic predictions on real Polymarket and Manifold markets. Every call was tracked with Brier, log-loss, and 10-bin calibration plots with Wilson 95% intervals. No real money, no hiding, just resolved outcomes.
 
-**Live:** [eivra.xyz](https://eivra.xyz) · **Source:** [github.com/claygeo/eivra](https://github.com/claygeo/eivra) · **Author:** [@deforestpeg](https://x.com/deforestpeg)
+**Site:** [eivra.xyz](https://eivra.xyz) · **Source:** [github.com/claygeo/eivra](https://github.com/claygeo/eivra) · **Author:** [@deforestpeg](https://x.com/deforestpeg)
 
-> **Status: archived run.** Eivra ran as a live system in May–June 2026. The pipeline was decommissioned afterward (database June 2026, forecasting VPS August 2026), so nothing updates anymore. The deployed site stays up and renders the deterministic in-repo demo dataset, labeled as such on every page. The last real-data record survives in [`public/paper-trading/latest-artifact-proof.json`](./public/paper-trading/latest-artifact-proof.json); real numbers quoted below come from that final snapshot. The full system remains deployable from this repo — see [Deploy your own](#deploy-your-own).
+> **Status: archived run.** Eivra ran as a live system in May–June 2026. The pipeline was decommissioned afterward (database June 2026, forecasting VPS August 2026), so nothing updates anymore. The deployed site stays up and renders the deterministic in-repo demo dataset, labeled as such on every page. The only run data that survives is the paper-trading proof artifact [`public/paper-trading/latest-artifact-proof.json`](./public/paper-trading/latest-artifact-proof.json) (final capture 2026-06-14) — the paper-trading numbers below are quoted from it. Leaderboard/Brier figures are quoted from the last observed state and can no longer be independently verified. The full system remains deployable from this repo — see [Deploy your own](#deploy-your-own).
 
 ---
 
 ## TL;DR
 
-- **6 AI agents** across distinct personas forecast live prediction markets and got scored when the markets resolved.
+- **6 AI agents** across distinct personas locked forecasts on open prediction markets and got scored when they resolved.
 - **Two scoring lanes:** *backfill* (agents forecast already-resolved historical markets — fast to accumulate, but look-ahead-prone) and *live* (agents lock a forecast on an **open** market, scored only after it resolves — no look-ahead by construction).
 - **Hawk (contrarian, Opus 4.7) led** the final leaderboard. But read the [honesty section](#how-honest-are-these-numbers) first: every agent ended the run near ~0.02 Brier / ~97% win, which is *far* better than human superforecasters (~0.15–0.20) and the best published LLM forecaster (~0.24). That gap is the backfill lane flattering itself, not superhuman skill.
 - **$0 Anthropic API spend** — forecasts ran a `claude -p` subprocess on a Hetzner VPS under a Max subscription. No `ANTHROPIC_API_KEY`.
@@ -33,7 +33,7 @@ While live, the site updated every two minutes (Next.js ISR), open markets inges
 
 LLMs are confidently wrong all the time. Existing public LLM benchmarks (MMLU, HumanEval, MTEB) mostly measure narrow correctness on static datasets. Forecasting is different: the truth resolves on a clock, humans have a strong baseline (the market itself), and *confidence* can be measured separately from *accuracy*.
 
-The two questions Eivra tracks:
+The two questions Eivra tracked:
 
 1. **Is this LLM accurate?** — Brier and log-loss on resolved markets.
 2. **Is this LLM calibrated?** — when it says 70%, does it win 70% of the time? (Calibration plot, 10 bins, Wilson 95% intervals.)
@@ -311,7 +311,7 @@ eivra/
 git clone https://github.com/claygeo/eivra.git
 cd eivra
 npm install
-cp .env.example .env.local        # publishable Supabase URL + anon key are prefilled
+cp .env.example .env.local        # demo mode needs no values; add your own Supabase for live mode
 npm run dev                       # http://localhost:3000
 ```
 
@@ -361,8 +361,8 @@ npm run paper:artifact-audit -- ./paper-artifacts --json   # audit downloaded Gi
 
 ## Honest limits
 
-- **Sample size.** The resolved-live sample is small; rankings will move as it grows. Don't anchor on today's order.
-- **Backfill dominance.** Most current resolutions are backfill and probably look-ahead-contaminated (see the [honesty section](#how-honest-are-these-numbers)).
+- **Sample size.** The resolved-live sample stayed small; the final order is noise-dominated. Don't anchor on it.
+- **Backfill dominance.** Most resolutions in the final dataset are backfill and probably look-ahead-contaminated (see the [honesty section](#how-honest-are-these-numbers)).
 - **Selection bias.** Polymarket and Manifold skew toward US politics, crypto, and AI/tech. Performance there may not generalize.
 - **One model family.** Five of six agents are Claude until Mirror gets a real GPT key. The "ensemble beats individuals" story is within-family for now.
 - **One operator, AI-built.** Solo project, no team review, bugs likely. Issues welcome.

@@ -67,7 +67,7 @@ export async function GET() {
       source,
       schema_version: "1",
       description:
-        "Eivra Eureka cards — auto-generated insights from the archived run's daily analysis job. Each card highlights a surprising or noteworthy pattern in agent forecasting behavior. Cards are frozen; no regeneration occurs. Evidence arrays link to specific predictions or markets.",
+        "Eivra Eureka cards — illustrative demo cards in the style of the run's nightly analysis job; the run's real cards did not survive the decommission. Each card highlights a surprising or noteworthy pattern in agent forecasting behavior. Cards are frozen; no regeneration occurs. Evidence arrays link to specific predictions or markets.",
       count: cards.length,
       cards,
     },

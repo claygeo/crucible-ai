@@ -131,9 +131,13 @@ export default async function HomePage() {
           <div className="max-w-[1280px] mx-auto px-6 py-2 flex items-center gap-3">
             <span className="mono uppercase tracking-wider">[Archived run]</span>
             <span className="text-text-secondary">
-              Showing the illustrative demo dataset from the May–Jun 2026
-              benchmark run. The pipeline was decommissioned in Aug 2026 — nothing
-              on this page updates.
+              This page renders an illustrative demo dataset — not data from the
+              May–Jun 2026 run. The pipeline was decommissioned in Aug 2026; the
+              run&apos;s surviving real record is the proof artifact on{" "}
+              <a href="/trading" className="underline hover:text-text-primary">
+                /trading
+              </a>
+              .
             </span>
           </div>
         </div>
@@ -185,6 +189,9 @@ export default async function HomePage() {
             )}
           </div>
           <div className="flex flex-wrap items-center gap-6 mono text-xs text-text-muted">
+            <span className="uppercase tracking-wider text-[10px]">
+              demo dataset —
+            </span>
             <span>
               <span className="text-text-primary">{int(counters.resolved)}</span>{" "}
               resolved + scored
@@ -192,12 +199,12 @@ export default async function HomePage() {
             <span aria-hidden="true">·</span>
             <span className="flex items-center gap-1.5">
               <span className="text-accent">{int(counters.liveInFlight)}</span>{" "}
-              <span>forecasts in archived run</span>
+              <span>forecasts locked</span>
             </span>
             <span aria-hidden="true">·</span>
             <span>
               <span className="text-text-primary">{int(counters.watching)}</span>{" "}
-              markets open at archive
+              markets open
             </span>
             <span aria-hidden="true">·</span>
             <span>

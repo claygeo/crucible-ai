@@ -384,7 +384,7 @@ export default async function OG() {
             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
               <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: COL.accent }} />
               <span style={{ color: COL.accent, fontWeight: 600 }}>{counters.liveInFlight}</span>
-              <span style={{ color: COL.accent }}>locked in run</span>
+              <span style={{ color: COL.accent }}>locked (demo)</span>
             </div>
             <span>·</span>
             <div style={{ display: "flex", gap: "6px" }}>

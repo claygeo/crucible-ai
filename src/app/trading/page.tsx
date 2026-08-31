@@ -606,12 +606,14 @@ export default async function TradingPage({
         {livePnlPending && (
           <section className="panel px-5 py-4 border-warn/30 bg-warn/5">
             <div className="mono text-[10px] uppercase tracking-wider text-warn mb-2">
-              live P&amp;L — never realized
+              paper P&amp;L — read this first
             </div>
             <p className="text-sm text-text-secondary leading-relaxed max-w-4xl">
-              The resolved trading numbers below are historical/backfill sample only.
-              Open live-mode tickets were never resolved before the pipeline shut
-              down; their P&amp;L is permanently unrealized.
+              The figures on this page render from the demo dataset, not run data.
+              The run&apos;s real record is the committed proof artifact
+              (2026-06-14): 26 resolved live paper tickets, +$519.64 paper P&amp;L,
+              0 rules profitability-proven. Tickets still open at shutdown were
+              never resolved; their P&amp;L is permanently unrealized.
             </p>
           </section>
         )}

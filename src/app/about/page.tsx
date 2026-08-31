@@ -56,14 +56,17 @@ export default async function AboutPage() {
             archived run · no further updates
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 mono text-xs">
+            <span className="text-text-secondary uppercase tracking-wider text-[10px]">
+              demo dataset —
+            </span>
             <span>
               <span className="text-accent">{int(counters.liveInFlight)}</span>{" "}
-              <span className="text-text-secondary">forecasts in archived run</span>
+              <span className="text-text-secondary">forecasts locked</span>
             </span>
             <span aria-hidden="true" className="text-text-muted">·</span>
             <span>
               <span className="text-text-primary">{int(counters.watching)}</span>{" "}
-              <span className="text-text-secondary">markets open at archive</span>
+              <span className="text-text-secondary">markets open</span>
             </span>
             <span aria-hidden="true" className="text-text-muted">·</span>
             <span>
@@ -264,7 +267,7 @@ export default async function AboutPage() {
               maximize calibration. The run ended first.{" "}
               {totalScoredForEnsemble > 0 && (
                 <span className="mono text-text-muted text-xs">
-                  ({int(totalScoredForEnsemble)}/{ensembleThreshold} resolved so far
+                  ({int(totalScoredForEnsemble)}/{ensembleThreshold} resolved at run end
                   {totalScoredForEnsemble >= ensembleThreshold * 0.75
                     ? " — close"
                     : ""})

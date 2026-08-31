@@ -2218,10 +2218,10 @@ function proofReadinessNextAction(
   evidenceWindowReady: boolean,
 ): string {
   if (args.persistenceStatus !== "available") {
-    return "Restore persisted paper snapshot storage before reading proof metrics.";
+    return "Snapshot storage was decommissioned with the run; the committed proof artifact is the readable record.";
   }
   if (args.captureHealth.status !== "fresh") {
-    return "Restore the daily snapshot writer before trusting proof metrics.";
+    return "The daily snapshot writer ended with the run; metrics shown are the final archived capture.";
   }
   if (args.registrySync && args.registrySync.status === "pending_capture") {
     return "No further snapshots will run; the registry capture shown is final.";

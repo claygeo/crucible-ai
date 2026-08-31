@@ -173,7 +173,7 @@ export async function GET(req: NextRequest) {
       source: "live",
       schema_version: "1",
       description:
-        "Markets open at archive time with Eivra agent consensus forecasts vs last-known market price. " +
+        "Illustrative demo markets with Eivra agent consensus forecasts vs demo market price — the run's real market table did not survive the decommission. " +
         "`delta` = agent_consensus − market_price (positive = agents collectively think YES is underpriced; negative = agents think YES is overpriced). " +
         "Sorted by abs(delta) — biggest AI-vs-market disagreements first. " +
         "`spread` = max − min individual agent probability (synthetic ensemble excluded). " +

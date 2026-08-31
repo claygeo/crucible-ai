@@ -128,9 +128,7 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
     <div className="panel panel-live px-7 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-2">
         <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-          {isTight && beatsMarket
-            ? "In the run's final window, a reasoning agent led market consensus — slim but real"
-            : `In the run's final window, the best agent ${beatsMarket ? "beat" : "trailed"} the market`}
+          Illustrative demo figures — not results from the run
         </div>
         <div className="text-text-primary text-lg sm:text-xl leading-snug">
           {isTight && beatsMarket ? (
@@ -140,12 +138,12 @@ export function HeroMetric({ stats }: { stats: LiveAgentStats[] }) {
               <span className="text-positive">{pctDisplay}% Brier edge</span>{" "}
               over market consensus after{" "}
               <span className="text-text-primary">{bestNonEcho.total_scored.toLocaleString()}</span>{" "}
-              resolved markets — the final margin from the archived run.
+              resolved demo markets — an illustrative margin, not a run result.
             </>
           ) : (
             <>
-              <span className="text-accent font-semibold">{bestAgent?.name}</span> was
-              the most accurate agent in the run&apos;s final window,{" "}
+              <span className="text-accent font-semibold">{bestAgent?.name}</span> is
+              the most accurate agent in the demo dataset,{" "}
               {beatsMarket
                 ? <><span className="text-positive">{pctDisplay}% better Brier</span> than</>
                 : `${pctDisplay}% behind`

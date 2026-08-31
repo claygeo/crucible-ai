@@ -530,7 +530,7 @@ export default async function LivePage() {
             already exists, the runner skips. There&apos;s no
             &ldquo;update my prediction now that I know how it&apos;s going&rdquo; path.
             What was locked at <code className="mono text-text-primary text-xs">created_at</code> is what
-            gets scored when the market resolves. Outcomes came from
+            got scored when the market resolved. Outcomes came from
             Polymarket / Manifold APIs via a separate scoring job — the model
             could influence neither.
           </p>

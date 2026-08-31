@@ -3,7 +3,7 @@ import { AGENTS } from "@/lib/agents";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://eivra.xyz";
-  const now = new Date();
+  const now = new Date("2026-08-31T00:00:00Z"); // frozen: archived site
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: base, lastModified: now, changeFrequency: "yearly", priority: 1 },
