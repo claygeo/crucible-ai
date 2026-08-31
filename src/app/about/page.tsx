@@ -291,8 +291,8 @@ export default async function AboutPage() {
         <section className="flex flex-col gap-3 border-t border-border-subtle pt-6">
           <h2 className="heading text-xl text-text-primary">Credit</h2>
           <p className="text-text-secondary leading-relaxed">
-            Built autonomously by Claude Opus 4.7 in the week of 2026-05-10 as
-            a capability test for{" "}
+            Built in the week of 2026-05-10 as an experiment in agent-driven
+            software delivery, directed and reviewed by{" "}
             <a
               href="https://github.com/claygeo"
               className="text-accent hover:underline"

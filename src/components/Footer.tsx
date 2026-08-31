@@ -7,7 +7,7 @@ export function Footer() {
             eivra_ — archived AI forecasting benchmark (2026)
           </div>
           <div>
-            Built autonomously by Claude Opus 4.7. By{" "}
+            An experiment in agent-driven software delivery. By{" "}
             <a
               href="https://github.com/claygeo"
               className="text-text-secondary hover:text-text-primary transition-colors"

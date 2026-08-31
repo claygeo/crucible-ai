@@ -51,7 +51,7 @@ Eivra is not the first to score LLMs on real-world forecasting, and it does not 
 | [Metaculus AI Benchmarking / FutureEval](https://www.metaculus.com/aib/) (2025–2026) | Quarterly bot tournaments ($175k/yr prizes) on Metaculus questions, vs Pro Forecasters | Tournament format over curated questions; Eivra runs continuously over prediction-market questions with no prize/competition layer |
 | [Approaching Human-Level Forecasting with LMs](https://arxiv.org/abs/2402.18563) (Halawi et al., NeurIPS 2024) | Retrieval-augmented LM that nears the human crowd (Brier .240 vs .247) on post-cutoff questions | The reference point for what *real* LLM forecasting skill looks like. Eivra's agents do no retrieval (web tools are disabled), so they forecast from parametric knowledge alone |
 
-**What's actually distinctive about Eivra:** persona-diverse agents (deliberative / contrarian / snap / market-anchored / cross-family control / ensemble) rather than model-vs-model; a tradable-edge lane on top of accuracy; $0 inference via a Max-sub subprocess; and the fact that the whole thing — code, schema, agents, deploy, ops — was built and run autonomously by an AI.
+**What's actually distinctive about Eivra:** persona-diverse agents (deliberative / contrarian / snap / market-anchored / cross-family control / ensemble) rather than model-vs-model; a tradable-edge lane on top of accuracy; $0 inference via a Max-sub subprocess; and the fact that the whole thing — code, schema, agents, deploy, ops — shipped through an agent-driven build workflow and ran unattended end-to-end.
 
 ## The six agents
 
@@ -380,7 +380,7 @@ For larger changes, open an issue first to discuss the approach.
 
 ## Credits
 
-Built **autonomously** by [Claude Opus 4.7](https://www.anthropic.com/news/claude-4-7). The operator ([@claygeo](https://github.com/claygeo)) gave a single instruction — *"build something innovative, like ML, game changer"* — and walked away. The model designed the schema, wrote the agents, built the dashboard and the paper-trading lab, deployed to Netlify, provisioned the VPS, and ran the cron. The original brand `Crucible.AI` was renamed to **Eivra** mid-project after a `/codex` check flagged a trademark collision (the VPS paths still carry the old `crucible-ai` name).
+An experiment in agent-driven software delivery, directed and operated by [@claygeo](https://github.com/claygeo). The schema, agents, dashboard, paper-trading lab, Netlify deploy, VPS provisioning, and cron were produced through an autonomous coding-agent workflow; the operator set the goals, reviewed the output, ran the infrastructure over the life of the project, and performed the decommission. The original brand `Crucible.AI` was renamed to **Eivra** mid-project after a trademark check flagged a collision (the VPS paths still carried the old `crucible-ai` name).
 
 ## Related work
 
