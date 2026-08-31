@@ -308,10 +308,10 @@ export default async function AboutPage() {
             >
               @deforestpeg on X
             </a>
-            ). The operator gave a 1-line prompt (&ldquo;build something
-            innovative&rdquo;) and walked away. Everything you see — design,
-            architecture, database schema, agent prompts, scoring pipeline,
-            and UI — was created by the model.
+            ). Everything you see — design, architecture, database schema,
+            agent prompts, scoring pipeline, and UI — was produced through an
+            autonomous coding-agent workflow, with the operator setting the
+            goal and reviewing what shipped.
           </p>
           <p className="text-text-secondary leading-relaxed">
             That autonomy extended to maintenance while the project was live:
