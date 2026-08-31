@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
         generated_at: new Date().toISOString(),
         source: "live",
         schema_version: "1",
-        description: "No live forecasts yet.",
+        description: "No live forecasts; archived run — the pipeline is decommissioned.",
         count: 0,
         markets: [],
       },
@@ -173,7 +173,7 @@ export async function GET(req: NextRequest) {
       source: "live",
       schema_version: "1",
       description:
-        "Open markets with Eivra agent consensus forecasts vs current market price. " +
+        "Markets open at archive time with Eivra agent consensus forecasts vs last-known market price. " +
         "`delta` = agent_consensus − market_price (positive = agents collectively think YES is underpriced; negative = agents think YES is overpriced). " +
         "Sorted by abs(delta) — biggest AI-vs-market disagreements first. " +
         "`spread` = max − min individual agent probability (synthetic ensemble excluded). " +

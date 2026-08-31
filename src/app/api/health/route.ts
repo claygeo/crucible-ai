@@ -23,7 +23,7 @@ export async function GET() {
     has_openai_key: Boolean(process.env.OPENAI_API_KEY),
     has_service_role: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
     note:
-      "Live data + agent loop come online when ANTHROPIC_API_KEY + SUPABASE_SERVICE_ROLE_KEY are set in Netlify env. Until then, dashboard renders deterministic seed data.",
+      "Archived run: the Supabase backend and agent loop were decommissioned (DB deleted 2026-06-27, VPS 2026-08-22). The dashboard permanently renders the deterministic demo dataset.",
   };
   return NextResponse.json(out, { headers: { "cache-control": "no-store" } });
 }

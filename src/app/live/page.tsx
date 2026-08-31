@@ -19,15 +19,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
     let description: string;
     if (totalLocked > 0 && resolvedCount > 0) {
-      description = `${totalLocked} AI forecasts locked on ${openCount} open markets. ${resolvedCount} already resolved with real Brier scores — no editing, no look-ahead. Watch the benchmark live.`;
+      description = `${totalLocked} AI forecasts locked on ${openCount} markets. ${resolvedCount} resolved with real Brier scores — no editing, no look-ahead. Archived record of the May–Jun 2026 run; the pipeline is decommissioned.`;
     } else if (totalLocked > 0) {
-      description = `${totalLocked} AI forecasts locked on ${openCount} open prediction markets. Timestamped at submission, scored on resolution. Six agents, real markets, no look-ahead.`;
+      description = `${totalLocked} AI forecasts locked on ${openCount} prediction markets. Timestamped at submission, scored on resolution, no look-ahead. Archived record of the May–Jun 2026 run; the pipeline is decommissioned.`;
     } else {
       description =
-        "Six AI agents lock probability forecasts on open Polymarket and Manifold markets. Timestamped at submission, scored automatically on resolution. No look-ahead by construction.";
+        "Six AI agents locked probability forecasts on open Polymarket and Manifold markets. Timestamped at submission, scored on resolution. Archived record of the May–Jun 2026 run; the pipeline is decommissioned.";
     }
 
-    const title = "Eivra — Live AI forecasts locked and scored in public";
+    const title = "Eivra — Archived AI forecasts, locked and scored in public";
     return {
       title,
       description,
@@ -48,9 +48,9 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: "Live forecasts — Eivra",
+      title: "Archived forecasts — Eivra",
       description:
-        "Six AI agents lock probability forecasts on open Polymarket and Manifold markets. Scored when resolved. No look-ahead.",
+        "Six AI agents locked probability forecasts on open Polymarket and Manifold markets, scored on resolution, no look-ahead. Archived record of the May–Jun 2026 run; the pipeline is decommissioned.",
     };
   }
 }
@@ -118,8 +118,8 @@ export default async function LivePage() {
   );
 
   const shareText = totalLockedAgentForecasts > 0
-    ? `${totalLockedAgentForecasts} AI forecasts locked on open prediction markets — scored automatically when they resolve, no edits allowed. Live benchmark: eivra.xyz/live`
-    : `Live AI forecasting: 6 agents lock probability forecasts on Polymarket & Manifold, scored on resolution. No look-ahead. eivra.xyz/live`;
+    ? `${totalLockedAgentForecasts} AI forecasts locked on open prediction markets — locked at submission, no edits allowed. Archived benchmark run: eivra.xyz/live`
+    : `Archived AI forecasting run: 6 agents locked probability forecasts on Polymarket & Manifold, scored on resolution. No look-ahead. eivra.xyz/live`;
   const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
 
   return (
@@ -129,21 +129,21 @@ export default async function LivePage() {
         {/* Hero */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2 mono text-xs text-text-muted uppercase tracking-wider">
-            <span className="live-dot" aria-hidden="true" />
-            <span>live forecasts · locked at submission</span>
+            <span>archived forecasts · locked at submission</span>
           </div>
           <h1 className="heading text-4xl sm:text-5xl text-text-primary tracking-tight">
-            Live locked forecasts on <span className="text-accent">open markets</span>.
+            Locked forecasts from the <span className="text-accent">archived run</span>.
           </h1>
           <p className="text-text-secondary text-base leading-relaxed max-w-3xl">
             Agents locked these probability forecasts on live Polymarket and
-            Manifold markets. Each prediction is timestamped at submission,
-            can&apos;t be edited, and scores automatically when the market
-            resolves. No look-ahead by construction
+            Manifold markets during the run. Each prediction was timestamped at
+            submission, couldn&apos;t be edited, and was scored when the market
+            resolved. Markets still open when the pipeline shut down will never
+            be scored. No look-ahead by construction
             {resolvedCount > 0 && (
               <> — the first{" "}
                 <span className="text-positive">{resolvedCount} markets</span>{" "}
-                have already resolved with real scores
+                resolved with real scores before the run ended
               </>
             )}.
           </p>
@@ -174,14 +174,14 @@ export default async function LivePage() {
               </>
             )}
             <span aria-hidden="true">·</span>
-            <span>new locks every 12 h</span>
+            <span>no new locks · archived</span>
             <span aria-hidden="true">·</span>
             <a
               href={shareHref}
               target="_blank"
               rel="noopener noreferrer"
               className="text-text-muted hover:text-accent transition-colors"
-              aria-label="Share live forecasts on X (Twitter)"
+              aria-label="Share archived forecasts on X (Twitter)"
             >
               Share on X →
             </a>
@@ -322,11 +322,11 @@ export default async function LivePage() {
         {rows.length === 0 ? (
           <section className="panel px-6 py-12 flex flex-col items-center gap-3 text-center">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              [no live forecasts yet]
+              [archived]
             </div>
             <p className="text-text-secondary max-w-md">
-              The live-mode cron runs every 12 hours. First batch was locked at
-              the most recent invocation. Refresh in a few hours to see new agent picks.
+              The live-mode cron was decommissioned 2026-08-22. No new agent
+              picks will ever be locked.
             </p>
           </section>
         ) : (
@@ -352,12 +352,11 @@ export default async function LivePage() {
                 </span>
               ) : isPending ? (
                 <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-warn/10 text-warn">
-                  Awaiting resolution
+                  Unresolved (archived)
                 </span>
               ) : (
                 <span className="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-accent/10 text-accent inline-flex items-center gap-1">
-                  <span className="live-dot" aria-hidden="true" />
-                  Awaiting resolution
+                  Unresolved (archived)
                 </span>
               );
 
@@ -531,9 +530,9 @@ export default async function LivePage() {
             already exists, the runner skips. There&apos;s no
             &ldquo;update my prediction now that I know how it&apos;s going&rdquo; path.
             What was locked at <code className="mono text-text-primary text-xs">created_at</code> is what
-            gets scored when the market resolves. Outcomes come from
+            gets scored when the market resolves. Outcomes came from
             Polymarket / Manifold APIs via a separate scoring job — the model
-            cannot influence either.
+            could influence neither.
           </p>
         </section>
 

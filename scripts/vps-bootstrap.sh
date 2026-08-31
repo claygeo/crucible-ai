@@ -1,7 +1,7 @@
 #!/bin/bash
 # VPS bootstrap script for Crucible.AI backfill cron.
 #
-# RUN ONCE on the Hetzner VPS (77.42.83.22, SSH port 2222).
+# RUN ONCE on the Hetzner VPS (SSH port 2222).
 # After this completes successfully, the backfill runs every 6 hours autonomously.
 #
 # Prereqs assumed:
@@ -10,8 +10,8 @@
 #   - The operator has the Supabase service role key on hand to paste
 #
 # Usage:
-#   scp -P 2222 vps-bootstrap.sh root@77.42.83.22:/tmp/
-#   ssh -p 2222 root@77.42.83.22 'bash /tmp/vps-bootstrap.sh'
+#   scp -P 2222 vps-bootstrap.sh root@YOUR-VPS-IP:/tmp/
+#   ssh -p 2222 root@YOUR-VPS-IP 'bash /tmp/vps-bootstrap.sh'
 #   The script prompts for SUPABASE_SERVICE_ROLE_KEY if it is not already set.
 
 set -e
@@ -95,8 +95,8 @@ if [ ! -f "$ENV_FILE" ]; then
   fi
 
   cat > "$ENV_FILE" <<EOF
-NEXT_PUBLIC_SUPABASE_URL=https://atxtnpgwrcesifejltah.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_HgRUYgzIEdElWBYLM-DbKQ_yiZLFeL0
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_YOUR_KEY_HERE
 SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
 EOF
   chown "$SERVICE_USER":"$SERVICE_USER" "$ENV_FILE"

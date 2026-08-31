@@ -1,8 +1,9 @@
 name: Paper trading snapshot
 
+# Scheduled runs disabled 2026-08-31: the Supabase project behind this pipeline
+# was decommissioned, so daily captures can only produce demo-sourced artifacts.
+# Manual dispatch is kept for reruns against a future replacement project.
 on:
-  schedule:
-    - cron: "22 5 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -33,8 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://atxtnpgwrcesifejltah.supabase.co' }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_HgRUYgzIEdElWBYLM-DbKQ_yiZLFeL0' }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       NEXT_PUBLIC_USE_DEMO_DATA: "false"
       SNAPSHOT_MIN_EDGE: ${{ github.event_name == 'workflow_dispatch' && inputs.min_edge || '0.1' }}

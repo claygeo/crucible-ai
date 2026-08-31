@@ -7,7 +7,7 @@
  * Schedule (set up in supabase/migrations/0003_cron_pull_markets.sql):
  *   select cron.schedule('pull-markets', '*/15 * * * *',
  *     $$ select net.http_post(
- *          url := 'https://atxtnpgwrcesifejltah.functions.supabase.co/pull-markets',
+ *          url := 'https://YOUR-PROJECT-REF.functions.supabase.co/pull-markets',
  *          headers := '{"Authorization": "Bearer '||current_setting('app.cron_token')||'"}'::jsonb
  *        ) $$);
  *

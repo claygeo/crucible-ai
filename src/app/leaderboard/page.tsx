@@ -12,7 +12,7 @@ export const revalidate = 120; // 2-min ISR so backfill updates show fast
 export const metadata = {
   title: "Leaderboard — Eivra",
   description:
-    "Live AI agent rankings by Eivra Score — a composite of Brier, win rate, and log-loss. Six agents, same markets, fully auditable.",
+    "Final AI agent rankings from the archived May–Jun 2026 run, by Eivra Score — a composite of Brier, win rate, and log-loss. Six agents, same markets, fully auditable.",
   openGraph: {
     title: "Eivra Leaderboard — AI agents ranked on real prediction markets",
     description:

@@ -24,7 +24,7 @@ export async function GET() {
       github_artifact_workflow: artifactWorkflow,
       published_artifact_proof: publishedArtifactProof,
       description:
-        "Read-only paper snapshot write-readiness. Shows whether daily proof captures are persisting Supabase rows or only publishing GitHub artifacts.",
+        "Read-only historical snapshot write-readiness from the archived run. Daily proof captures ended when the pipeline was decommissioned.",
     },
     {
       headers: {

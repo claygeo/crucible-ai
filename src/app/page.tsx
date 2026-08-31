@@ -19,50 +19,28 @@ import { createClient } from "@supabase/supabase-js";
 export const revalidate = 120; // 2-min ISR so backfill updates show fast
 
 export async function generateMetadata(): Promise<Metadata> {
-  try {
-    const stats = await getAgentStats();
-    const echo = stats.rows.find((s) => s.agent_id === "echo");
-    const reasoningStats = stats.rows.filter(
-      (s) => s.agent_id !== "echo" && s.agent_id !== "ensemble"
-    );
-    const best = [...reasoningStats].sort((a, b) => a.brier_30d - b.brier_30d)[0];
-    const bestAgent = best ? AGENTS.find((a) => a.id === best.agent_id) : null;
+  const description =
+    "Archived benchmark run (May–Jun 2026): six AI agents vs prediction-market consensus. Figures shown are the illustrative demo dataset; pipeline decommissioned.";
 
-    let description =
-      "AI makes predictions. Eivra scores them in public. Six agents on live Polymarket and Manifold markets, tracked with Brier, log-loss, and calibration.";
-    if (echo && best && bestAgent) {
-      const pctGap = Math.round(
-        (Math.abs(best.brier_30d - echo.brier_30d) / echo.brier_30d) * 100
-      );
-      if (best.brier_30d < echo.brier_30d) {
-        description = `After ${int(echo.total_scored)} resolved markets, ${bestAgent.name} beats prediction-market consensus — Brier ${num(best.brier_30d, 3)} vs ${num(echo.brier_30d, 3)}. AI reasoning is winning. Track it live.`;
-      } else {
-        description = `After ${int(echo.total_scored)} resolved markets, market consensus (Echo) leads by ${pctGap}%. Can ${bestAgent.name} close the gap? Six AI agents, real markets, public scoring.`;
-      }
-    }
-
-    const title = "Eivra — Does AI reasoning beat market consensus?";
-    return {
+  const title = "Eivra — Does AI reasoning beat market consensus?";
+  return {
+    title,
+    description,
+    openGraph: {
       title,
       description,
-      openGraph: {
-        title,
-        description,
-        url: "https://eivra.xyz",
-        siteName: "Eivra",
-        type: "website",
-      },
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-        creator: "@deforestpeg",
-        site: "@deforestpeg",
-      },
-    };
-  } catch {
-    return {};
-  }
+      url: "https://eivra.xyz",
+      siteName: "Eivra",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      creator: "@deforestpeg",
+      site: "@deforestpeg",
+    },
+  };
 }
 
 async function getTickerItems(): Promise<TickerItem[]> {
@@ -151,10 +129,11 @@ export default async function HomePage() {
           role="status"
         >
           <div className="max-w-[1280px] mx-auto px-6 py-2 flex items-center gap-3">
-            <span className="mono uppercase tracking-wider">[Demo mode]</span>
+            <span className="mono uppercase tracking-wider">[Archived run]</span>
             <span className="text-text-secondary">
-              Showing seed data while we backfill real predictions on resolved
-              prediction-market events. Live data appears as soon as agents finish scoring.
+              Showing the illustrative demo dataset from the May–Jun 2026
+              benchmark run. The pipeline was decommissioned in Aug 2026 — nothing
+              on this page updates.
             </span>
           </div>
         </div>
@@ -164,29 +143,28 @@ export default async function HomePage() {
         {/* Hero */}
         <section className="flex flex-col gap-6">
           <div className="flex items-center gap-3 mono text-xs text-text-muted uppercase tracking-wider">
-            <span className="live-dot" aria-hidden="true" />
-            eivra_ · public AI forecasting, scored continuously
+            eivra_ · archived AI forecasting benchmark (may–jun 2026)
           </div>
           <h1 className="heading text-4xl sm:text-6xl text-text-primary leading-tight tracking-tight max-w-3xl">
             Does AI reasoning beat market consensus?
           </h1>
           <p className="text-text-secondary text-lg leading-relaxed max-w-3xl">
             <span className="text-text-primary font-medium">
-              Eivra is the live public record.
+              Eivra was a public benchmark run (May–Jun 2026).
             </span>{" "}
-            Six AI agents with distinct strategies lock probability forecasts
+            Six AI agents with distinct strategies locked probability forecasts
             on open Polymarket and Manifold markets every 12 hours. Each
-            prediction is timestamped at submission and scored automatically
-            on resolution — Brier, log-loss, calibration. No look-ahead,
-            no post-hoc edits. Just the record.
+            prediction was timestamped at submission and scored on
+            resolution — Brier, log-loss, calibration. No look-ahead,
+            no post-hoc edits. Pipeline decommissioned; this is the archived
+            record.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/live"
               className="flex items-center gap-1.5 mono text-sm text-accent hover:text-text-primary transition-colors border border-accent/40 hover:border-accent rounded px-3 py-1.5"
             >
-              <span className="live-dot" aria-hidden="true" />
-              See live forecasts
+              Browse archived forecasts
             </Link>
             <Link
               href="/benchmark"
@@ -213,14 +191,13 @@ export default async function HomePage() {
             </span>
             <span aria-hidden="true">·</span>
             <span className="flex items-center gap-1.5">
-              <span className="live-dot" aria-hidden="true" />
               <span className="text-accent">{int(counters.liveInFlight)}</span>{" "}
-              <span>live forecasts in flight</span>
+              <span>forecasts in archived run</span>
             </span>
             <span aria-hidden="true">·</span>
             <span>
               <span className="text-text-primary">{int(counters.watching)}</span>{" "}
-              open markets watched
+              markets open at archive
             </span>
             <span aria-hidden="true">·</span>
             <span>
@@ -242,7 +219,7 @@ export default async function HomePage() {
               Eureka — surprises this week
             </h2>
             <span className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              Auto-generated · refresh nightly
+              Auto-generated · archived run
             </span>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -295,7 +272,7 @@ export default async function HomePage() {
           </div>
           <div className="panel px-5 py-5 flex flex-col gap-2">
             <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
-              <Tooltip tip="Eivra Score: composite ranking — 50% normalized Brier + 20% normalized log-loss + 30% win rate. Normalized so higher is better. Updated on each scoring run.">
+              <Tooltip tip="Eivra Score: composite ranking — 50% normalized Brier + 20% normalized log-loss + 30% win rate. Normalized so higher is better. Computed on the final scoring run.">
                 Eivra Score
               </Tooltip>
             </div>

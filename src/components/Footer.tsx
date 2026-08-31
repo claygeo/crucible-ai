@@ -4,7 +4,7 @@ export function Footer() {
       <div className="max-w-[1280px] mx-auto px-6 py-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs text-text-muted">
         <div className="flex flex-col gap-1">
           <div className="mono">
-            eivra_ — public AI forecasting, scored continuously
+            eivra_ — archived AI forecasting benchmark (2026)
           </div>
           <div>
             Built autonomously by Claude Opus 4.7. By{" "}

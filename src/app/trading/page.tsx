@@ -46,7 +46,7 @@ export const revalidate = 120;
 export const metadata = {
   title: "Paper Trading — Eivra",
   description:
-    "Paper-only prediction-market trading analytics for Eivra agents. Converts forecast edge into bounded simulated tickets and tracks P&L.",
+    "Archived paper-only trading analytics from Eivra's May–Jun 2026 run. Converted forecast edge into bounded simulated tickets and tracked P&L.",
   openGraph: {
     title: "Eivra Paper Trading — tradability, not just accuracy",
     description:
@@ -557,16 +557,15 @@ export default async function TradingPage({
       <main className="flex-1 max-w-[1280px] w-full mx-auto px-6 py-12 flex flex-col gap-10">
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-3 mono text-xs text-text-muted uppercase tracking-wider">
-            <span className="live-dot" aria-hidden="true" />
             paper trader - bounded tickets - no execution
           </div>
           <h1 className="heading text-4xl sm:text-5xl text-text-primary tracking-tight">
             Accuracy is not enough. <span className="text-accent">Tradability</span> is the test.
           </h1>
           <p className="text-text-secondary text-base leading-relaxed max-w-3xl">
-            Eivra now converts agent probability edges into paper-only prediction-market tickets.
-            Each ticket has a fixed maximum loss, a market-entry price, and a resolved P&amp;L
-            when the market closes.
+            During the run, Eivra converted agent probability edges into paper-only
+            prediction-market tickets. Each ticket has a fixed maximum loss, a
+            market-entry price, and a resolved P&amp;L when the market closed.
           </p>
           <div className="flex flex-wrap items-center gap-3 mono text-xs text-text-muted">
             <span className="px-2 py-1 rounded bg-surface-elevated border border-border-subtle">
@@ -607,12 +606,12 @@ export default async function TradingPage({
         {livePnlPending && (
           <section className="panel px-5 py-4 border-warn/30 bg-warn/5">
             <div className="mono text-[10px] uppercase tracking-wider text-warn mb-2">
-              live P&amp;L pending
+              live P&amp;L — never realized
             </div>
             <p className="text-sm text-text-secondary leading-relaxed max-w-4xl">
               The resolved trading numbers below are historical/backfill sample only.
-              Live-mode tickets are visible in the open-ticket feed and become
-              meaningful after their markets resolve.
+              Open live-mode tickets were never resolved before the pipeline shut
+              down; their P&amp;L is permanently unrealized.
             </p>
           </section>
         )}
@@ -621,10 +620,10 @@ export default async function TradingPage({
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="heading text-base text-text-primary">
-                Would trade today
+                Would have traded (final snapshot)
               </h2>
               <p className="text-xs text-text-muted mt-1">
-                Live-only paper watchlist ranked by current strategy rules.
+                Final live-only paper watchlist from the archived snapshot.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -1460,13 +1459,14 @@ export default async function TradingPage({
           </div>
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 border-t border-border-subtle pt-4">
             <p className="text-sm text-text-secondary leading-relaxed">
-              A strategy cannot become a candidate until it has 30 live calendar
+              A strategy could not become a candidate until it had 30 live calendar
               days, at least 30 resolved live paper tickets, positive resolved
               P&amp;L, positive ROI, and drawdown under{" "}
               <span className="text-text-primary">
                 {dollars(selectedProof.rules.maxDrawdownUsd, 0)}
               </span>
-              . This is a proof label only, not an execution signal.
+              . The run ended before any strategy cleared the gate. This is a
+              proof label only, not an execution signal.
             </p>
             <div className="flex flex-col gap-2">
               <div className="mono text-[10px] uppercase tracking-wider text-text-muted">
@@ -1899,7 +1899,7 @@ export default async function TradingPage({
             <span className={captureHealthClass(captureHealth.status)}>
               {captureHealth.message}
             </span>
-            <span>cron {captureHealth.cron} UTC</span>
+            <span>cron decommissioned (was {captureHealth.cron} UTC)</span>
             <span>
               stale after {int(captureHealth.stale_after_hours)}h
             </span>

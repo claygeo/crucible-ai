@@ -20,8 +20,7 @@ export function Header() {
             href="/live"
             className="flex items-center gap-1.5 hover:text-text-primary transition-colors shrink-0"
           >
-            <span className="live-dot" aria-hidden="true" />
-            <span className="text-accent">Live</span>
+            <span className="text-accent">Forecasts</span>
           </Link>
           <Link
             href="/benchmark"

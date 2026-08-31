@@ -63,8 +63,8 @@ export default async function AgentsPage() {
           <p className="text-text-secondary text-sm max-w-2xl">
             Six agents. Five distinct strategies plus a uniform-weight ensemble.
             Each is built around a hypothesis about what makes for good
-            probabilistic forecasting — and we test that hypothesis in public,
-            every day.
+            probabilistic forecasting — and we tested that hypothesis in public,
+            daily, for the length of the run.
           </p>
           {isLive && reasoningBeatsMarket && topReasonerAgent && topReasoner && echoStats && (
             <div className="panel px-4 py-3 border-l-2 border-l-positive flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 max-w-xl">

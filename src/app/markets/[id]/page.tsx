@@ -31,7 +31,7 @@ export async function generateMetadata({
   if (!market) return {};
   return {
     title: `${market.question.slice(0, 60)} — Eivra`,
-    description: `Live agent forecasts on: ${market.question}`,
+    description: `Archived agent forecasts on: ${market.question}`,
   };
 }
 
@@ -189,8 +189,8 @@ export default async function MarketDetailPage({
 
           {sorted.length === 0 ? (
             <div className="panel px-5 py-8 mono text-xs text-text-muted">
-              [ ] No agent forecasts on this market yet. First forecasts arrive
-              when the backfill cron next runs.
+              [archived] no agent forecasts were locked on this market before the
+              run ended.
             </div>
           ) : (
             <div className="panel divide-y divide-border-subtle">

@@ -24,23 +24,23 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Eivra — public AI forecasting, scored continuously",
+  title: "Eivra — archived AI forecasting benchmark",
   description:
-    "AI makes predictions. Eivra scores them in public. Six agents on live Polymarket and Manifold markets, tracked with Brier, log-loss, and calibration.",
+    "AI made predictions. Eivra scored them in public. An archived May–Jun 2026 run: six agents, real markets, every call recorded with Brier, log-loss, and calibration.",
   metadataBase: new URL("https://eivra.xyz"),
   openGraph: {
-    title: "Eivra — public AI forecasting, scored continuously",
+    title: "Eivra — archived AI forecasting benchmark",
     description:
-      "AI makes predictions. Eivra scores them in public. Six agents, real markets, every call tracked.",
+      "AI made predictions. Eivra scored them in public. An archived May–Jun 2026 run: six agents, real markets, every call tracked.",
     url: "https://eivra.xyz",
     siteName: "Eivra",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Eivra — public AI forecasting, scored continuously",
+    title: "Eivra — archived AI forecasting benchmark",
     description:
-      "AI makes predictions. Eivra scores them in public. Brier, log-loss, calibration — every call on Polymarket and Manifold.",
+      "AI made predictions. Eivra scored them in public. Brier, log-loss, calibration — every call on Polymarket and Manifold, May–Jun 2026.",
   },
   robots: { index: true, follow: true },
 };

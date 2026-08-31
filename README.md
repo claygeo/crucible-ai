@@ -1,22 +1,23 @@
 # Eivra
 
-> Public AI forecasting, scored continuously. Six AI agents make probabilistic predictions on real Polymarket and Manifold markets. Every call is tracked with Brier, log-loss, and 10-bin calibration plots with Wilson 95% intervals. No real money, no hiding, just resolved outcomes.
+> Public AI forecasting, scored on resolved outcomes. Six AI agents made probabilistic predictions on real Polymarket and Manifold markets. Every call was tracked with Brier, log-loss, and 10-bin calibration plots with Wilson 95% intervals. No real money, no hiding, just resolved outcomes.
 
 **Live:** [eivra.xyz](https://eivra.xyz) · **Source:** [github.com/claygeo/eivra](https://github.com/claygeo/eivra) · **Author:** [@deforestpeg](https://x.com/deforestpeg)
+
+> **Status: archived run.** Eivra ran as a live system in May–June 2026. The pipeline was decommissioned afterward (database June 2026, forecasting VPS August 2026), so nothing updates anymore. The deployed site stays up and renders the deterministic in-repo demo dataset, labeled as such on every page. The last real-data record survives in [`public/paper-trading/latest-artifact-proof.json`](./public/paper-trading/latest-artifact-proof.json); real numbers quoted below come from that final snapshot. The full system remains deployable from this repo — see [Deploy your own](#deploy-your-own).
 
 ---
 
 ## TL;DR
 
-- **6 AI agents** across distinct personas forecast live prediction markets and get scored when the markets resolve.
+- **6 AI agents** across distinct personas forecast live prediction markets and got scored when the markets resolved.
 - **Two scoring lanes:** *backfill* (agents forecast already-resolved historical markets — fast to accumulate, but look-ahead-prone) and *live* (agents lock a forecast on an **open** market, scored only after it resolves — no look-ahead by construction).
-- **Hawk (contrarian, Opus 4.7) leads** the leaderboard. But read the [honesty section](#how-honest-are-these-numbers) first: every agent currently sits near ~0.02 Brier / ~97% win, which is *far* better than human superforecasters (~0.15–0.20) and the best published LLM forecaster (~0.24). That gap is the backfill lane flattering itself, not superhuman skill.
-- **$0 Anthropic API spend** — forecasts run a `claude -p` subprocess on a Hetzner VPS under a Max subscription. No `ANTHROPIC_API_KEY`.
+- **Hawk (contrarian, Opus 4.7) led** the final leaderboard. But read the [honesty section](#how-honest-are-these-numbers) first: every agent ended the run near ~0.02 Brier / ~97% win, which is *far* better than human superforecasters (~0.15–0.20) and the best published LLM forecaster (~0.24). That gap is the backfill lane flattering itself, not superhuman skill.
+- **$0 Anthropic API spend** — forecasts ran a `claude -p` subprocess on a Hetzner VPS under a Max subscription. No `ANTHROPIC_API_KEY`.
 - **A paper-trading proof lab** (`/trading`) turns each forecast into a bounded quarter-Kelly paper ticket and asks a sharper question: which agent is not just *accurate* but *tradable*? It ships with explicit anti-overclaim guards (no real execution, ever).
-- Auto-deploys via GitHub → Netlify. Cron jobs handle market ingestion, backfill scoring, live forecasting, and nightly insight cards.
-- Built autonomously by Claude Opus 4.7 over roughly two weeks while the operator was away.
+- Auto-deploys via GitHub → Netlify. While the run was live, cron jobs handled market ingestion, backfill scoring, live forecasting, and nightly insight cards.
 
-> **Numbers drift.** Cron runs change every count on this page hourly. Live, always-current figures are at [`/api/summary.json`](https://eivra.xyz/api/summary.json) and [`/api/leaderboard.json`](https://eivra.xyz/api/leaderboard.json). The snapshots below are dated.
+> **Numbers are frozen.** The pipeline is decommissioned; no count on this page will change again. [`/api/summary.json`](https://eivra.xyz/api/summary.json) and [`/api/leaderboard.json`](https://eivra.xyz/api/leaderboard.json) still respond, but they serve the labeled demo dataset — not run data. Real numbers in this README are quoted from the final proof artifact.
 
 ---
 
@@ -24,9 +25,9 @@
 
 Eivra is a **public scoreboard for LLM forecasting accuracy**.
 
-Six AI agents — each with a distinct system prompt and model — read real prediction-market questions from [Polymarket](https://polymarket.com) and [Manifold Markets](https://manifold.markets), produce a probability estimate with a short reasoning trace, and get scored against the eventual ground-truth resolution.
+Six AI agents — each with a distinct system prompt and model — read real prediction-market questions from [Polymarket](https://polymarket.com) and [Manifold Markets](https://manifold.markets), produced a probability estimate with a short reasoning trace, and got scored against the eventual ground-truth resolution.
 
-The site updates every two minutes (Next.js ISR). New open markets ingest every 15 minutes. New forecasts land on a 6-hour backfill cycle, plus a separate live-forecasting pass that locks predictions on still-open markets. Insight cards regenerate nightly. Without database credentials the whole site renders from a deterministic in-repo seed (`src/lib/demo-data.ts`, 25 markets / 150 predictions) so it loads with zero infrastructure.
+While live, the site updated every two minutes (Next.js ISR), open markets ingested every 15 minutes, forecasts landed on a 6-hour backfill cycle plus a separate live-forecasting pass, and insight cards regenerated nightly. Without database credentials the whole site renders from a deterministic in-repo seed (`src/lib/demo-data.ts`, 25 markets / 150 predictions) so it loads with zero infrastructure — since decommissioning, that seed is what the deployed site serves.
 
 ## Why this exists
 
@@ -67,7 +68,7 @@ Display roster lives in [`src/lib/agents.ts`](./src/lib/agents.ts); the runner d
 
 ## How forecasts are produced
 
-Every agent forecast is generated by spawning a `claude -p` (print-mode) subprocess on the VPS, where the operator's **Max subscription** is logged in via `claude login`. The subprocess inherits that auth, makes the call, and emits JSON to stdout. The runner extracts the first `{` to the last `}` and parses it.
+Every agent forecast was generated by spawning a `claude -p` (print-mode) subprocess on the VPS, where the operator's **Max subscription** was logged in via `claude login`. The subprocess inherits that auth, makes the call, and emits JSON to stdout. The runner extracts the first `{` to the last `}` and parses it.
 
 The flags that matter, from [`backfill/run.ts`](./backfill/run.ts):
 
@@ -94,7 +95,7 @@ Details that took a few iterations to get right:
 
 **Backfill mode** (`backfill/run.ts`, default) pulls markets that resolved between 2026-02-01 and 2026-05-08 (after Claude's Jan-2026 training cutoff, to *limit* not eliminate look-ahead), forecasts them, and scores immediately. These rows are flagged `is_backfill = true`. The runner does **not** pass the resolution outcome to the model, and it stamps each backfill prediction with a synthetic `created_at` of `resolved_at − 24h` — a defensible "we forecasted ~a day before close" timestamp. It is still a reconstruction, and the model may have seen news about these outcomes in training. Treat backfill numbers as a warm-up set, not proof of skill.
 
-**Live mode** (`backfill/run.ts --mode=live`) pulls markets that are still **open** (closing >24h out), locks one forecast per agent at `created_at = NOW()` with `is_backfill = false`, and writes nothing to `scores` until the market actually resolves. There is no look-ahead by construction: the lock is the receipt. The locked forecasts are visible at [`/live`](https://eivra.xyz/live). This is the honest signal, and the resolved-live sample is still small.
+**Live mode** (`backfill/run.ts --mode=live`) pulls markets that are still **open** (closing >24h out), locks one forecast per agent at `created_at = NOW()` with `is_backfill = false`, and writes nothing to `scores` until the market actually resolves. There is no look-ahead by construction: the lock is the receipt. Locked forecasts surfaced at [`/live`](https://eivra.xyz/live) (now demo rows). This was the honest signal, and the resolved-live sample stayed small for the whole run.
 
 ## Scoring methodology
 
@@ -139,16 +140,28 @@ How it works:
 
 - **Bounded paper tickets.** For each agent forecast, compare the agent's probability to the market price. If the edge clears a threshold (default 5pp), open a paper ticket: YES on positive edge, NO on negative. Stake is **quarter-Kelly** off a $5,000 paper bankroll, **capped at $100/ticket**, with a $500 open-exposure cap. Maximum loss is the stake. No wallet, no leverage, no order placement, no liquidation path.
 - **Proof gate.** A live strategy stays `collecting` until it has **30 live days** and **30 resolved tickets**, then must show positive net P&L, positive ROI, and bounded drawdown (<$500) to be marked a `candidate`. Backfill strategies are `control_only` and can never qualify. Stale captures are flagged.
-- **Durable evidence pipeline.** Daily snapshots are written to `paper_trading_snapshots` (a Netlify scheduled function at 05:12 UTC) with a GitHub Actions fallback recorder (05:22 UTC) that captures artifact proof even when service-role writes are disabled, plus a resolution catch-up pass (05:02 UTC). The whole thing is auditable offline (`npm run paper:artifact-audit`).
+- **Durable evidence pipeline.** Daily snapshots were written to `paper_trading_snapshots` (a Netlify scheduled function at 05:12 UTC) with a GitHub Actions fallback recorder (05:22 UTC) that captured artifact proof even when service-role writes were disabled, plus a resolution catch-up pass (05:02 UTC). The Actions schedule is disabled post-decommission; the whole record is still auditable offline (`npm run paper:artifact-audit`).
 - **Anti-overclaim guards, everywhere.** Every payload carries `paper_only: true` and `real_money_execution_allowed: false`. Missed/skipped signals are tracked but flagged `missed_pnl_counts_as_proof: false`. Pending open-ticket EV is flagged `pending_pnl_counts_as_proof: false`. A liquidity/slippage review is a hard blocker on any "this rule is profitable" claim, because real fill quality isn't modeled. The point of the lab is to make it *hard* to fool yourself, not to look good.
 
 The lab exposes roughly two dozen read-only JSON endpoints under `/api/trading-*` (agent-edge proof matrix, exposure ledger, resolution watch, capital-review packet, evidence SLA, lab status, and so on). The full design spec is in [`docs/designs/eivra-paper-trading-v2.md`](./docs/designs/eivra-paper-trading-v2.md).
+
+### Final archived numbers (last real capture: 2026-06-14)
+
+The last real-data proof artifact — [`public/paper-trading/latest-artifact-proof.json`](./public/paper-trading/latest-artifact-proof.json), written by the scheduled Actions run — froze the lab at:
+
+- **26 resolved live paper tickets**, **+$519.64 net paper P&L**, over an 18-of-30-day proof window.
+- **9 of 12 rules resolved** — 6 positive, 0 below break-even, and **0 profitability-proven**: no rule reached the 30-resolved-tickets / 30-live-days gate before decommission.
+- Best rule: `magpie-live-edge-10`, **+$253.52** on 5 tickets (0.8 win rate, 0.507 ROI on stake). `mirror-live-edge-10` shows identical figures because both rules caught the same trades — they are not independent results.
+- 53 open live signals / $5,298.79 open paper exposure at final capture.
+- The capital-review gate ended **`blocked` / `do_not_allocate_capital`** — which is exactly what the anti-overclaim design should say about an 18-day sample.
+
+Brier and leaderboard figures did not survive the decommission: the scoring database was deleted without an export, so the ~0.02-Brier leaderboard described elsewhere in this README is quoted from the last observed state and can no longer be recomputed. This artifact is the only independently verifiable record of the run.
 
 ## How honest are these numbers?
 
 Read this before trusting the leaderboard.
 
-- **The headline numbers are too good to be real skill.** As of the latest snapshot every agent sits near **~0.02 Brier and ~97% win rate**. Human superforecasters land around 0.15–0.20; the best published LLM forecasting system (Halawi et al.) reached ~0.24 on genuinely-uncertain post-cutoff questions. Six agents all an order of magnitude better than that is a red flag, not a triumph. The cause is almost certainly the **backfill lane**: resolved markets skew lopsided (many close near 0/1), and the models may have absorbed the outcomes in training. The numbers measure "can the model recognize an already-decided question," not "can it forecast the future."
+- **The headline numbers are too good to be real skill.** In the final snapshot every agent sat near **~0.02 Brier and ~97% win rate**. Human superforecasters land around 0.15–0.20; the best published LLM forecasting system (Halawi et al.) reached ~0.24 on genuinely-uncertain post-cutoff questions. Six agents all an order of magnitude better than that is a red flag, not a triumph. The cause is almost certainly the **backfill lane**: resolved markets skew lopsided (many close near 0/1), and the models may have absorbed the outcomes in training. The numbers measure "can the model recognize an already-decided question," not "can it forecast the future."
 - **Backfill dominates the dataset.** Most resolved rows are `is_backfill = true` with a synthetic pre-resolution timestamp. The **live lane** (`is_backfill = false`, locked on open markets) is the honest signal, and its resolved sample is still small. Watch that, not the aggregate.
 - **No retrieval.** Web tools are disabled in the subprocess, so agents forecast from parametric knowledge. That's a deliberate cost/simplicity choice, and a real limitation versus retrieval-augmented systems.
 - **Mirror is not GPT-5 yet.** It runs as Claude Sonnet with a cross-family prompt because no OpenAI key is configured. Disclosed on the agent card and above. Five of six agents are one model family, so "cross-model" comparison is currently weak.
@@ -191,7 +204,7 @@ None of this is hidden in the code. It shouldn't be hidden here either.
                   https://eivra.xyz
 ```
 
-A claude.ai cloud routine also runs periodically, picking one autonomous polish task per fire (landing copy, OG image, agent text, lint fixes) and shipping it via Netlify + Supabase MCP, gated on typecheck + build passing.
+A claude.ai cloud routine also ran periodically during the live months, picking one autonomous polish task per fire (landing copy, OG image, agent text, lint fixes) and shipping it via Netlify + Supabase MCP, gated on typecheck + build passing.
 
 ## Data sources
 
@@ -238,7 +251,7 @@ Full DDL in [`supabase/migrations/`](./supabase/migrations). The Supabase Edge F
 
 ## Cron jobs (VPS)
 
-The VPS bootstrap installs three jobs; live forecasting is the same runner with `--mode=live`, run as a separate pass. The VPS retains its original `crucible-ai` paths from before the project was renamed to Eivra — renaming them risks breaking live cron, so they're left as-is.
+The VPS bootstrap installs three jobs; live forecasting is the same runner with `--mode=live`, run as a separate pass. The VPS retained its original `crucible-ai` paths from before the project was renamed to Eivra. (The VPS itself was retired in August 2026 — this section is preserved for redeployment.)
 
 ```cron
 */15 * * * *  cd /opt/crucible-ai && npx tsx backfill/pull-open.ts                 # ingest open markets
@@ -306,6 +319,8 @@ With `NEXT_PUBLIC_USE_DEMO_DATA=true` (the default) the site renders entirely fr
 
 ### Run the backfill yourself
 
+The original Supabase project no longer exists — point these at your own (see [Deploy your own](#deploy-your-own)).
+
 ```bash
 # Requires:  claude on PATH, logged in via `claude login` (Max sub)
 # Optional:  SUPABASE_SERVICE_ROLE_KEY in .env.local for live writes
@@ -333,6 +348,8 @@ npm run paper:artifact-audit -- ./paper-artifacts --json   # audit downloaded Gi
 5. For continuous forecasting: provision a VPS (Hetzner CX22 is plenty), run `scripts/vps-bootstrap.sh`, `claude login`, and install the crontab from [`scripts/VPS-SETUP.md`](./scripts/VPS-SETUP.md).
 
 ## What's next
+
+*(Preserved roadmap — the run itself is concluded. This is where a restart would pick up.)*
 
 - **Grow the live lane** until resolved-live forecasts outnumber backfill, so headline numbers reflect real (not reconstructed) skill.
 - **Real GPT-5 in Mirror** once an OpenAI key is available — turns the cross-family slot into an actual A/B.
@@ -376,4 +393,4 @@ MIT. See [LICENSE](./LICENSE).
 
 ---
 
-**Built autonomously by Claude Opus 4.7. Curated by [@deforestpeg](https://x.com/deforestpeg).**
+**Curated by [@deforestpeg](https://x.com/deforestpeg).**

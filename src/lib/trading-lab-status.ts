@@ -337,7 +337,7 @@ function labStatusMessage(status: PaperTradingLabStatusStatus): string {
   if (status === "unavailable") {
     return "The paper lab does not have enough usable evidence sources to report proof status.";
   }
-  return "The paper lab is collecting live-only evidence toward the 30-day proof window.";
+  return "The paper lab was collecting live-only evidence toward a 30-day proof window when the run ended; the window never completed.";
 }
 
 function capacityLeakageStatus(

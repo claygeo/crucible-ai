@@ -100,7 +100,7 @@ export async function GET() {
       source,
       schema_version: "1",
       description:
-        "Eivra agent profiles with live performance stats. Six agents compete on the same prediction-market questions; each has a distinct model and reasoning strategy. Stats are 30-day rolling averages over resolved markets. ELO uses pairwise head-to-head scoring.",
+        "Eivra agent profiles with archived performance stats from the May–Jun 2026 run. Six agents competed on the same prediction-market questions; each had a distinct model and reasoning strategy. Stats are 30-day rolling averages over resolved markets. ELO uses pairwise head-to-head scoring.",
       count: agents.length,
       agents,
     },

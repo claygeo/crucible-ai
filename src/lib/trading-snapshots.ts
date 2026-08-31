@@ -2166,7 +2166,7 @@ export function buildPaperTradingProofRunway(args: {
         captureEta,
         captureBlocked
           ? "Daily capture quality must be repaired before the runway is meaningful."
-          : "Earliest date assumes the daily snapshot keeps landing on schedule.",
+          : "Runway is historical: the daily snapshot stopped landing when the pipeline was decommissioned.",
       ),
       buildRunwayMilestone(
         "resolved_trades",
@@ -2224,7 +2224,7 @@ function proofReadinessNextAction(
     return "Restore the daily snapshot writer before trusting proof metrics.";
   }
   if (args.registrySync && args.registrySync.status === "pending_capture") {
-    return "Wait for the next daily snapshot to capture the current strategy registry.";
+    return "No further snapshots will run; the registry capture shown is final.";
   }
   if (
     args.resolutionWatch &&
@@ -2691,7 +2691,7 @@ export function buildPaperTradingProofEvidenceSources(args: {
     current: `${PAPER_TRADING_ARTIFACT_CONTRACT.scheduled_time_utc} UTC / ${PAPER_TRADING_ARTIFACT_CONTRACT.retention_days}d retention`,
     target: "self-contained proof bundle per workflow run",
     detail:
-      "The scheduled workflow uploads a live proof bundle even when Supabase writes are disabled.",
+      "The scheduled workflow (retired) uploaded a live proof bundle even when Supabase writes were disabled; the last bundle is the archived proof.",
     evidence: [
       PAPER_TRADING_ARTIFACT_CONTRACT.workflow_path,
       PAPER_TRADING_ARTIFACT_CONTRACT.artifact_name_pattern,

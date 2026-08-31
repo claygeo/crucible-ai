@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     {
       ...preview,
       description:
-        "Read-only paper-trading resolution catch-up preview. It detects provider-resolved live markets that Eivra has not scored yet and estimates the paper-only P&L that would land after resolver refresh. It never writes outcomes, scores, orders, or real-money execution state.",
+        "Historical paper-trading resolution catch-up preview from the archived run. The resolver pipeline is decommissioned; unscored markets remain unscored permanently. It never writes outcomes, scores, orders, or real-money execution state.",
     },
     {
       status: preview.status === "error" ? 500 : 200,
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     {
       ...result,
       description:
-        "Authorized paper-only resolution catch-up. It updates stale market resolution fields and score rows for provider-resolved markets, then refreshes agent stats. It never creates orders, wallets, leverage, or real-money execution state.",
+        "Decommissioned: this write endpoint belonged to the archived run's paper-only pipeline and no longer updates anything (backend deleted). It never created orders, wallets, leverage, or real-money execution state.",
     },
     {
       status: result.status === "error" ? 500 : 200,

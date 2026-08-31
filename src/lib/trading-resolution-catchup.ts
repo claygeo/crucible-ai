@@ -817,7 +817,7 @@ function statusForPreview(args: {
     status: "clear",
     status_label: "Clear",
     message: "No due unscored live markets were found.",
-    next_required_action: "Continue daily paper-only collection.",
+    next_required_action: "None — the run is archived; collection ended.",
   };
 }
 
@@ -1088,7 +1088,7 @@ export async function applyResolutionCatchup(
       status: "clear",
       statusLabel: "Clear",
       message: "No due unresolved markets were found.",
-      nextRequiredAction: "Continue daily paper-only collection.",
+      nextRequiredAction: "None — the run is archived; collection ended.",
       dryRun,
       limit,
       marketId,

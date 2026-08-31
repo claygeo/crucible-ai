@@ -11,17 +11,17 @@ export const revalidate = 120;
 export const metadata = {
   title: "Markets — Eivra",
   description:
-    "Every prediction market Eivra's AI agents are watching — open questions tracked in real-time and resolved events with outcome verdicts.",
+    "Every prediction market Eivra's AI agents were watching when the run ended — open questions at archive time and resolved events with outcome verdicts.",
   openGraph: {
     title: "Markets — Eivra",
     description:
-      "Polymarket and Manifold events tracked by six AI forecasters. Open markets watched in real-time; resolved markets scored and archived.",
+      "Polymarket and Manifold events tracked by six AI forecasters during the archived May–Jun 2026 run. Markets open at archive time; resolved markets scored.",
   },
   twitter: {
     card: "summary_large_image" as const,
     title: "Markets — Eivra",
     description:
-      "Polymarket and Manifold events tracked by six AI forecasters. Open markets watched in real-time; resolved markets scored and archived.",
+      "Polymarket and Manifold events tracked by six AI forecasters during the archived May–Jun 2026 run. Markets open at archive time; resolved markets scored.",
     creator: "@deforestpeg",
     site: "@deforestpeg",
   },
@@ -84,7 +84,6 @@ export default async function MarketsPage({
         {/* Hero */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3 mono text-xs text-text-muted uppercase tracking-wider">
-            <span className="live-dot" aria-hidden="true" />
             eivra_ · tracked markets
           </div>
           <h1 className="heading text-3xl text-text-primary tracking-tight">
@@ -93,11 +92,12 @@ export default async function MarketsPage({
             <span className="text-text-secondary">{allResolved.length} resolved</span>
           </h1>
           <p className="text-text-secondary text-sm max-w-2xl">
-            Every question Eivra&apos;s agents are currently forecasting, plus the
-            archive of resolved events with outcome verdicts.
+            Every question Eivra&apos;s agents were forecasting when the run
+            ended, plus the resolved events with outcome verdicts.
             {marketsWithForecasts > 0 && (
               <span className="text-text-primary"> AI forecasts are locked on{" "}
-                <span className="text-accent">{marketsWithForecasts}</span> open markets.
+                <span className="text-accent">{marketsWithForecasts}</span> markets
+                that were open at archive time.
               </span>
             )}
           </p>
@@ -167,12 +167,12 @@ export default async function MarketsPage({
         {/* Open markets */}
         <section className="flex flex-col gap-3">
           <h2 className="heading text-lg text-text-primary">
-            Open ({filteredOpen.length})
+            Open at archive ({filteredOpen.length})
           </h2>
           <div className="panel divide-y divide-border-subtle">
             {filteredOpen.length === 0 ? (
               <div className="px-5 py-8 mono text-xs text-text-muted">
-                [ ] No{activeCategory !== "all" ? ` ${activeCategory}` : ""} markets open right now.
+                [ ] No{activeCategory !== "all" ? ` ${activeCategory}` : ""} markets were open at archive time.
               </div>
             ) : (
               filteredOpen.map((m) => {
@@ -217,13 +217,13 @@ export default async function MarketsPage({
                       <div className="flex items-center gap-2 mono text-[11px] text-text-muted">
                         <span className="whitespace-nowrap">closes {relativeTime(m.closes_at)}</span>
                         <span aria-hidden="true">·</span>
-                        <Tooltip tip="Current market consensus probability from Polymarket / Manifold">
+                        <Tooltip tip="Market consensus probability at archive time (last-known Polymarket / Manifold price)">
                           <span className="text-text-secondary tabular-nums">P={pct(m.outcome_yes_price)}</span>
                         </Tooltip>
                         {agentCount > 0 && (
                           <>
                             <span aria-hidden="true">·</span>
-                            <Tooltip tip="AI agents with locked forecasts on this market — scored when it resolves">
+                            <Tooltip tip="AI agents with locked forecasts on this market — unscored; the run ended before resolution">
                               <span className="text-accent/80">{agentCount} agents</span>
                             </Tooltip>
                           </>

@@ -11,17 +11,17 @@ export const revalidate = 120;
 export const metadata = {
   title: "About — Eivra",
   description:
-    "Eivra is public AI forecasting, scored continuously. Six AI agents on real prediction-market events with Brier, log-loss, and calibration.",
+    "Eivra was a public AI forecasting benchmark (May–Jun 2026). Six AI agents on real prediction-market events, scored with Brier, log-loss, and calibration. Archived.",
   openGraph: {
-    title: "About Eivra — Public AI forecasting, scored continuously",
+    title: "About Eivra — Archived AI forecasting benchmark",
     description:
-      "Six AI agents predict real-world events. Every call scored with Brier, log-loss, and calibration. All open, all auditable.",
+      "Six AI agents predicted real-world events. Every call scored with Brier, log-loss, and calibration. All archived, all auditable.",
   },
   twitter: {
     card: "summary_large_image" as const,
-    title: "About Eivra — Public AI forecasting, scored continuously",
+    title: "About Eivra — Archived AI forecasting benchmark",
     description:
-      "Six AI agents predict real-world events. Every call scored with Brier, log-loss, and calibration. All open, all auditable.",
+      "Six AI agents predicted real-world events. Every call scored with Brier, log-loss, and calibration. All archived, all auditable.",
     creator: "@deforestpeg",
     site: "@deforestpeg",
   },
@@ -50,21 +50,20 @@ export default async function AboutPage() {
           About Eivra
         </h1>
 
-        {/* Live system status */}
+        {/* Archived system status */}
         <div className="panel px-5 py-4 flex flex-col gap-3">
           <div className="flex items-center gap-2 mono text-[10px] uppercase tracking-wider text-text-muted">
-            <span className="live-dot" aria-hidden="true" />
-            System live · updates every 2 min
+            archived run · no further updates
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 mono text-xs">
             <span>
               <span className="text-accent">{int(counters.liveInFlight)}</span>{" "}
-              <span className="text-text-secondary">forecasts in flight</span>
+              <span className="text-text-secondary">forecasts in archived run</span>
             </span>
             <span aria-hidden="true" className="text-text-muted">·</span>
             <span>
               <span className="text-text-primary">{int(counters.watching)}</span>{" "}
-              <span className="text-text-secondary">open markets watched</span>
+              <span className="text-text-secondary">markets open at archive</span>
             </span>
             <span aria-hidden="true" className="text-text-muted">·</span>
             <span>
@@ -79,7 +78,7 @@ export default async function AboutPage() {
           </div>
           <div className="flex flex-wrap gap-3 text-xs">
             <Link href="/live" className="text-accent hover:underline mono">
-              See live forecasts →
+              Browse archived forecasts →
             </Link>
             <Link href="/leaderboard" className="text-text-secondary hover:text-text-primary transition-colors mono">
               Leaderboard →
@@ -92,8 +91,8 @@ export default async function AboutPage() {
 
         <section className="flex flex-col gap-4">
           <p className="text-text-secondary leading-relaxed">
-            Eivra is a live tournament where six AI agents publicly predict
-            real-world events. Every prediction is scored against the
+            Eivra was a public tournament (May–Jun 2026) in which six AI agents
+            predicted real-world events. Every prediction was scored against the
             ground-truth resolution of the prediction-market question.{" "}
             <Tooltip tip="Brier score: mean squared error between predicted probability and outcome (0 or 1). Range 0–1. Lower is better — 0 is perfect, 0.25 is random chance.">
               Brier score
@@ -106,10 +105,10 @@ export default async function AboutPage() {
             <Tooltip tip="Calibration: of the times an agent says '70%', does it actually happen 70% of the time? Perfect calibration plots on the diagonal. Bars show Wilson 95% confidence intervals.">
               calibration plots
             </Tooltip>
-            , and continuous leaderboard rankings — all open, all auditable.
+            , and leaderboard rankings — all archived, all auditable.
           </p>
           <p className="text-text-secondary leading-relaxed">
-            No real money changes hands. Agents paper-trade against the
+            No real money changed hands. Agents paper-traded against the
             prevailing market price using a fixed{" "}
             <Tooltip tip="Kelly fraction: a formula for sizing bets proportionally to your edge over the market price. Eivra uses 0.25× Kelly on a $100 bankroll — conservative, to reduce variance while still tracking whether agent edges are positive-EV.">
               Kelly fraction
@@ -218,14 +217,14 @@ export default async function AboutPage() {
               Functions for the agent loop.
             </li>
             <li>
-              Market data from Polymarket Gamma API and Manifold Markets API,
-              polled every 15 min.
+              Market data came from the Polymarket Gamma API and Manifold
+              Markets API, polled every 15 min while the run was live.
             </li>
             <li>
-              Agents call Claude (Opus / Sonnet / Haiku). Mirror runs an
-              adversarial cross-family system prompt on Claude Sonnet — a real
-              cross-lab slot (GPT-5) is planned once API access is available.
-              90s per-forecast budget. Hard daily $ cap per agent.
+              Agents called Claude (Opus / Sonnet / Haiku). Mirror ran an
+              adversarial cross-family prompt on Claude Sonnet — a real GPT-5
+              slot never shipped. 90s per-forecast budget; hard daily $ cap per
+              agent.
             </li>
             <li>
               All predictions written with idempotency keys. All scoring
@@ -239,26 +238,30 @@ export default async function AboutPage() {
         </section>
 
         <section className="flex flex-col gap-3 border-t border-border-subtle pt-6">
-          <h2 className="heading text-xl text-text-primary">Roadmap</h2>
+          <h2 className="heading text-xl text-text-primary">
+            Roadmap (historical — the run ended before the rest shipped)
+          </h2>
           <ul className="text-text-secondary leading-relaxed list-disc list-inside flex flex-col gap-2">
             <li>
-              <strong className="text-positive">Live forecasting (shipped 2026-05-20).</strong>{" "}
-              Agents now lock probability forecasts on OPEN markets every 12 hours via
-              VPS cron. Predictions are timestamped at submission (
+              <strong className="text-positive">Live forecasting (2026-05-20 → late June 2026).</strong>{" "}
+              Agents locked probability forecasts on OPEN markets every 12 hours via
+              VPS cron until the database was decommissioned (the idle VPS itself
+              was retired in August). Predictions were
+              timestamped at submission (
               <code className="mono text-text-primary">
                 predictions.created_at = NOW()
               </code>{" "}
               with{" "}
               <code className="mono text-text-primary">is_backfill = false</code>
-              ), one per (agent, market) — never re-forecast. Markets resolve in
-              the future, scoring runs automatically on close. Zero look-ahead by
+              ), one per (agent, market) — never re-forecast. Markets resolved in
+              the future and scoring ran automatically on close. Zero look-ahead by
               construction.
             </li>
             <li>
               <strong className="text-text-primary">Learned ensemble weights.</strong>{" "}
-              Crowd currently blends agents uniformly. Once N &gt; {ensembleThreshold}{" "}
-              resolutions, weights will be fit on held-out history to maximize
-              calibration.{" "}
+              Crowd blended agents uniformly. The plan was to fit weights on
+              held-out history once N &gt; {ensembleThreshold} resolutions, to
+              maximize calibration. The run ended first.{" "}
               {totalScoredForEnsemble > 0 && (
                 <span className="mono text-text-muted text-xs">
                   ({int(totalScoredForEnsemble)}/{ensembleThreshold} resolved so far
@@ -308,14 +311,13 @@ export default async function AboutPage() {
             and UI — was created by the model.
           </p>
           <p className="text-text-secondary leading-relaxed">
-            That autonomy extends to ongoing maintenance. Claude Code agents
-            run as scheduled remote sessions every six hours: they read live
-            Supabase state, pick one concrete improvement, implement and
-            typecheck it, run{" "}
+            That autonomy extended to maintenance while the project was live:
+            Claude Code agents ran as scheduled remote sessions every six hours,
+            reading live Supabase state, picking one concrete improvement,
+            implementing and typechecking it, running{" "}
             <code className="mono text-text-primary text-xs">npm run build</code>,
-            push to main, and verify the Netlify deploy before declaring
-            success. Day-to-day development requires no human operator
-            involvement. The{" "}
+            pushing to main, and verifying the Netlify deploy before declaring
+            success. Maintenance ended when the pipeline was decommissioned. The{" "}
             <a
               href="https://github.com/claygeo/eivra"
               className="text-accent hover:underline"

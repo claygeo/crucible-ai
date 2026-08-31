@@ -433,7 +433,7 @@ export function buildPaperTradingAgentEdgeEvidenceTimeline(args: {
         ? "No canonical agent-edge proof rows are available for a timeline."
         : status === "available"
           ? "Agent-edge evidence has a complete persisted capture window."
-          : "Agent-edge evidence is collecting daily persisted rule snapshots.",
+          : "Agent-edge evidence stopped at the final archived snapshot; no further rows will be collected.",
     next_required_action:
       status === "unavailable"
         ? "Run the paper snapshot workflow until canonical agent-edge rows are present."

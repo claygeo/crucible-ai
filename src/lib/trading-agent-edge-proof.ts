@@ -461,7 +461,7 @@ function buildProfitabilityGuard(
         : status === "collecting" && positiveUnprovenRules.length > 0
           ? "Some agent-edge rules are positive, but the sample is not large enough to call them profitable."
           : status === "collecting"
-            ? "Agent-edge profitability proof is still collecting resolved live paper tickets."
+            ? "Agent-edge profitability proof ended before enough live paper tickets resolved; the sample is final and inconclusive."
             : "No agent-edge profitability proof source is available.",
     next_required_action:
       status === "reviewable"
@@ -470,7 +470,7 @@ function buildProfitabilityGuard(
           ? "Run the paper snapshot workflow and publish a proof artifact."
           : positiveUnprovenRules.length > 0
             ? "Keep collecting until each positive rule also clears the 30-day and 30-resolved-ticket gates."
-            : "Wait for live paper markets to resolve before judging profitability.",
+            : "Open tickets never resolved; open EV was never realized.",
     paper_only: true,
     real_money_execution_allowed: false,
     required_resolved_trades_per_rule:
@@ -683,7 +683,7 @@ export function buildPaperTradingAgentEdgeProofFromRows(args: {
       args.source === "none"
         ? "Run the paper snapshot workflow and publish a proof artifact."
         : status === "collecting"
-          ? "Wait for live paper markets to resolve before treating open EV as realized profit."
+          ? "Open tickets never resolved; open EV was never realized."
           : candidateCount > 0
             ? "Review candidate agent-edge rules; execution remains disabled."
             : "Compare resolved P&L, ROI, drawdown, and blockers before any operator review.",

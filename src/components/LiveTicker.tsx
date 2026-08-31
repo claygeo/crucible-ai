@@ -83,13 +83,12 @@ export function LiveTicker({ items: itemsProp }: { items?: TickerItem[] } = {}) 
     <div
       className="fixed bottom-0 left-0 right-0 z-30 h-14 border-t border-border-subtle bg-panel-hi"
       role="region"
-      aria-label="Live agent forecasts"
+      aria-label="Archived agent forecast replay"
     >
       <div className="max-w-[1280px] mx-auto h-full flex items-center px-6 gap-4">
         <div className="flex items-center gap-2 shrink-0">
-          <span className="live-dot" aria-hidden="true" />
           <span className="mono text-[11px] uppercase tracking-wider text-text-muted">
-            Live
+            Replay
           </span>
         </div>
 

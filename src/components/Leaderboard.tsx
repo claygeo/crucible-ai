@@ -21,7 +21,7 @@ export function Leaderboard({
           <h2 className="heading text-base text-text-primary">Leaderboard</h2>
         </div>
         <div className="px-5 py-8 text-text-muted text-sm mono">
-          [WARMING UP] No scored predictions yet. First scores in ~6h.
+          [archived] no scored predictions in this dataset.
         </div>
       </section>
     );

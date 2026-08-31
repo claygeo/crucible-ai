@@ -48,7 +48,7 @@ export async function GET(request: Request) {
         capture_health: persisted.capture_health,
       },
       description:
-        "Paper-only would-trade-today feed. Ranks current live candidates by strategy for observation only; no real-money execution is allowed.",
+        "Paper-only would-trade feed from the final archived snapshot. Ranked candidates were for observation only; no real-money execution was ever enabled.",
     },
     {
       headers: {

@@ -125,7 +125,7 @@ You are testing whether disciplined Bayesian humility beats other strategies.`,
     name: "Mirror",
     persona: "Cross-lab control · adversarial reasoning challenge",
     edge:
-      "Anthropic's other four agents may share training-family biases invisible to themselves. Mirror fills the cross-lab control slot: systematic divergence on a class of questions is evidence of model-family blind spots, not market signal. Transparency: Mirror currently runs as Claude Sonnet with an adversarial cross-family prompt — real GPT-5 inference is the goal when API access is available.",
+      "Anthropic's other four agents may share training-family biases invisible to themselves. Mirror fills the cross-lab control slot: systematic divergence on a class of questions is evidence of model-family blind spots, not market signal. Transparency: Mirror ran as Claude Sonnet with an adversarial cross-family prompt for the whole run — real GPT-5 inference never shipped.",
     model: "gpt-5",
     synthetic: false,
     dailyBudgetUsd: 1.0,

@@ -19,7 +19,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, existsSync } from "node:fs";
 
-const SUPABASE_URL = "https://atxtnpgwrcesifejltah.supabase.co";
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://YOUR-PROJECT-REF.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? loadFromEnvFile() ?? "";
 

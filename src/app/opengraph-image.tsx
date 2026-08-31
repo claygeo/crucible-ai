@@ -3,7 +3,7 @@ import { getCounters, getAgentStats } from "@/lib/data";
 import { AGENTS } from "@/lib/agents";
 
 export const runtime = "nodejs";
-export const alt = "Eivra — public AI forecasting, scored continuously";
+export const alt = "Eivra — archived AI forecasting benchmark";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -113,24 +113,16 @@ export default async function OG() {
               alignItems: "center",
               gap: "6px",
               fontSize: "12px",
-              color: COL.positive,
+              color: COL.muted,
               fontFamily: "monospace",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              border: `1px solid ${COL.positive}`,
+              border: `1px solid ${COL.border}`,
               borderRadius: "2px",
               padding: "3px 8px",
             }}
           >
-            <div
-              style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                background: COL.positive,
-              }}
-            />
-            LIVE
+            ARCHIVE
           </div>
         </div>
 
@@ -392,7 +384,7 @@ export default async function OG() {
             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
               <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: COL.accent }} />
               <span style={{ color: COL.accent, fontWeight: 600 }}>{counters.liveInFlight}</span>
-              <span style={{ color: COL.accent }}>live in flight</span>
+              <span style={{ color: COL.accent }}>locked in run</span>
             </div>
             <span>·</span>
             <div style={{ display: "flex", gap: "6px" }}>

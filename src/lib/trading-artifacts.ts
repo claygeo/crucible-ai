@@ -442,16 +442,16 @@ export function buildPaperTradingWriteReadiness(args: {
           : "Unknown",
     message:
       status === "persisting"
-        ? "Daily proof captures are configured to write Supabase snapshot rows and publish GitHub artifacts."
+        ? "Daily proof captures ended when the pipeline was decommissioned; the rows and artifacts shown are the archived record."
         : status === "artifact_only"
-          ? "Daily proof captures are publishing GitHub artifacts, but Supabase snapshot rows are not being written."
-          : "The latest public proof does not expose workflow write mode yet.",
+          ? "Daily proof captures ended when the pipeline was decommissioned; the archived record has GitHub artifacts but no persisted Supabase rows."
+          : "The latest public proof does not expose workflow write mode.",
     next_required_action:
       status === "persisting"
-        ? "Keep monitoring daily captures and resolved live paper tickets."
+        ? "No further captures will land; evidence below is the final archived state."
         : status === "artifact_only"
-          ? "Configure SUPABASE_SERVICE_ROLE_KEY for the Paper trading snapshot workflow before relying on the persisted dashboard row trail."
-          : "Run the Paper trading snapshot workflow with workflow-mode publishing enabled.",
+          ? "No further captures will land; the persisted row trail ended with the run."
+          : "No further captures will land; the archived proof is the last one published.",
     paper_only: true,
     real_money_execution_allowed: false,
     write_enabled: writeEnabled,
@@ -529,7 +529,7 @@ function evidenceSlaNextAction(
       daysRemaining === 1 ? "" : "s"
     }.`;
   }
-  return "Keep daily proof captures landing on schedule; execution remains disabled.";
+  return "Daily proof captures ended with the run; execution was never enabled.";
 }
 
 export function buildPaperTradingEvidenceSla(args: {
